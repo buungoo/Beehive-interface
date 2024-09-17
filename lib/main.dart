@@ -1,4 +1,4 @@
-// import 'dart.io' show Platform;
+// import 'dart.io' show Platform; // To determine platform e.g. Platform.iOS
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -24,8 +24,9 @@ final GoRouter _router = GoRouter(
       name: 'beehive-detail',
       path: '/beehive/:id',
       builder: (context, state) {
-        // Query parameters for widgets that need it
+        // Retrieve the path parameter 'id'
         final String id = state.pathParameters['id']!;
+        // Fetch the beehive from the provider
         final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
 
         // If beehive is not found, display an error message
@@ -35,26 +36,16 @@ final GoRouter _router = GoRouter(
               title: const Text('Error'),
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go('/'), // Navigate to overview page
+                // Navigate to overview page using go to get a clean stack
+                onPressed: () => context.go('/'),
               ),
             ),
             body: const Center(child: Text('Beehive not found!')),
           );
         }
 
-        // Wrap the detail page with a Scaffold and an AppBar
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Beehive Details'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () {
-                context.go('/'); // Navigate back to the overview page
-              },
-            ),
-          ),
-          body: BeehiveDetailPage(beehive: beehive),
-        );
+        // If beehive is found, return the beehive detail page
+        return BeehiveDetailPage(beehive: beehive);
       },
     ),
   ],
@@ -70,6 +61,7 @@ class BeehiveApp extends StatelessWidget {
       // The providers that are specified here are globally available
       // This means every widget in the app can listen to them
       providers: [
+        // See overview_page for use of this global provider
         ChangeNotifierProvider(create: (context) => BeehiveListProvider()),
       ],
       child: MaterialApp.router(

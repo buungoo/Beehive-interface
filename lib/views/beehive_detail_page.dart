@@ -11,8 +11,8 @@ class BeehiveDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamProvider<int?>(
-      // Because the StreamProvider is specified here only the
-      // BeehiveDetailPage widget can listen to it
+      // Because the StreamProvider is specified here and not in BeehiveApp
+      // class only the BeehiveDetailPage widget can listen to it
       initialData: null, // Nullable initial data
       create: (context) {
         // Setup the Stream which the StreamProvider should listen to

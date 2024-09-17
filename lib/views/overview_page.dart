@@ -8,7 +8,7 @@ class OverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Through context we  can access global providers
+    // Through context we can access global providers
     // Start listening to the global BeehiveListProvider
     final beehiveList = context.watch<BeehiveListProvider>().beehives;
 
@@ -22,7 +22,12 @@ class OverviewPage extends StatelessWidget {
             title: Text(beehive.name),
             onTap: () {
               // Navigate to the beehive detail page using GoRouter pathing
-              context.go('/beehive/${beehive.id}');
+              context.pushNamed(
+                'beehive-detail', // The name of the route
+                pathParameters: {
+                  'id': beehive.id
+                }, // Use 'pathParameters' to pass the id
+              );
             },
           );
         },
