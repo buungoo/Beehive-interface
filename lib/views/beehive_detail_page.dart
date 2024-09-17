@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/beehive.dart';
+import '../providers/beehive_data_provider.dart';
 
 class BeehiveDetailPage extends StatelessWidget {
   final Beehive beehive;
@@ -9,12 +10,13 @@ class BeehiveDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<int>(
-      initialData: 0, // Simulated initial data
+    return StreamProvider<int?>(
+      // Because the StreamProvider is specified here only the
+      // BeehiveDetailPage widget can listen to it
+      initialData: null, // Nullable initial data
       create: (context) {
-        // Simulate a stream of data (e.g., temperature updates)
-        return Stream.periodic(
-            const Duration(seconds: 1), (count) => 20 + count);
+        // Setup the Stream which the StreamProvider should listen to
+        return BeehiveDataProvider().getTemperatureStream();
       },
       child: Scaffold(
         appBar: AppBar(title: Text(beehive.name)),
@@ -24,8 +26,12 @@ class BeehiveDetailPage extends StatelessWidget {
             children: [
               Text('Beehive ID: ${beehive.id}'),
               const SizedBox(height: 20),
-              Consumer<int>(
+              Consumer<int?>(
                 builder: (context, temperature, child) {
+                  // Show loading until the stream emits the first data
+                  if (temperature == null) {
+                    return const CircularProgressIndicator();
+                  }
                   return Text('Simulated Temperature: $temperature°C');
                 },
               ),

@@ -8,6 +8,8 @@ class OverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Through context we acces global providers
+    // Start listening to the global BeehiveListProvider
     final beehiveList = context.watch<BeehiveListProvider>().beehives;
 
     return Scaffold(

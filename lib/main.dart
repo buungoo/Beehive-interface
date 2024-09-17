@@ -7,9 +7,8 @@ import 'package:provider/provider.dart';
 import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
-import 'models/beehive.dart';
 
-// GoRouter configuration with sinitial route and named routes
+// GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
@@ -28,12 +27,30 @@ final GoRouter _router = GoRouter(
         // If beehive is not found, display an error message
         if (beehive == null) {
           return Scaffold(
-            body: Center(child: Text('Beehive not found!')),
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/'), // Navigate to overview page
+              ),
+            ),
+            body: const Center(child: Text('Beehive not found!')),
           );
         }
 
-        // Pass the found beehive to the detail page
-        return BeehiveDetailPage(beehive: beehive);
+        // Wrap the detail page with a Scaffold and an AppBar
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Beehive Details'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                context.go('/'); // Navigate back to the overview page
+              },
+            ),
+          ),
+          body: BeehiveDetailPage(beehive: beehive),
+        );
       },
     ),
   ],
@@ -46,6 +63,8 @@ class BeehiveApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
+      // The providers that are specified here are globally available
+      // This means every widget in the app can listen to them
       providers: [
         ChangeNotifierProvider(create: (context) => BeehiveListProvider()),
       ],
