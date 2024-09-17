@@ -8,7 +8,7 @@ class OverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Through context we acces global providers
+    // Through context we  can access global providers
     // Start listening to the global BeehiveListProvider
     final beehiveList = context.watch<BeehiveListProvider>().beehives;
 
@@ -21,7 +21,7 @@ class OverviewPage extends StatelessWidget {
           return ListTile(
             title: Text(beehive.name),
             onTap: () {
-              // Navigate to the beehive detail page
+              // Navigate to the beehive detail page using GoRouter pathing
               context.go('/beehive/${beehive.id}');
             },
           );
