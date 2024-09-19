@@ -1,12 +1,16 @@
 // import 'dart.io' show Platform; // To determine platform e.g. Platform.iOS
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
+
+import 'utils/helpers.dart';
 
 // GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
@@ -57,6 +61,8 @@ class BeehiveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(isIOS(context));
+
     return MultiProvider(
       // The providers that are specified here are globally available
       // This means every widget in the app can listen to them
@@ -64,10 +70,26 @@ class BeehiveApp extends StatelessWidget {
         // See overview_page for use of this global provider
         ChangeNotifierProvider(create: (context) => BeehiveListProvider()),
       ],
-      child: MaterialApp.router(
-        routerConfig: _router, // Pass the GoRouter configuration
-        title: 'Beehive App', // App title
-      ),
+      child: isIOS(context)
+          ? CupertinoApp.router(
+              localizationsDelegates: const <LocalizationsDelegate>[
+                DefaultMaterialLocalizations.delegate,
+                DefaultWidgetsLocalizations.delegate,
+                DefaultCupertinoLocalizations.delegate,
+              ],
+              routerConfig: _router, // Pass the GoRouter configuration
+              title: 'Beehive App', // App title
+              theme: CupertinoThemeData(
+                primaryColor: CupertinoColors.systemYellow,
+              ),
+            )
+          : MaterialApp.router(
+              routerConfig: _router, // Pass the GoRouter configuration
+              title: 'Beehive App', // App title
+              theme: ThemeData(
+                primarySwatch: Colors.yellow,
+              ),
+            ),
     );
   }
 }
