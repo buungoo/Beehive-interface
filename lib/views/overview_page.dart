@@ -3,8 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/beehive_list_provider.dart';
-import '../widgets/SharedListView.dart';
-import '../widgets/SharedAppBar.dart';
+import '../widgets/shared.dart';
 
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key});
