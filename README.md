@@ -18,23 +18,22 @@ https://lucid.app/lucidchart/56da49fe-bf38-427f-9650-d7c6f5b29474/edit?viewport_
 lib
 ├── main.dart
 ├── models
-│   ├── beehive.dart
-│   ├── beehive_data.dart
 │   └── README.md
+|    This folder contains data objects used in the app. These models define the structure of the app's data.
 ├── providers
-│   ├── beehive_data_provider.dart
-│   ├── beehive_list_provider.dart
 │   └── README.md
+|    This folder contains state management logic using Flutter's `provider` package. Providers in this folder manage application state, notifying widgets when data changes.
+|    Typical provider classes extend a provider, allowing reactive updates across the app.
 ├── services
 │   └── README.md
+|    This folder contains service classes responsible for handling business logic and data fetching. Services may interact with APIs, local storage, or simulate real-time data updates.
 ├── utils
-│   ├── helpers.dart
 │   └── README.md
+|    This folder contains reusable utility functions that can be used across multiple parts of the app.
 ├── views
-│   ├── beehive_detail_page.dart
-│   ├── overview_page.dart
 │   └── README.md
+|    This folder contains the UI screens (pages) of the app. Each view represents a distinct part of the app's user interface.
 └── widgets
-    ├── README.md
-    └── SharedAppBar.dart
+    └── README.md
+     This folder contains reusable UI components that can be used across multiple views in the app.
 ```
