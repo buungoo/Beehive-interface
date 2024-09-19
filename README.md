@@ -22,11 +22,13 @@ lib
 |    This folder contains data objects used in the app. These models define the structure of the app's data.
 ├── providers
 │   └── README.md
-|    This folder contains state management logic using Flutter's `provider` package. Providers in this folder manage application state, notifying widgets when data changes.
+|    This folder contains state management logic using Flutter's `provider` package.
+|    Providers in this folder manage application state, notifying widgets when data changes.
 |    Typical provider classes extend a provider, allowing reactive updates across the app.
 ├── services
 │   └── README.md
-|    This folder contains service classes responsible for handling business logic and data fetching. Services may interact with APIs, local storage, or simulate real-time data updates.
+|    This folder contains service classes responsible for handling business logic and data fetching.
+|    Services may interact with APIs, local storage, or simulate real-time data updates.
 ├── utils
 │   └── README.md
 |    This folder contains reusable utility functions that can be used across multiple parts of the app.
