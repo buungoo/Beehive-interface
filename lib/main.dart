@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
+import 'views/login_page.dart';
 
 import 'utils/helpers.dart';
 
@@ -17,10 +18,15 @@ final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
+      name: 'login-page',
+      path: '/',
+      builder: (context, state) => const LoginPage()
+      ),
+    GoRoute(
       // Name of the route
       name: 'overview',
       // Path we specify for this route
-      path: '/',
+      path: '/overview',
       // Widget that we bind to the path
       builder: (context, state) => const OverviewPage(),
     ),
