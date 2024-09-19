@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/cupertino.dart';
 import '../models/beehive.dart';
 import '../providers/beehive_data_provider.dart';
+import '../utils/helpers.dart';
+import '../widgets/SharedAppBar.dart';
 
 class BeehiveDetailPage extends StatelessWidget {
   final Beehive beehive;
@@ -19,7 +22,7 @@ class BeehiveDetailPage extends StatelessWidget {
         return BeehiveDataProvider().getTemperatureStream();
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(beehive.name)),
+        appBar: getNavigationBar(context: context, title: beehive.name),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/beehive_list_provider.dart';
+import '../widgets/SharedAppBar.dart';
 
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key});
@@ -13,7 +15,7 @@ class OverviewPage extends StatelessWidget {
     final beehiveList = context.watch<BeehiveListProvider>().beehives;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Beehive Overview')),
+      appBar: getNavigationBar(context: context, title: 'Beehive Overview'),
       body: ListView.builder(
         itemCount: beehiveList.length,
         itemBuilder: (context, index) {
