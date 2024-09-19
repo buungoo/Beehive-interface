@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:beehive/models/beehive_data.dart';
 import 'package:beehive/widgets/shared.dart';
 import 'package:beehive/utils/helpers.dart';
+import 'dart:ui';
 
 class DetailGrid extends StatelessWidget {
   @override
@@ -23,27 +24,72 @@ class DetailGrid extends StatelessWidget {
               mainAxisSpacing: 10.0,
               childAspectRatio: 1,
             ),
-            itemCount: 3, // Example grid size
+            itemCount: 4, // Example grid size
             itemBuilder: (context, index) {
               switch (index) {
                 case 0:
-                  return DataBox(
+                  return FrostedGlassBox(
+                    title: 'Temperature',
+                    value: "${beehiveData.temperature}°C",
+                    colors: [
+                      Colors.green.withOpacity(0.2),
+                      Colors.orange.withOpacity(0.3),
+                      Colors.red.withOpacity(0.2),
+                    ],
+                  );
+                case 1:
+                  return FrostedGlassBox(
+                    title: 'Weight',
+                    value: "${beehiveData.weight}kg",
+                    colors: [
+                      Colors.deepPurple.withOpacity(0.2),
+                      Colors.blueAccent.withOpacity(0.3),
+                      Colors.cyanAccent.withOpacity(0.2),
+                    ],
+                  );
+                case 2:
+                  return FrostedGlassBox(
+                    title: 'Humidity',
+                    value: "${beehiveData.humidity}%",
+                    colors: [
+                      Colors.blue.withOpacity(0.2),
+                      Colors.lightBlue.withOpacity(0.3),
+                      Colors.lightBlueAccent.withOpacity(0.2),
+                    ],
+                  );
+                case 3:
+                  return FrostedGlassBox(
+                    title: 'CO2',
+                    value: "${beehiveData.ppm}ppm",
+                    colors: [
+                      Colors.grey.withOpacity(0.2),
+                      Colors.grey.withOpacity(0.3),
+                      Colors.grey.withOpacity(0.2),
+                    ],
+                  );
+                default:
+                  return FrostedGlassBox(title: 'null', value: 'null');
+              }
+
+              /*switch (index) {
+                case 0:
+                  return FrostedDataBox(
                     title: "Temperature",
                     value: "${beehiveData.temperature}°C",
                   );
                 case 1:
-                  return DataBox(
+                  return FrostedDataBox(
                     title: "Weight",
                     value: "${beehiveData.weight}kg",
                   );
                 case 2:
-                  return DataBox(
+                  return FrostedDataBox(
                     title: "Humidity",
                     value: "${beehiveData.humidity}%",
                   );
                 default:
-                  return DataBox(title: "null", value: "null");
-              }
+                  return FrostedDataBox(title: "null", value: "null");
+              }*/
             },
           ),
         );
@@ -52,11 +98,11 @@ class DetailGrid extends StatelessWidget {
   }
 }
 
-class DataBox extends StatelessWidget {
+class _DataBox extends StatelessWidget {
   final String title;
   final String value;
 
-  DataBox({required this.title, required this.value});
+  _DataBox({required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +131,61 @@ class DataBox extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class FrostedGlassBox extends StatelessWidget {
+  String title;
+  String value;
+  final List<Color> colors;
+
+  FrostedGlassBox(
+      {required this.title,
+      required this.value,
+      this.colors = const [Colors.white30]});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 300,
+      height: 200,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+          child: Container(
+              color: Colors.black.withOpacity(0.2),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10.0),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ],
+              )),
         ),
       ),
     );

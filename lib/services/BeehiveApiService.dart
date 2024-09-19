@@ -8,7 +8,7 @@ class BeehiveApi {
    */
   Future<List<Beehive>> GetHives() {
     return Future.delayed(
-        const Duration(seconds: 10),
+        const Duration(seconds: 2),
         () => [
               Beehive(id: "1", name: "Beehive 1"),
               Beehive(id: "2", name: "Beehive 2"),

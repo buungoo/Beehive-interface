@@ -25,7 +25,14 @@ class BeehiveDetailPage extends StatelessWidget {
       child: SharedScaffold(
         context: context,
         appBar: getNavigationBar(context: context, title: beehive.name),
-        body: DetailGrid(),
+        body: Column(
+          children: [
+            Expanded(
+              child: DetailGrid(),
+            ),
+            // Add more children here if needed
+          ],
+        ),
       ),
     );
   }
