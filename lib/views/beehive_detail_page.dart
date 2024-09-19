@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import '../models/beehive.dart';
 import '../providers/beehive_data_provider.dart';
 import '../utils/helpers.dart';
-import '../widgets/SharedAppBar.dart';
+import '../widgets/shared.dart';
 
 class BeehiveDetailPage extends StatelessWidget {
   final Beehive beehive;
@@ -21,7 +21,8 @@ class BeehiveDetailPage extends StatelessWidget {
         // Setup the Stream which the StreamProvider should listen to
         return BeehiveDataProvider().getTemperatureStream();
       },
-      child: Scaffold(
+      child: SharedScaffold(
+        context: context,
         appBar: getNavigationBar(context: context, title: beehive.name),
         body: Center(
           child: Column(
@@ -33,7 +34,7 @@ class BeehiveDetailPage extends StatelessWidget {
                 builder: (context, temperature, child) {
                   // Show loading until the stream emits the first data
                   if (temperature == null) {
-                    return const CircularProgressIndicator();
+                    return SharedLoadingIndicator(context: context);
                   }
                   return Text('Simulated Temperature: $temperature°C');
                 },

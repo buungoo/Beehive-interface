@@ -11,6 +11,7 @@ import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
 
 import 'utils/helpers.dart';
+import 'widgets/shared.dart';
 
 // GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
@@ -35,7 +36,8 @@ final GoRouter _router = GoRouter(
 
         // If beehive is not found, display an error message
         if (beehive == null) {
-          return Scaffold(
+          return SharedScaffold(
+            context: context,
             appBar: AppBar(
               title: const Text('Error'),
               leading: IconButton(
