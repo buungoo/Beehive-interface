@@ -14,6 +14,7 @@ https://lucid.app/lucidchart/56da49fe-bf38-427f-9650-d7c6f5b29474/edit?viewport_
 
 ## File structure
 
+```
 lib
 ├── main.dart
 ├── models
@@ -36,3 +37,4 @@ lib
 └── widgets
     ├── README.md
     └── SharedAppBar.dart
+```
