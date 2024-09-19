@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
 import '../models/beehive.dart';
 import '../providers/beehive_data_provider.dart';
-import '../utils/helpers.dart';
 import '../widgets/shared.dart';
 
 class BeehiveDetailPage extends StatelessWidget {
