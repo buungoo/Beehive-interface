@@ -1,5 +1,7 @@
 // import 'dart.io' show Platform; // To determine platform e.g. Platform.iOS
 
+import 'package:beehive/views/initial_page.dart';
+import 'package:beehive/views/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -9,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
+import 'views/login_page.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
@@ -18,10 +21,25 @@ final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
+      name: 'initial-page',
+      path: '/',
+      builder: (context, state) => const InitialPage()
+      ),
+    GoRoute(
+      name: 'signup-page',
+      path: '/signup_page',
+      builder: (context, state) => const SignupPage()
+      ),
+    GoRoute(
+      name: 'login page',
+      path: '/login_page',
+      builder: (context, state) => const LoginPage()
+      ),
+    GoRoute(
       // Name of the route
       name: 'overview',
       // Path we specify for this route
-      path: '/',
+      path: '/overview',
       // Widget that we bind to the path
       builder: (context, state) => const OverviewPage(),
     ),
