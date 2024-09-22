@@ -16,25 +16,24 @@ import 'views/login_page.dart';
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
 
+import 'package:beehive/services/BeehiveNotificationService.dart';
+
 // GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
-      name: 'initial-page',
-      path: '/',
-      builder: (context, state) => const InitialPage()
-      ),
+        name: 'initial-page',
+        path: '/',
+        builder: (context, state) => const InitialPage()),
     GoRoute(
-      name: 'signup-page',
-      path: '/signup_page',
-      builder: (context, state) => const SignupPage()
-      ),
+        name: 'signup-page',
+        path: '/signup_page',
+        builder: (context, state) => const SignupPage()),
     GoRoute(
-      name: 'login page',
-      path: '/login_page',
-      builder: (context, state) => const LoginPage()
-      ),
+        name: 'login page',
+        path: '/login_page',
+        builder: (context, state) => const LoginPage()),
     GoRoute(
       // Name of the route
       name: 'overview',
@@ -81,7 +80,8 @@ class BeehiveApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(isIOS(context));
+    // Ask for perm
+    BeeNotification().init(context);
 
     return MultiProvider(
       // The providers that are specified here are globally available
