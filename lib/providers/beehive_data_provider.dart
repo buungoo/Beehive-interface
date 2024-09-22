@@ -5,6 +5,8 @@ import 'dart:math';
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
   Stream<BeehiveData> getBeehiveDataStream() async* {
+    // TODO: Investigate if its possible to do socket connection instead
+
     var random = Random();
     int temp = 35; // Initial temperature in °C
     int weight = 50; // Initial hive weight in kg
@@ -19,6 +21,8 @@ class BeehiveDataProvider {
       } else {
         init = true;
       }
+
+      print("Fetch Data");
       // Simulate small fluctuations in temperature (±0.5°C)
       temp += random.nextInt(3) - 1;
 

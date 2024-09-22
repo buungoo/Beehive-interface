@@ -18,7 +18,10 @@ class OverviewPage extends StatelessWidget {
 
     return SharedScaffold(
       context: context,
-      appBar: getNavigationBar(context: context, title: 'Beehive Overview'),
+      appBar: getNavigationBar(
+          context: context,
+          title: 'Beehive Overview',
+          bgcolor: Color(0xFFf4991a)),
       body: FutureBuilder<List<Beehive>>(
         future: beehiveList,
         builder: (context, snapshot) {

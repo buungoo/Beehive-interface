@@ -24,7 +24,8 @@ class BeehiveDetailPage extends StatelessWidget {
       },
       child: SharedScaffold(
         context: context,
-        appBar: getNavigationBar(context: context, title: beehive.name),
+        appBar: getNavigationBar(
+            context: context, title: beehive.name, bgcolor: Color(0xFFf4991a)),
         body: Column(
           children: [
             Expanded(
