@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/beehive.dart';
-import '../services/BeehiveApiService.dart';
+import 'package:beehive/models/beehive.dart';
+import 'package:beehive/services/BeehiveApiService.dart';
 
 class BeehiveListProvider extends ChangeNotifier {
   // A hardcoded list of beehives that the provider manages
