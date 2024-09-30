@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: ./api  # path to your Go project
+      dockerfile: Dockerfile  # Dockerfile for building your Go project
+    ports:
+      - "8080:8080"  # Expose the Go API to the host on port 8080
+    depends_on:
+      - timescaledb
+    environment:
+      - DATABASE_URL=postgres://user:password@timescaledb:5432/yourdb?sslmode=disable
+    networks:
+      - backend
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: yourdb
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
