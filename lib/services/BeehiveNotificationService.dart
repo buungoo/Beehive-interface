@@ -50,11 +50,15 @@ class BeeNotification {
 
     print("Sending Notification...");
     const AndroidNotificationDetails androidNotificationDetails =
-        AndroidNotificationDetails('beehive', 'BeeHive',
-            channelDescription: 'Beehive notification',
-            importance: Importance.max,
-            priority: Priority.high,
-            ticker: 'ticker');
+        AndroidNotificationDetails(
+      'beehive',
+      'BeeHive',
+      channelDescription: 'Beehive notification',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+      icon: 'ic_launcher',
+    );
 
     const DarwinNotificationDetails iOSNotificationDetails =
         DarwinNotificationDetails(
