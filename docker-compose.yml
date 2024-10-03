@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: ./api  # path to your Go project
+      context: ./backend  # path to your Go project
       dockerfile: Dockerfile  # Dockerfile for building your Go project
     ports:
       - "8080:8080"  # Expose the Go API to the host on port 8080
@@ -17,12 +17,17 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: yourdb
+      POSTGRES_DB: beehivedb
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
     networks:
       - backend
 
 networks:
   backend:
     driver: bridge
+
+volumes:
+  timescaledb_data:
