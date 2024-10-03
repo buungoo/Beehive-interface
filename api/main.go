@@ -19,9 +19,11 @@ func main() {
 	// 	randomNum := api.GetRandomNum()
 	// 	fmt.Println(w, "Randomnumber: %d", randomNum)
 	// })
-
-	if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+	if err := http.ListenAndServe("localhost:8080", mux); err != nil {
 		fmt.Print("Sever error", err)
 	}
+	// if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+	// 	fmt.Print("Sever error", err)
+	// }
 
 }

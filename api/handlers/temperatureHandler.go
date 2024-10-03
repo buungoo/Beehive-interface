@@ -47,7 +47,7 @@ func TemperatureHandler(w http.ResponseWriter, id string, r *http.Request) {
 
 func getTemperature(w http.ResponseWriter, data interface{}) {
 	// This is simply for testing, will be replaced with real logic
-	utils.SendJSONResponse(w, data, 200)
+	utils.SendJSONResponse(w, data, http.StatusOK)
 
 }
 

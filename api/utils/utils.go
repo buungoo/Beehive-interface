@@ -7,7 +7,7 @@ import (
 
 type ErrorResponse struct {
 	Error string `json:"error"`
-	Code  string `json:"code,omitempty"`
+	Code  int    `json:"code,omitempty"`
 }
 
 func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
@@ -25,6 +25,7 @@ func SendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	// Genereate error message in JSON format
 	errorResponse := ErrorResponse{
 		Error: message,
+		Code:  statusCode,
 	}
 
 	json.NewEncoder(w).Encode(errorResponse)
