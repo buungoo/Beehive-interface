@@ -15,6 +15,7 @@ import 'views/login_page.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
+import 'config.dart' as config;
 
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'package:workmanager/workmanager.dart';
@@ -118,12 +119,9 @@ class BeehiveApp extends StatelessWidget {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    print("Background task executed: $task");
-    // print task and  current time
-    print("Task: $task [${DateTime.now()}]");
     BeeNotification().sendCriticalNotification(
-      title: "Beehive Background task",
-      body: "Task: $task [${DateTime.now()}]",
+      title: "Beehive #32 is having issues",
+      body: "Unable to connect to the beehive",
     );
     return Future.value(true);
   });
@@ -133,21 +131,16 @@ const simplePeriodicTask = "com.example.beehive.simplePeriodicTask";
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
   Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: true,
+    isInDebugMode: false,
   );
-
   Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
-    frequency: Duration(minutes: 5),
+    frequency: config.bgWorkerFetchRate,
   );
-
   Workmanager().printScheduledTasks();
-
-  print("Init");
 
   runApp(const BeehiveApp()); // Entry point for the app
 }

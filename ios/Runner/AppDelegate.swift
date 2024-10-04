@@ -27,9 +27,9 @@ import workmanager
 
 
      WorkmanagerPlugin.registerBGProcessingTask(withIdentifier: "com.example.beehive.rescheduledTask")
-      WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.simplePeriodicTask", frequency: NSNumber(value: 10))
+      WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.simplePeriodicTask", frequency: NSNumber(value: 60 * 60))
 
-     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.iOSBackgroundAppRefresh", frequency: NSNumber(value: 1 * 60))
+     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.iOSBackgroundAppRefresh", frequency: NSNumber(value: 60 * 60))
 
 
 

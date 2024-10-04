@@ -46,11 +46,6 @@ class OverviewPage extends StatelessWidget {
                   context: context,
                   title: Text(beehive.name),
                   onTap: () {
-                    BeeNotification().sendCriticalNotification(
-                        title: "Bee Hive 1 Issue",
-                        body:
-                            "Bee Hive 1 is currently experiencing issue with Co2");
-
                     // Navigate to the beehive detail page using GoRouter pathing
                     context.pushNamed(
                       'beehive-detail', // The name of the route
