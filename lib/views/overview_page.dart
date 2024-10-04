@@ -8,6 +8,8 @@ import '../models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'dart:io';
 
+const simplePeriodicTask = "com.example.beehive.simplePeriodicTask";
+
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key});
 

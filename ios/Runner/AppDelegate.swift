@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import flutter_local_notifications
+import workmanager
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -13,9 +14,24 @@ import flutter_local_notifications
           GeneratedPluginRegistrant.register(with: registry)
      }
 
+     
+
      if #available(iOS 10.0, *) {
        UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
      }
+
+     WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+                 GeneratedPluginRegistrant.register(with: registry)
+             }
+      
+
+
+     WorkmanagerPlugin.registerBGProcessingTask(withIdentifier: "com.example.beehive.rescheduledTask")
+      WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.simplePeriodicTask", frequency: NSNumber(value: 10))
+
+     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.iOSBackgroundAppRefresh", frequency: NSNumber(value: 1 * 60))
+
+
 
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
