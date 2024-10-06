@@ -8,19 +8,32 @@ import (
 	"strings"
 )
 
-func InitRoutes(mux *http.ServeMux) {
+func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	// Register routes
-	mux.HandleFunc("/beehive/", beehiveHandler)
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		registerHandler(w, r, conn)
+	})
 
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		loginHandler(w, r, conn)
+	})
+
+	mux.HandleFunc("/beehive/", func(w http.ResponseWriter, r *http.Request) {
+		beehiveHandler(w, r, conn)
+	})
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
+	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
+}
+func loginHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
+	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 }
 
 // Direct to correct handler based on http request
-func beehiveHandler(w http.ResponseWriter, r *http.Request) {
+func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
 	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if pathParts[1] == "login" {
-		// Here we authenticate the user with token or something
-		// Need a return here
-	}
+
 	if len(pathParts) != 3 {
 		if len(pathParts) > 3 {
 			fmt.Println("Len > 3")
@@ -34,21 +47,21 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	beehive_id := pathParts[1]
-	sensor := pathParts[2]
+	beehiveId := pathParts[1]
+	sensorType := pathParts[2]
 
 	switch r.Method {
 	case http.MethodGet:
-		handlers.GetSensorData(w, beehive_id, r, sensor)
+		handlers.GetSensorData(w, r, conn, beehiveId, sensorType)
 
 	case http.MethodPost:
-		handlers.AddSensorData(w, beehive_id, r, sensor)
+		handlers.AddSensorData(w, r, conn, beehiveId, sensorType)
 
 	case http.MethodPut:
-		handlers.UpdateSensorData(w, beehive_id, r, sensor)
+		handlers.UpdateSensorData(w, r, conn, beehiveId, sensorType)
 
 	case http.MethodDelete:
-		handlers.DeleteSensorData(w, beehive_id, r, sensor)
+		handlers.DeleteSensorData(w, r, conn, beehiveId, sensorType)
 
 	default:
 		utils.SendErrorResponse(w, "HTTP method not found", http.StatusBadRequest)
@@ -56,3 +69,4 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+

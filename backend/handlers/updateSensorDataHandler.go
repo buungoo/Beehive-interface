@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func UpdateSensorData(w http.ResponseWriter, beehive_id string, r *http.Request, sensor string) {
+func UpdateSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id string,  sensor string) {
 
 	switch r.Method {
 	case http.MethodGet:
