@@ -6,9 +6,10 @@ services:
     ports:
       - "8080:8080"  # Expose the Go API to the host on port 8080
     depends_on:
-      - timescaledb
+      timescaledb:
+        condition: service_healthy  # Wait until TimescaleDB is healthy
     environment:
-      - DATABASE_URL=postgres://user:password@timescaledb:5432/yourdb?sslmode=disable
+      - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
     networks:
       - backend
 
@@ -24,6 +25,11 @@ services:
       - timescaledb_data:/var/lib/postgresql/data
     networks:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   backend:

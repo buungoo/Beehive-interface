@@ -4,11 +4,19 @@ FROM golang:latest
 # Set the working directory inside the container
 WORKDIR /
 
+# Copy go.mod and go.sum first to cache dependency installation
+COPY go.mod ./
+
+# Clean up unused dependancy before download
+#RUN go mod tidy
+
+# Download dependencies (caches the downloaded modules)
+RUN go mod download
+
 # Copy the Go project to the container
 COPY . .
 
-# Download dependencies
-# RUN go mod tidy
+
 
 # Build the Go API
 RUN go build -o main ./main.go

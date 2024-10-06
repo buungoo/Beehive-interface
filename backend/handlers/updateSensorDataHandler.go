@@ -5,34 +5,35 @@ import (
 	"net/http"
 )
 
-func HumidityHandler(w http.ResponseWriter, id string, r *http.Request) {
+func UpdateSensorData(w http.ResponseWriter, beehive_id string, r *http.Request, sensor string) {
+
 	switch r.Method {
 	case http.MethodGet:
-		getHumidity()
+		getSound()
 	case http.MethodPost:
-		postHumidity()
+		postSound()
 	case http.MethodPut:
-		updateHumidity()
+		updateSound()
 	case http.MethodDelete:
-		deteleHumidity()
+		deteleSound()
 	default:
 		utils.SendErrorResponse(w, "Not a supported http method", http.StatusBadRequest)
 	}
 
 }
 
-func getHumidity() {
+func getSound() {
 
 }
 
-func postHumidity() {
+func postSound() {
 
 }
 
-func updateHumidity() {
+func updateSound() {
 
 }
 
-func deteleHumidity() {
+func deteleSound() {
 
 }

@@ -14,9 +14,13 @@ func InitRoutes(mux *http.ServeMux) {
 
 }
 
-// Direct to correct beehive-handler based on id
+// Direct to correct handler based on http request
 func beehiveHandler(w http.ResponseWriter, r *http.Request) {
 	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if pathParts[1] == "login" {
+		// Here we authenticate the user with token or something
+		// Need a return here
+	}
 	if len(pathParts) != 3 {
 		if len(pathParts) > 3 {
 			fmt.Println("Len > 3")
@@ -30,28 +34,25 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id := pathParts[1]
+	beehive_id := pathParts[1]
 	sensor := pathParts[2]
 
-	switch sensor {
-	case "humidity":
-		handlers.HumidityHandler(w, id, r)
+	switch r.Method {
+	case http.MethodGet:
+		handlers.GetSensorData(w, beehive_id, r, sensor)
 
-	case "temperature":
-		handlers.TemperatureHandler(w, id, r)
+	case http.MethodPost:
+		handlers.AddSensorData(w, beehive_id, r, sensor)
 
-	case "oxygen":
-		handlers.OxygenHandler(w, id, r)
+	case http.MethodPut:
+		handlers.UpdateSensorData(w, beehive_id, r, sensor)
 
-	case "weight":
-		handlers.WeightHandler(w, id, r)
+	case http.MethodDelete:
+		handlers.DeleteSensorData(w, beehive_id, r, sensor)
 
-	case "microphone":
-		handlers.SoundHandler(w, id, r)
 	default:
-		utils.SendErrorResponse(w, "Sensor not found", http.StatusNotFound)
+		utils.SendErrorResponse(w, "HTTP method not found", http.StatusBadRequest)
 
-		//http.Error(w, "Unknown sensor type", http.StatusBadRequest)
 	}
 
 }
