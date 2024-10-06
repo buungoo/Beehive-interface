@@ -3,37 +3,11 @@ package handlers
 import (
 	"beehive_api/utils"
 	"net/http"
+	"github.com/jackc/pgx/v5"
 )
 
 func UpdateSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id string,  sensor string) {
-
-	switch r.Method {
-	case http.MethodGet:
-		getSound()
-	case http.MethodPost:
-		postSound()
-	case http.MethodPut:
-		updateSound()
-	case http.MethodDelete:
-		deteleSound()
-	default:
-		utils.SendErrorResponse(w, "Not a supported http method", http.StatusBadRequest)
-	}
+	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 
 }
 
-func getSound() {
-
-}
-
-func postSound() {
-
-}
-
-func updateSound() {
-
-}
-
-func deteleSound() {
-
-}

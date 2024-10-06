@@ -40,7 +40,7 @@ func main() {
 	// requests and dispatches them to matching handlers
 	mux := http.NewServeMux()
 
-	api.InitRoutes(mux)
+	api.InitRoutes(mux, conn)
 	
 	if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
 		fmt.Print("Sever error", err)

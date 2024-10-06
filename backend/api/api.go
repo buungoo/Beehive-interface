@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"github.com/jackc/pgx/v5"
 )
 
 func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
