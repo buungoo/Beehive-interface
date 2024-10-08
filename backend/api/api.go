@@ -12,11 +12,11 @@ import (
 func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	// Register routes
 	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		registerHandler(w, r, conn)
+		handlers.registerHandler(w, r, conn)
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		loginHandler(w, r, conn)
+		handlers.loginHandler(w, r, conn)
 	})
 
 	mux.HandleFunc("/beehive/", func(w http.ResponseWriter, r *http.Request) {
@@ -24,12 +24,7 @@ func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	})
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
-	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
-}
-func loginHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
-	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
-}
+
 
 // Direct to correct handler based on http request
 func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
