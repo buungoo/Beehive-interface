@@ -1,11 +1,8 @@
 package handlers
 
 import (
-	"beehive_api/handlers"
 	"beehive_api/utils"
-	"fmt"
 	"net/http"
-	"strings"
 	"github.com/jackc/pgx/v5"
 )
 

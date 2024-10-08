@@ -1,26 +1,29 @@
 package authentication
 
 import(
+	"beehive_api/utils"
+	"net/http"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
+	"strings"
 )
 
 var secretKey = []byte("secret-key")
 
-func createToken(username string) (string, error) {
+func CreateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"username": username,
-			"exp": time.Now().Add(time.hour * 24).Unix(),
+			"exp": time.Now().Add(time.Hour * 24).Unix(),
 		})
 
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
-	return "", err
+		return "", err
 	}
 
-retun tokenString, nil
+return tokenString, nil
 
 }
 
@@ -39,4 +42,35 @@ func verifyToken(tokenString string) error {
 	
 return nil
 
+}
+
+func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// Get token from Authorization-header
+		tokenString := r.Header.Get("Authorization")
+		if tokenString == "" {
+			utils.SendErrorResponse(w, "Missing authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		// In OAuth 2.0-specification
+		if !strings.HasPrefix(tokenString, "Bearer ") {
+			utils.SendErrorResponse(w, "Invalid authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		// Slice to remove "Bearer" to retreive token
+		tokenString = tokenString[len("Bearer "):]
+
+		// Verify the token
+		err := verifyToken(tokenString)
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid or expired token", http.StatusUnauthorized)
+			return
+		}
+
+		// continue to next handler
+		next(w,r)
+	}
 }

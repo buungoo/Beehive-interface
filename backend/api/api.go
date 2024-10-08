@@ -1,6 +1,7 @@
 package api
 
 import (
+	"beehive_api/authentication"
 	"beehive_api/handlers"
 	"beehive_api/utils"
 	"fmt"
@@ -12,16 +13,17 @@ import (
 func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	// Register routes
 	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		handlers.registerHandler(w, r, conn)
+		handlers.RegisterHandler(w, r, conn)
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		handlers.loginHandler(w, r, conn)
+		handlers.LoginHandler(w, r, conn)
 	})
 
-	mux.HandleFunc("/beehive/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/beehive/", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		beehiveHandler(w, r, conn)
-	})
+	}))
+
 }
 
 
