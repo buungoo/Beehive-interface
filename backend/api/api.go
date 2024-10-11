@@ -25,7 +25,7 @@ func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	}))
 
 	mux.HandleFunc("/test", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
-	testAuthentication(w, r, conn)
+	testAuthentication(w, r)
 	}))
 
 
