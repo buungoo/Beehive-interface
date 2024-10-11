@@ -7,22 +7,23 @@ WORKDIR /
 # Copy go.mod and go.sum first to cache dependency installation
 COPY go.mod ./
 
-# Clean up unused dependancy before download
+# Clean up unused dependencies before download
 #RUN go mod tidy
 
 # Download dependencies (caches the downloaded modules)
 RUN go mod download
 
-# Copy the Go project to the container
+# Copy the entire Go project into the container
 COPY . .
-
-
 
 # Build the Go API
 RUN go build -o main ./main.go
 
+# Optionally build the MQTT subscriber if needed
+RUN go build -o mqtt_subscriber ./mqtt/mqtt_subscriber.go
+
 # Expose port 8080 (adjust if your Go app uses a different port)
 EXPOSE 8080
 
-# Command to run the Go API
+# Default command is to run the main Go app
 CMD ["./main"]

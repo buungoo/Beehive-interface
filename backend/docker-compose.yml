@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   api:
     build:
@@ -31,6 +33,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  mqtt_subscriber:
+    build:
+      context: .  # Path to your Go project
+      dockerfile: Dockerfile  # Dockerfile for building your Go project
+    command: ./mqtt_subscriber  # Run the MQTT subscriber binary
+    depends_on:
+      - mqtt_broker
+    networks:
+      - backend
+
+  # mqtt_publisher:
+  #   build:
+  #     context: .  # Path to your Go project
+  #     dockerfile: Dockerfile  # Dockerfile for building your Go project
+  #   command: go run mqtt/mqtt_publisher.go
+  #   depends_on:
+  #     - mqtt_broker
+  #   networks:
+  #     - backend
+
+  # mqtt_broker:
+  #   image: eclipse-mosquitto
+  #   ports:
+  #     - "1883:1883"
+  #   networks:
+  #     - backend
 
 networks:
   backend:
