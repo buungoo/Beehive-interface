@@ -25,7 +25,7 @@ func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 	}))
 
 	mux.HandleFunc("/test", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
-	testAuthentication(w, r)
+		testAuthentication(w, r)
 	}))
 
 
@@ -73,8 +73,8 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
 
 }
 
-func testAuthentication(w http.ResponseWriter, r *http.Reques,) {
-	utils.SendJSONResponse(w, "Token is Valid")
+func testAuthentication(w http.ResponseWriter, r *http.Request,) {
+	utils.SendJSONResponse(w, "Token is Valid", http.StatusOK)
 	return
 }
 
