@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func AddSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id string,  sensor string) {
+func AddSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id int,  sensor string) {
 	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 }
 

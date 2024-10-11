@@ -8,7 +8,7 @@ import (
 
 
 
-func DeleteSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id string,  sensor string) {
+func DeleteSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id int,  sensor string) {
 	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 
 }

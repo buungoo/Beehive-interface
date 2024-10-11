@@ -72,14 +72,14 @@ func InjectTestData(conn *pgx.Conn) error {
 
     // Insert test data into the sensor_data table
     testData := []models.SensorData{
-        {SensorID: fmt.Sprint(sensor1ID), BeehiveID: beehive1ID, Value: 23.4, Time: "2024-10-01 10:45:00"},
-        {SensorID: fmt.Sprint(sensor2ID), BeehiveID: beehive1ID, Value: 55.8, Time: "2024-10-02 11:50:00"},
-        {SensorID: fmt.Sprint(sensor3ID), BeehiveID: beehive2ID, Value: 12.3, Time: "2024-10-03 12:55:00"},
-		{SensorID: fmt.Sprint(sensor4ID), BeehiveID: beehive1ID, Value: 23.4, Time: "2024-10-04 12:45:00"},
-        {SensorID: fmt.Sprint(sensor5ID), BeehiveID: beehive1ID, Value: 23.8, Time: "2024-10-04 10:30:00"},
-        {SensorID: fmt.Sprint(sensor6ID), BeehiveID: beehive2ID, Value: 54.2, Time: "2024-10-05 11:55:00"},
-		{SensorID: fmt.Sprint(sensor7ID), BeehiveID: beehive1ID, Value: 12.4, Time: "2024-10-05 12:45:00"},
-        {SensorID: fmt.Sprint(sensor8ID), BeehiveID: beehive1ID, Value: 23.8, Time: "2024-10-05 12:59:00"},
+        {SensorID: sensor1ID, Value: 23.4, Time: "2024-10-01 10:45:00"},
+        {SensorID: sensor2ID, Value: 55.8, Time: "2024-10-02 11:50:00"},
+        {SensorID: sensor3ID, Value: 12.3, Time: "2024-10-03 12:55:00"},
+		{SensorID: sensor4ID, Value: 23.4, Time: "2024-10-04 12:45:00"},
+        {SensorID: sensor5ID, Value: 23.8, Time: "2024-10-04 10:30:00"},
+        {SensorID: sensor6ID, Value: 54.2, Time: "2024-10-05 11:55:00"},
+		{SensorID: sensor7ID, Value: 12.4, Time: "2024-10-05 12:45:00"},
+        {SensorID: sensor8ID, Value: 23.8, Time: "2024-10-05 12:59:00"},
     }
 
     for _, data := range testData {

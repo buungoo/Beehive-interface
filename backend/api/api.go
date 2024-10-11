@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"github.com/jackc/pgx/v5"
+	"strconv"
 )
 
 func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
@@ -49,12 +50,19 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
 			return
 		}
 	}
+	beehiveIdStr := pathParts[1]
+	beehiveId, err := strconv.Atoi(beehiveIdStr)
+	if err != nil {
+		utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
+		return
 
-	beehiveId := pathParts[1]
+	}
 	sensorType := pathParts[2]
 
 	switch r.Method {
 	case http.MethodGet:
+		//utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
+
 		handlers.GetSensorData(w, r, conn, beehiveId, sensorType)
 
 	case http.MethodPost:

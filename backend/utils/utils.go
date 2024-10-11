@@ -14,7 +14,7 @@ func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(data); err != nil {
-		SendErrorResponse(w, "Could not encode JSON respone", http.StatusInternalServerError)
+		SendErrorResponse(w, "Could not encode JSON response", http.StatusInternalServerError)
 	}
 }
 
