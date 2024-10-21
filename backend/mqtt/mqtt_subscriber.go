@@ -21,6 +21,16 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 	fmt.Printf("Connection lost: %v\n", err)
 }
 
+func publish(client mqtt.Client) {
+	num := 10
+	for i := 0; i < num; i++ {
+		text := fmt.Sprintf("Message %d", i)
+		token := client.Publish("test/topic", 0, false, text)
+		token.Wait()
+		time.Sleep(time.Second)
+	}
+}
+
 func main() {
 	// Set MQTT broker URL
 	broker := "tcp://broker.hivemq.com:1883" // HiveMQ public broker
