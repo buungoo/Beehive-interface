@@ -10,6 +10,7 @@ services:
         condition: service_healthy  # Wait until TimescaleDB is healthy
     environment:
       - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
+    container_name: api-container
     networks:
       - backend
 
@@ -26,7 +27,7 @@ services:
     networks:
       - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
       interval: 10s
       timeout: 5s
       retries: 5

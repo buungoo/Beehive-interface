@@ -3,10 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitializeTables(conn *pgx.Conn) error {
+func InitializeTables(dbpool *pgxpool.Pool) error {
 	// Create the tables if they don't already exist
 	createTablesSQL := `
 	CREATE EXTENSION IF NOT EXISTS timescaledb;
@@ -56,7 +56,7 @@ func InitializeTables(conn *pgx.Conn) error {
 	`
 
 	// Execute the SQL to create the tables
-	_, err := conn.Exec(context.Background(), createTablesSQL)
+	_, err := dbpool.Exec(context.Background(), createTablesSQL)
 	if err != nil {
 		return fmt.Errorf("failed to create tables: %v", err)
 	}
@@ -67,7 +67,7 @@ func InitializeTables(conn *pgx.Conn) error {
 	`
 
 	var hypertableExists bool
-	err = conn.QueryRow(context.Background(), hypertableCheckSQL).Scan(&hypertableExists)
+	err = dbpool.QueryRow(context.Background(), hypertableCheckSQL).Scan(&hypertableExists)
 	if err != nil {
 		return fmt.Errorf("failed to check for hypertable: %v", err)
 	}
@@ -78,7 +78,7 @@ func InitializeTables(conn *pgx.Conn) error {
 		SELECT create_hypertable('sensor_data', 'time');
 		`
 
-		_, err = conn.Exec(context.Background(), createHypertable)
+		_, err = dbpool.Exec(context.Background(), createHypertable)
 		if err != nil {
 			return fmt.Errorf("failed to create hypertable: %v", err)
 		}
@@ -88,7 +88,7 @@ func InitializeTables(conn *pgx.Conn) error {
 		SELECT add_dimension('sensor_data', 'sensor_id', 4);
 		`
 
-		_, err = conn.Exec(context.Background(), addHashPartitioning)
+		_, err = dbpool.Exec(context.Background(), addHashPartitioning)
 		if err != nil {
 			return fmt.Errorf("failed to add hash partitioning: %v", err)
 		}

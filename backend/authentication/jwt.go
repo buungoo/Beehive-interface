@@ -9,8 +9,10 @@ import(
 	"strings"
 )
 
+// This needs to be made properly in the near future
 var secretKey = []byte("secret-key")
 
+// Creates, signs and encodes the token with given claims and username
 func CreateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
@@ -27,6 +29,7 @@ return tokenString, nil
 
 }
 
+// Verifies the token
 func verifyToken(tokenString string) error {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
@@ -44,6 +47,8 @@ return nil
 
 }
 
+// This acts as "middleware" by wrapping the handlers of the secure endpoints.
+// Will only let verified user pass
 func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

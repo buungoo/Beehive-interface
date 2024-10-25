@@ -7,22 +7,22 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"strconv"
 )
-
-func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
-	// Register routes
+// Register routes and send to correct handler
+func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
+	
 	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		handlers.RegisterHandler(w, r, conn)
+		handlers.RegisterHandler(w, r, dbPool)
 	})
 
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		handlers.LoginHandler(w, r, conn)
+		handlers.LoginHandler(w, r, dbPool)
 	})
 
 	mux.HandleFunc("/beehive/", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
-		beehiveHandler(w, r, conn)
+		beehiveHandler(w, r, dbPool)
 	}))
 
 	mux.HandleFunc("/test", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +35,7 @@ func InitRoutes(mux *http.ServeMux, conn *pgx.Conn) {
 
 
 // Direct to correct handler based on http request
-func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
+func beehiveHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 
 	if len(pathParts) != 3 {
@@ -63,16 +63,16 @@ func beehiveHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
 	case http.MethodGet:
 		//utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 
-		handlers.GetSensorData(w, r, conn, beehiveId, sensorType)
+		handlers.GetSensorData(w, r, dbPool, beehiveId, sensorType)
 
 	case http.MethodPost:
-		handlers.AddSensorData(w, r, conn, beehiveId, sensorType)
+		handlers.AddSensorData(w, r, dbPool, beehiveId, sensorType)
 
 	case http.MethodPut:
-		handlers.UpdateSensorData(w, r, conn, beehiveId, sensorType)
+		handlers.UpdateSensorData(w, r, dbPool, beehiveId, sensorType)
 
 	case http.MethodDelete:
-		handlers.DeleteSensorData(w, r, conn, beehiveId, sensorType)
+		handlers.DeleteSensorData(w, r, dbPool, beehiveId, sensorType)
 
 	default:
 		utils.SendErrorResponse(w, "HTTP method not found", http.StatusBadRequest)

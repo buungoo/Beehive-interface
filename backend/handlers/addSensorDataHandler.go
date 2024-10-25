@@ -3,10 +3,10 @@ package handlers
 import (
 	"beehive_api/utils"
 	"net/http"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func AddSensorData(w http.ResponseWriter, r *http.Request, conn *pgx.Conn, beehive_id int,  sensor string) {
+func AddSensorData(w http.ResponseWriter, r *http.Request, dbpool *pgxpool.Pool, beehive_id int,  sensor string) {
 	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 }
 

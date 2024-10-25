@@ -6,11 +6,11 @@ import (
 	"beehive_api/utils"
 	"fmt"
 	"net/http"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"encoding/json"
 )
 
-func LoginHandler(w http.ResponseWriter, r *http.Request, conn *pgx.Conn) {
+func LoginHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	
 	//w.Header().Set("Content-Type", "application/json")
 	

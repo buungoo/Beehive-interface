@@ -10,6 +10,7 @@ type ErrorResponse struct {
 	Code  int    `json:"code,omitempty"`
 }
 
+// This is used for every successfull request
 func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -18,6 +19,7 @@ func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	}
 }
 
+// This is used for every error response
 func SendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
