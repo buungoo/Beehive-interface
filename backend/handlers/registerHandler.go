@@ -4,30 +4,27 @@ import (
 	"beehive_api/models"
 	"beehive_api/utils"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 
-	// Decode input to a user structure
+	// Decode input to a user struct
 	var user models.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		utils.SendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 
-	// Instantiate hashfunction
-	hash := sha256.New()
-
-	// Coerse string to bytes and add to hash
-	hash.Write([]byte(user.Password))
-
-	// Complete the hash and get the hashed password as bytes 
-	hashedPw := hash.Sum(nil)
+	// Hash password with bcrypt
+	hashedPW, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Error hashing password:", err)
+	}
 
 	// Prepared statements 
 	const sqlQueryCheckUsername = `SELECT EXISTS(SELECT 1 FROM users WHERE username=$1)`
@@ -42,7 +39,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 
 	// Check if the username already exists
     var exists bool
-    err = dbPool.QueryRow(context.Background(), sqlQueryCheckUsername , user.Username).Scan(&exists)
+    err = conn.QueryRow(context.Background(), sqlQueryCheckUsername , user.Username).Scan(&exists)
     if err != nil {
         log.Println("Error checking username:", err)
         utils.SendErrorResponse(w, "Error registering user", http.StatusInternalServerError)
@@ -56,7 +53,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 	}
 	
 	// Insert username and password
-	_, err = conn.Exec(context.Background(), sqlQueryInsertNewUSer, user.Username, hashedPw)
+	_, err = conn.Exec(context.Background(), sqlQueryInsertNewUSer, user.Username, hashedPW)
 	if err != nil {
 		log.Println("Error registering user, error: ", err)
 		utils.SendErrorResponse(w, "Error registering user", http.StatusBadRequest)

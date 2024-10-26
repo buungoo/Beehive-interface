@@ -12,10 +12,10 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 	CREATE TABLE IF NOT EXISTS "users" (
-		"id" serial PRIMARY KEY,
-		"username" VARCHAR(255) UNIQUE NOT NULL,
-		"password" BYTEA NOT NULL
-	);
+    "id" serial PRIMARY KEY,
+    "username" VARCHAR(255) UNIQUE NOT NULL CHECK (username <> ''),
+    "password" BYTEA NOT NULL
+);
 
 	CREATE TABLE IF NOT EXISTS "beehives" (
 		"id" serial PRIMARY KEY,
@@ -35,24 +35,6 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"time" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		PRIMARY KEY ("sensor_id", "time")
 	);
-
-	-- SQL Function to Fetch Latest Sensor Data for a Beehive
-	CREATE OR REPLACE FUNCTION fetch_latest_sensor_data_for_beehive(
-		p_beehive_id INT,
-		p_sensor_type VARCHAR
-	)
-	RETURNS TABLE(sensor_value FLOAT, measurement_time TIMESTAMPTZ) AS $$
-	BEGIN
-		RETURN QUERY
-		SELECT sd.value, sd.time
-		FROM sensor_data sd
-		JOIN sensors s ON sd.sensor_id = s.id
-		WHERE sd.beehive_id = p_beehive_id
-		AND s.type = p_sensor_type
-		ORDER BY sd.time DESC
-		LIMIT 1;
-	END;
-	$$ LANGUAGE plpgsql;
 	`
 
 	// Execute the SQL to create the tables
