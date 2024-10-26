@@ -13,8 +13,8 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 
 	CREATE TABLE IF NOT EXISTS "users" (
 		"id" serial PRIMARY KEY,
-		"username" varchar NOT NULL,
-		"password" varchar NOT NULL
+		"username" VARCHAR(255) UNIQUE NOT NULL,
+		"password" BYTEA NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehives" (

@@ -8,16 +8,16 @@ import (
 	"net/http"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"encoding/json"
+
 )
 
 func LoginHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	
-	//w.Header().Set("Content-Type", "application/json")
-	
+	// Decode input to a user structure
 	var user models.User
-
 	json.NewDecoder(r.Body).Decode(&user)
 	fmt.Printf("The user request value %v", user)
+
 	
 	if user.Username == "Emil" && user.Password == "123456" {
 		tokenString, err := authentication.CreateToken(user.Username)
