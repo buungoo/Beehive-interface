@@ -8,15 +8,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"net/http"
-	"time"
 )
 
-func GetSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, sensorType string) {
-	
-	var sensorId int
-	var value float64
-	var time time.Time
-	
+
+func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
 	// Acuire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err!=nil {
@@ -24,54 +19,16 @@ func GetSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	} 
 	defer conn.Release()
 
-	// First query to get the sensor ID for the beehive
-	err = conn.QueryRow(context.Background(), "SELECT id FROM sensors WHERE beehive_id=$1 AND type=$2", beehiveId, sensorType).Scan(&sensorId)
+	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId)
 	if err != nil {
-		utils.SendErrorResponse(w, "Error fetching sensor ID", http.StatusInternalServerError)
-		return
-	}
-
-	// Query to fetch the latest sensor data using SQL function
-	err = conn.QueryRow(context.Background(), "SELECT value, time FROM fetch_latest_sensor_data_for_beehive($1, $2)", beehiveId, sensorType).Scan(&value, &time)
-	if err != nil {
-		utils.SendErrorResponse(w, "Error fetching sensor data", http.StatusInternalServerError)
-		return
-	}
-
-	dataResponse := models.SensorData{
-		BeehiveID: beehiveId,
-		SensorID:  sensorId,
-		Value:     value,
-		Time:      time,
-	}
-
-	// Send the response as JSON
-	utils.SendJSONResponse(w, dataResponse, http.StatusOK)
-	
-}
-
-func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int){
-	// Acuire connection from the connection pool
-	conn, err := dbPool.Acquire(context.Background())
-	if err!=nil {
-	 log.Fatal("Error while acquiring connection from the database pool!!")
-	} 
-	defer conn.Release()
-
-	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1)`
-
-	//Verify the beehive ID exists
-	var exists bool
-	err = conn.QueryRow(context.Background(), sqlQueryCheckBeehive , beehiveId).Scan(&exists)
-	if err != nil {
-		log.Println("Error checking beehive, err: ", err)
+		log.Println("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
 		return
 	}
 
-	if !exists {
-		log.Println("Beehive does not exist, err:", err)
-		utils.SendErrorResponse(w, "Beehive does not exists", http.StatusNotFound)
+	if !beehiveExists {
+		log.Println("Error, beehive doesnt exists")
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
 		return
 	}
 
@@ -102,6 +59,68 @@ func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool
 	return
 
 }
+
+func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, sensorType string) {
+	// Acuire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err!=nil {
+	 log.Fatal("Error while acquiring connection from the database pool!!")
+	} 
+	defer conn.Release()
+
+	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId)
+	if err != nil {
+		log.Println("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		log.Println("Error, beehive doesnt exists")
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	// Query to find latest temprature for beehive_id
+	const sqlQueryFetchTemperature = `SELECT sd.sensor_id, sd.beehive_id, sd.value, sd.time
+	FROM sensor_data sd
+	JOIN sensors s ON sd.sensor_id = s.id
+	WHERE sd.beehive_id = $1
+		AND s.type = $2
+	ORDER BY sd.time DESC
+	LIMIT 1;`
+
+
+	// Store data in SensorData struct
+	var dataResponse models.SensorData
+
+	
+	err = conn.QueryRow(context.Background(), sqlQueryFetchTemperature , beehiveId, sensorType).Scan(&dataResponse.SensorID, 
+		&dataResponse.BeehiveID, &dataResponse.Value, &dataResponse.Time)
+	if err != nil {
+		log.Println("Error fetching latest temperature, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching temperature", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the data
+	utils.SendJSONResponse(w, dataResponse, http.StatusOK)
+
+}
+
+// Veryfies the provided beehive_id exists in the database
+func verifyBeehiveId(conn *pgx.Conn, beehiveId int) (bool, error) {
+	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1)`
+
+	// Verify the beehive ID exists
+	var exists bool
+	err := conn.QueryRow(context.Background(), sqlQueryCheckBeehive, beehiveId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 
 func iterateData(rows pgx.Rows) ([]models.SensorData, error){
 	// Slice to hold the data from returned rows
