@@ -25,7 +25,8 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 
 	CREATE TABLE IF NOT EXISTS "sensors" (
 		"id" serial PRIMARY KEY,
-		"type" varchar NOT NULL
+		"type" varchar NOT NULL,
+		"beehive_id" integer REFERENCES "beehives" ("id")
 	);
 
 	CREATE TABLE IF NOT EXISTS "sensor_data" (
