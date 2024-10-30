@@ -6,19 +6,34 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"beehive_api/models"
     "time"
+    "log"
+    "golang.org/x/crypto/bcrypt"
 )
 
 // Inject harmful data into the database for testing
 
 func InjectTestData(dbpool *pgxpool.Pool) error {
 
+    // Hash password with bcrypt
+	password1, err := bcrypt.GenerateFromPassword([]byte("pass1"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Error hashing password:", err)
+	}
+
+    password2, err := bcrypt.GenerateFromPassword([]byte("pass2"), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Error hashing password:", err)
+	}
+
+    
+
     // Insert test data into the users table
     var user1ID, user2ID int
-    err := dbpool.QueryRow(context.Background(), "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", "user1", "pass1").Scan(&user1ID)
+    err = dbpool.QueryRow(context.Background(), "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", "user1", password1).Scan(&user1ID)
     if err != nil {
         return fmt.Errorf("failed to insert user1: %v", err)
     }
-    err = dbpool.QueryRow(context.Background(), "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", "user2", "pass2").Scan(&user2ID)
+    err = dbpool.QueryRow(context.Background(), "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id", "user2", password2).Scan(&user2ID)
     if err != nil {
         return fmt.Errorf("failed to insert user2: %v", err)
     }
