@@ -19,8 +19,8 @@ COPY . .
 # Build the Go API
 RUN go build -o main ./main.go
 
-# Optionally build the MQTT subscriber if needed
-RUN go build -o mqtt_subscriber ./mqtt/mqtt_subscriber.go
+# # Optionally build the MQTT subscriber if needed
+# RUN go build -o mqtt_subscriber ./mqtt/mqtt_subscriber.go
 
 # Expose port 8080 (adjust if your Go app uses a different port)
 EXPOSE 8080

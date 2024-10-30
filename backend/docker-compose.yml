@@ -34,15 +34,15 @@ services:
       timeout: 5s
       retries: 5
 
-  mqtt_subscriber:
-    build:
-      context: .  # Path to your Go project
-      dockerfile: Dockerfile  # Dockerfile for building your Go project
-    command: ./mqtt_subscriber  # Run the MQTT subscriber binary
-    depends_on:
-      - mqtt_broker
-    networks:
-      - backend
+  # mqtt_subscriber:
+  #   build:
+  #     context: .  # Path to your Go project
+  #     dockerfile: Dockerfile  # Dockerfile for building your Go project
+  #   command: ./mqtt_subscriber  # Run the MQTT subscriber binary
+  #   depends_on:
+  #     - mqtt_broker
+  #   networks:
+  #     - backend
 
   # mqtt_publisher:
   #   build:
@@ -60,6 +60,16 @@ services:
   #     - "1883:1883"
   #   networks:
   #     - backend
+
+services:
+  mqtt_broker:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+    networks:
+      - backend
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
 networks:
   backend:

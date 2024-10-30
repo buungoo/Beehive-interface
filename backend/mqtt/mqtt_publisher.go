@@ -12,7 +12,7 @@ import (
 
 func main() {
     // Set MQTT broker URL
-    broker := "tcp://broker.hivemq.com:1883" // HiveMQ public broker
+	broker := "tcp://localhost:1883"// "tcp://broker.hivemq.com:1883" // HiveMQ public broker
     topic := "test/topic"
 
     opts := mqtt.NewClientOptions()
