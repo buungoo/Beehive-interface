@@ -50,7 +50,7 @@ class OverviewPage extends StatelessWidget {
                     context.pushNamed(
                       'beehive-detail', // The name of the route
                       pathParameters: {
-                        'id': beehive.id.toString()
+                        'id': beehive.id.toString(),
                         // Ensure id is a string if needed
                       }, // Use 'pathParameters' to pass the id
                     );

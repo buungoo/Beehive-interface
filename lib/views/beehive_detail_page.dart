@@ -29,7 +29,7 @@ class BeehiveDetailPage extends StatelessWidget {
         body: Column(
           children: [
             Expanded(
-              child: DetailGrid(),
+              child: DetailGrid(id: beehive.id),
             ),
             // Add more children here if needed
           ],

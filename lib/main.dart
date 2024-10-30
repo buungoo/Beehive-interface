@@ -76,12 +76,17 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       name: "testing",
-      path: '/chart',
+      path: '/beehive/test/:id/:type',
       builder: (context, state) {
+        final beehive =
+            context.read<BeehiveListProvider>().findBeehiveById("1");
+        return BeeChartPage(beehive: beehive);
+
         // Retrieve the path parameter 'id'
-        final String id = state.pathParameters['id']!;
+        //final String id = state.pathParameters['id']!;
+        //final String type = state.pathParameters['type']!;
         // Fetch the beehive from the provider
-        final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
+        //final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
 
         // If beehive is not found, display an error message
         if (beehive == null) {

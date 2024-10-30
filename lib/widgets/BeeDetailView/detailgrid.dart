@@ -8,7 +8,8 @@ import 'dart:ui';
 import 'package:go_router/go_router.dart'; // GoRouter for navigation
 
 class DetailGrid extends StatelessWidget {
-  DetailGrid({super.key});
+  final String id;
+  DetailGrid({required this.id, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +43,15 @@ class DetailGrid extends StatelessWidget {
                       ],
                     ),
                     onTap: () {
-                      context.pushNamed('testing');
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "temperature",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
                     },
                   );
 
