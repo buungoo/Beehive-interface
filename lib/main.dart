@@ -12,6 +12,7 @@ import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
 import 'views/login_page.dart';
+import 'package:beehive/views/detail_chart_page.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
@@ -73,6 +74,35 @@ final GoRouter _router = GoRouter(
         return BeehiveDetailPage(beehive: beehive);
       },
     ),
+    GoRoute(
+      name: "testing",
+      path: '/chart',
+      builder: (context, state) {
+        // Retrieve the path parameter 'id'
+        final String id = state.pathParameters['id']!;
+        // Fetch the beehive from the provider
+        final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
+
+        // If beehive is not found, display an error message
+        if (beehive == null) {
+          return SharedScaffold(
+            context: context,
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                // Navigate to overview page using go to get a clean stack
+                onPressed: () => context.go('/'),
+              ),
+            ),
+            body: const Center(child: Text('Beehive not found 2!')),
+          );
+        }
+
+        // If beehive is found, return the beehive detail page
+        return BeeChartPage(beehive: beehive);
+      },
+    ),
   ],
 );
 
@@ -119,10 +149,10 @@ class BeehiveApp extends StatelessWidget {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    BeeNotification().sendCriticalNotification(
+    /*BeeNotification().sendCriticalNotification(
       title: "Beehive #32 is having issues",
       body: "Unable to connect to the beehive",
-    );
+    );*/
     return Future.value(true);
   });
 }
@@ -135,12 +165,13 @@ void main() {
     callbackDispatcher,
     isInDebugMode: false,
   );
-  Workmanager().registerPeriodicTask(
+  /*Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
     frequency: config.bgWorkerFetchRate,
   );
   Workmanager().printScheduledTasks();
+  */
 
   runApp(const BeehiveApp()); // Entry point for the app
 }

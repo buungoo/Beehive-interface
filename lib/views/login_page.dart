@@ -1,9 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter for navigation
 import '../widgets/SharedAppBar.dart';
+import 'package:beehive/providers/beehive_user_provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  String? _errorMessage;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    try {
+      final user = await BeehiveUserProvider().login(email, password);
+      print(user);
+
+      if (user == null) {
+        throw Exception('Invalid credentials');
+      } else {
+        context.go('/overview');
+      }
+      // Navigate to the 'overview' page on successful login
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString(); // Capture the error message
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +63,7 @@ class LoginPage extends StatelessWidget {
             SizedBox(
               width: 250,
               child: TextFormField(
+                controller: _emailController,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
                   labelText: 'Enter your username',
@@ -39,6 +78,7 @@ class LoginPage extends StatelessWidget {
             SizedBox(
               width: 250,
               child: TextFormField(
+                controller: _passwordController,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
                   labelText: 'Enter your password',
@@ -50,13 +90,18 @@ class LoginPage extends StatelessWidget {
 
             const SizedBox(height: 15), // Adds spacing between input and button
 
+            // Error Message Display
+            if (_errorMessage != null) ...[
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+              ),
+              const SizedBox(height: 15),
+            ],
+
             // Login Button
             ElevatedButton(
-              onPressed: () {
-                // Navigate to the 'overview' page
-                // Here we need to talk to API and do som checks
-                context.go('/overview');
-              },
+              onPressed: _login,
               child: const Text('Login'),
             ),
           ],

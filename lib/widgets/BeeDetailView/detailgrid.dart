@@ -5,8 +5,11 @@ import 'package:beehive/models/beehive_data.dart';
 import 'package:beehive/widgets/shared.dart';
 import 'package:beehive/utils/helpers.dart';
 import 'dart:ui';
+import 'package:go_router/go_router.dart'; // GoRouter for navigation
 
 class DetailGrid extends StatelessWidget {
+  DetailGrid({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Use Consumer to listen for changes from the StreamProvider
@@ -28,7 +31,22 @@ class DetailGrid extends StatelessWidget {
             itemBuilder: (context, index) {
               switch (index) {
                 case 0:
-                  return FrostedGlassBox(
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Temperature',
+                      value: "${beehiveData.temperature}°C",
+                      colors: [
+                        Colors.green.withOpacity(0.2),
+                        Colors.orange.withOpacity(0.3),
+                        Colors.red.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed('testing');
+                    },
+                  );
+
+                /*return FrostedGlassBox(
                     title: 'Temperature',
                     value: "${beehiveData.temperature}°C",
                     colors: [
@@ -36,7 +54,7 @@ class DetailGrid extends StatelessWidget {
                       Colors.orange.withOpacity(0.3),
                       Colors.red.withOpacity(0.2),
                     ],
-                  );
+                  );*/
                 case 1:
                   return FrostedGlassBox(
                     title: 'Weight',
@@ -70,26 +88,6 @@ class DetailGrid extends StatelessWidget {
                 default:
                   return FrostedGlassBox(title: 'null', value: 'null');
               }
-
-              /*switch (index) {
-                case 0:
-                  return FrostedDataBox(
-                    title: "Temperature",
-                    value: "${beehiveData.temperature}°C",
-                  );
-                case 1:
-                  return FrostedDataBox(
-                    title: "Weight",
-                    value: "${beehiveData.weight}kg",
-                  );
-                case 2:
-                  return FrostedDataBox(
-                    title: "Humidity",
-                    value: "${beehiveData.humidity}%",
-                  );
-                default:
-                  return FrostedDataBox(title: "null", value: "null");
-              }*/
             },
           ),
         );
