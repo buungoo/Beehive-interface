@@ -2,6 +2,12 @@ package models
 
 import "time"
 
+type Beehives struct {
+	Id		int		`json: "id"`
+	Name 	string 	`json: "name`
+	UserID 	int 	`json: "user_id`
+}
+
 type SensorData struct {
 	SensorID		int 		`json:"sensor_id"`
 	BeehiveID 		int 		`json:"beehive_id"`

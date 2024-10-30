@@ -81,7 +81,7 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 		return
 	}
 
-	// Query to find latest temprature for beehive_id
+	// Query to find latest temperature for beehive_id
 	const sqlQueryFetchTemperature = `SELECT sd.sensor_id, sd.beehive_id, sd.value, sd.time
 	FROM sensor_data sd
 	JOIN sensors s ON sd.sensor_id = s.id

@@ -21,6 +21,12 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		handlers.LoginHandler(w, r, dbPool)
 	})
 
+	mux.HandleFunc("GET /beehive/list", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetBeehiveList(w, r, dbPool)
+	}))
+
+
+
 	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/latest", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
 		if err != nil {

@@ -3,10 +3,11 @@ package authentication
 import(
 	"beehive_api/utils"
 	"net/http"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 	"strings"
+	"log"
+	"context"
 )
 
 // This needs to be made properly in the near future
@@ -30,20 +31,27 @@ return tokenString, nil
 }
 
 // Verifies the token
-func verifyToken(tokenString string) error {
+func verifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token")
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if ok == false {
+		return nil, err
 	}
 	
-return nil
+
+	
+return claims, nil
 
 }
 
@@ -55,12 +63,14 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		// Get token from Authorization-header
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
+			log.Println("Missing authorization header")
 			utils.SendErrorResponse(w, "Missing authorization header", http.StatusUnauthorized)
 			return
 		}
 
 		// In OAuth 2.0-specification
 		if !strings.HasPrefix(tokenString, "Bearer ") {
+			log.Println("Invalid authorization header format")
 			utils.SendErrorResponse(w, "Invalid authorization header format", http.StatusUnauthorized)
 			return
 		}
@@ -68,12 +78,20 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		// Slice to remove "Bearer" to retreive token
 		tokenString = tokenString[len("Bearer "):]
 
-		// Verify the token
-		err := verifyToken(tokenString)
+		// Verify the token and get the claims
+		claims, err := verifyToken(tokenString)
 		if err != nil {
 			utils.SendErrorResponse(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
+
+		// Extract the username
+		username := claims["username"].(string)
+
+		// Add username to request context
+		ctx := context.WithValue(r.Context(), "username", username)
+		r = r.WithContext(ctx)
+
 
 		// continue to next handler
 		next(w,r)
