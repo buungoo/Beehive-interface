@@ -37,7 +37,7 @@ func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool
 		return
 	}
 
-
+	// Fetch all beehives connected to the user
 	const sqlQueryFetchAllBeehives = `SELECT id, name, user_id FROM beehives WHERE user_id=$1`
 
 	rows, err := conn.Query(context.Background(), sqlQueryFetchAllBeehives, userID)
