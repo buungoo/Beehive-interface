@@ -3,6 +3,8 @@ import 'package:beehive/models/beehive_data.dart';
 import 'dart:math';
 import 'package:beehive/config.dart' as config;
 
+import '../models/beehive_data.dart';
+
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
   Stream<BeehiveData> getBeehiveDataStream() async* {
@@ -43,5 +45,11 @@ class BeehiveDataProvider {
       yield BeehiveData(
           temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
     }
+  }
+
+  Stream<String> getBeehiveSensorData(String type) async* {
+
+    yield "Hello";
+
   }
 }

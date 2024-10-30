@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:beehive/widgets/shared.dart';
 
+import '../providers/beehive_data_provider.dart';
+
 class BeeChartPage extends StatelessWidget {
   final String? id;
   final Beehive? beehive;
@@ -52,7 +54,7 @@ class BeeChartPage extends StatelessWidget {
       // class only the BeehiveDetailPage widget can listen to it
       initialData: "", // Nullable initial data
       create: (context) {
-        return Stream.value("hi");
+        return BeehiveDataProvider().getBeehiveSensorData("Temperature"); //TODO: Change this to the correct stuff.
         // Setup the Stream which the StreamProvider should listen to
         //return BeehiveDataProvider().getBeehiveDataStream();
       },
