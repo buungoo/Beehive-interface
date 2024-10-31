@@ -34,23 +34,6 @@ services:
       timeout: 5s
       retries: 5
 
-  mqtt_broker:
-    image: eclipse-mosquitto
-    ports:
-      - "1883:1883"
-    networks:
-      - backend
-    volumes:
-      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
-<<<<<<< HEAD
-      
-networks:
-  backend:
-    driver: bridge
-
-volumes:
-  timescaledb_data:
-
   # mqtt_subscriber:
   #   build:
   #     context: .  # Path to your Go project
@@ -78,8 +61,19 @@ volumes:
   #   networks:
   #     - backend
 
-=======
->>>>>>> fixed docker-compose mqtt service conflict
+services:
+  mqtt_broker:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+    networks:
+      - backend
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
+networks:
+  backend:
+    driver: bridge
 
-
+volumes:
+  timescaledb_data:
