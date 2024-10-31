@@ -125,15 +125,15 @@ services:
   #   volumes:
   #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  mqtt_subscriber:
-    build:
-      context: .  # Path to your Go project
-      dockerfile: Dockerfile  # Dockerfile for building your Go project
-    command: ./mqtt_subscriber  # Run the MQTT subscriber binary
-    depends_on:
-      - mqtt_broker
-    networks:
-      - backend
+  # mqtt_subscriber:
+  #   build:
+  #     context: .  # Path to your Go project
+  #     dockerfile: Dockerfile  # Dockerfile for building your Go project
+  #   command: ./mqtt_subscriber  # Run the MQTT subscriber binary
+  #   depends_on:
+  #     - mqtt_broker
+  #   networks:
+  #     - backend
 
   # Only for testing the subsriber
   # mqtt_publisher:

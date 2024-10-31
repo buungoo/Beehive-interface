@@ -1,13 +1,14 @@
 package test
 
 import (
-    "beehive_api/models"
+    //"beehive_api/models"
 	"context"
-    //"encoding/json"
+    "encoding/json"
 	"fmt"
+    "io"
 	"github.com/jackc/pgx/v5/pgxpool"
     "golang.org/x/crypto/bcrypt"
-    //"os"
+    "os"
     "log"
     "time"
 )
@@ -93,82 +94,50 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
     }
 
     // // Read JSON file
-    // jsonData, err := os.Open("/test/test_data.json")
-    // if err != nil {
-    //     log.Fatalf("Error opening json file, err: ", err)
-    // }
-    // defer jsonData.Close()
+    jsonData, err := os.Open("/test/test_data.json")
+    if err != nil {
+        log.Fatalf("Error opening json file, err: ", err)
+    }
+    defer jsonData.Close()
 
-    // var readings []models.SensorData
-    // decoder := json.NewDecoder(jsonData)
-    // err = decoder.Decode(&readings)
-
-    // if err != nil {
-    //     log.Fatalf("Error decoding JSON data: %v", err)
-    // }
-    
-  
-
-    // // Insert each sensor reading into the database
-    // for _, reading := range readings {
-    //     _, err := conn.Exec(context.Background(),
-    //         "INSERT INTO sensor_data (sensor_id, beehive_id, value, time) VALUES ($1, $2, $3, $4)",
-    //         reading.SensorID, reading.BeehiveID, reading.Value, reading.Time)
-    //     if err != nil {
-    //         log.Fatal("Failed to insert sensor data for sensor_id %d: %v", reading.SensorID, err)
-    //     }
-    // }
-    // log.Println("Data successfully inserted into the database")
-
-    // Initialize the string slice with date-time values
-    testTimes := []string{
-        "2024-10-01 10:45:00", "2024-10-02 11:50:00", "2024-10-03 12:55:00", 
-        "2024-10-04 12:45:00", "2024-10-04 10:30:00", "2024-10-05 11:55:00", 
-        "2024-10-05 12:45:00", "2024-10-05 12:59:00",
+    // Read the content of the file into a byte slice
+    data, err := io.ReadAll(jsonData) 
+    if err != nil {
+        log.Fatalf("Error reading json file, err: %v", err)
     }
 
-    // Slice to hold parsed time.Time values
-    testTimesTimeformat := make([]time.Time, len(testTimes))
+    // Unmarshal JSON data
+    var readings []struct {
+        SensorID   int     `json:"sensor_id"`
+        BeehiveID  int     `json:"beehive_id"`
+        Value      float64 `json:"value"`
+        Time       string  `json:"time"`
+    }
+    err = json.Unmarshal(data, &readings)
+    if err != nil {
+        log.Fatalf("Error unmarshaling json data: %v", err)
+    }
 
-    
+    // Parse each time string into a time.Time value and insert into the database
     layout := "2006-01-02 15:04:05"
-
-    // Parse each time string into a time.Time value
-    for i := 0; i < len(testTimes); i++ {
-        parsedTime, err := time.Parse(layout, testTimes[i])
+    for _, reading := range readings {
+        parsedTime, err := time.Parse(layout, reading.Time)
         if err != nil {
-            fmt.Println("Error parsing time:", err)
-            return err
+            log.Printf("Error parsing time %s: %v", reading.Time, err)
+            continue
         }
-        testTimesTimeformat[i] = parsedTime
-    }
-        
-	
-	
 
-    // Insert test data into the sensor_data table
-    testData := []models.SensorData{
-        {BeehiveID: beehive1ID, SensorID: sensor1ID, Value: 23.4, Time: testTimesTimeformat[0]},
-        {BeehiveID: beehive1ID, SensorID: sensor2ID, Value: 55.8, Time: testTimesTimeformat[1]},
-        {BeehiveID: beehive1ID, SensorID: sensor3ID, Value: 12.3, Time: testTimesTimeformat[2]},
-		{BeehiveID: beehive1ID, SensorID: sensor4ID, Value: 23.4, Time: testTimesTimeformat[3]},
-        {BeehiveID: beehive2ID, SensorID: sensor5ID, Value: 23.8, Time: testTimesTimeformat[4]},
-        {BeehiveID: beehive2ID, SensorID: sensor6ID, Value: 54.2, Time: testTimesTimeformat[5]},
-		{BeehiveID: beehive2ID, SensorID: sensor7ID, Value: 12.4, Time: testTimesTimeformat[6]},
-        {BeehiveID: beehive2ID, SensorID: sensor8ID, Value: 23.8, Time: testTimesTimeformat[7]},
-    }
-
-    for _, data := range testData {
-        insertSQL := `
-            INSERT INTO sensor_data (sensor_id, beehive_id, value, time)
-            VALUES ($1, $2, $3, $4)
-        `
-        _, err := conn.Exec(context.Background(), insertSQL, data.SensorID, data.BeehiveID, data.Value, data.Time)
+        _, err = conn.Exec(context.Background(),
+            "INSERT INTO sensor_data (sensor_id, beehive_id, value, time) VALUES ($1, $2, $3, $4)",
+            reading.SensorID, reading.BeehiveID, reading.Value, parsedTime)
         if err != nil {
-            return fmt.Errorf("failed to insert test sensor data: %v", err)
+            log.Fatalf("Failed to insert sensor data for sensor_id %d: %v", reading.SensorID, err)
         }
     }
+	
 
     return nil
 }
+
+
 
