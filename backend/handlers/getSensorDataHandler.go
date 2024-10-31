@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"net/http"
+	"time"
 )
 
 
@@ -129,6 +130,92 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 
 	// Return the data
 	utils.SendJSONResponse(w, dataResponse, http.StatusOK)
+
+}
+
+func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, date1 string, date2 string) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	layout := "2006-01-02"
+
+	// Verify the date is in correct format
+	parsedDate1, err := time.Parse(layout, date1)
+	if err != nil {
+		log.Println("Error wrong format of date")
+		utils.SendErrorResponse(w, "Error wrong format of date", http.StatusBadRequest)
+		return
+	}
+
+	// Verify the dates are in correct order
+	parsedDate2, err := time.Parse(layout, date2)
+	if err != nil {
+		log.Println("Error wrong format of date")
+		utils.SendErrorResponse(w, "Error wrong format of date", http.StatusBadRequest)
+		return
+	}
+
+	if parsedDate2.Before(parsedDate1) {
+		log.Println("Date 2 is before date 1")
+		utils.SendErrorResponse(w, "Dates are in wrong order", http.StatusBadRequest)
+		return
+	}
+
+	// Acuire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err!=nil {
+	 log.Fatal("Error while acquiring connection from the database pool!!")
+	} 
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := getUserId(conn.Conn(), username)
+	if err != nil {
+		log.Println("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the beehive exists and that the user has access to said beehive
+	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId, userId)
+	if err != nil {
+		log.Println("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		log.Println("Error, beehive doesnt exists")
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryFetchDataBetweenDates = `SELECT sd.sensor_id, sd.beehive_id, sd.value, sd.time
+	FROM sensor_data sd
+	WHERE beehive_id=$1 AND time BETWEEN $2 AND $3
+	ORDER BY time;
+	`
+
+	// Fetch all data
+	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, beehiveId, parsedDate1, parsedDate2)
+	if err != nil {
+		log.Println("Error fetching data", err)
+		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Put all data into struct before returning to client
+	data, err := iterateData(rows)
+	if err != nil {
+		log.Println("Error iterating data, err: ", err)
+		utils.SendErrorResponse(w, "Error iterating data", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the data
+	utils.SendJSONResponse(w, data, http.StatusOK)
+	return
 
 }
 
