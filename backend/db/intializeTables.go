@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,6 +29,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"type" varchar NOT NULL,
 		"beehive_id" integer REFERENCES "beehives" ("id")
 	);
+
 
 	CREATE TABLE IF NOT EXISTS "sensor_data" (
 		"sensor_id" integer REFERENCES "sensors" ("id"),

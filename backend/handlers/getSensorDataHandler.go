@@ -24,7 +24,7 @@ func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool
 	defer conn.Release()
 
 	// Fetch userid
-	userId, err := getUserId(conn.Conn(), username)
+	userId, err := utils.GetUserId(conn.Conn(), username)
 	if err != nil {
 		log.Println("Error fetching user id, err: ", err)
 		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
@@ -33,7 +33,7 @@ func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool
 
 	
 	// Verify the beehive exists and that the user has access to said beehive
-	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId, userId)
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
 	if err != nil {
 		log.Println("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
@@ -87,13 +87,13 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 	defer conn.Release()
 
 	// Fetch userid
-	userId, err := getUserId(conn.Conn(), username)
+	userId, err := utils.GetUserId(conn.Conn(), username)
 	if err != nil {
 		log.Println("Error fetching user id, err: ", err)
 		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
 	}
 
-	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId, userId)
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
 	if err != nil {
 		log.Println("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
@@ -169,7 +169,7 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	defer conn.Release()
 
 	// Fetch userid
-	userId, err := getUserId(conn.Conn(), username)
+	userId, err := utils.GetUserId(conn.Conn(), username)
 	if err != nil {
 		log.Println("Error fetching user id, err: ", err)
 		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
@@ -177,7 +177,7 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 
 	// Verify the beehive exists and that the user has access to said beehive
-	beehiveExists, err := verifyBeehiveId(conn.Conn(), beehiveId, userId)
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
 	if err != nil {
 		log.Println("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
@@ -219,18 +219,7 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 
 }
 
-// Veryfies the provided beehive_id exists in the database
-func verifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
-	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1 AND user_id=$2)`
 
-	// Verify the beehive ID exists
-	var exists bool
-	err := conn.QueryRow(context.Background(), sqlQueryCheckBeehive, beehiveId, userId).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-	return exists, nil
-}
 
 
 func iterateData(rows pgx.Rows) ([]models.SensorData, error){
@@ -251,16 +240,4 @@ func iterateData(rows pgx.Rows) ([]models.SensorData, error){
 	return dataResponse, nil
 }
 
-// Returns the userid
-func getUserId(conn *pgx.Conn, username string) (int, error) {
-	const sqlQueryFetchUserID = `SELECT id FROM users WHERE username=$1`
 
-	var userID int
-	// Fetch userid for user
-	err := conn.QueryRow(context.Background(), sqlQueryFetchUserID, username).Scan(&userID)
-	if err != nil {
-		return userID, err
-	}
-	return userID, nil
-
-}

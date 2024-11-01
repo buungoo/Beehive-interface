@@ -5,10 +5,11 @@ import (
 	"beehive_api/utils"
 	"context"
 	"encoding/json"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
@@ -26,34 +27,34 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 		log.Fatal("Error hashing password:", err)
 	}
 
-	// Prepared statements 
+	// Prepared statements
 	const sqlQueryCheckUsername = `SELECT EXISTS(SELECT 1 FROM users WHERE username=$1)`
-	const sqlQueryInsertNewUSer = `INSERT INTO users (username, password) VALUES($1, $2)`
+	const sqlQueryInsertNewUser = `INSERT INTO users (username, password) VALUES($1, $2)`
 
 	// Acuire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
-	if err!=nil {
-	 	log.Fatal("Error while acquiring connection from the database pool!")
-	} 
+	if err != nil {
+		log.Fatal("Error while acquiring connection from the database pool!")
+	}
 	defer conn.Release()
 
 	// Check if the username already exists
-    var exists bool
-    err = conn.QueryRow(context.Background(), sqlQueryCheckUsername , user.Username).Scan(&exists)
-    if err != nil {
-        log.Println("Error checking username:", err)
-        utils.SendErrorResponse(w, "Error registering user", http.StatusInternalServerError)
-        return
-    }
+	var exists bool
+	err = conn.QueryRow(context.Background(), sqlQueryCheckUsername, user.Username).Scan(&exists)
+	if err != nil {
+		log.Println("Error checking username:", err)
+		utils.SendErrorResponse(w, "Error registering user", http.StatusInternalServerError)
+		return
+	}
 
 	if exists {
 		log.Println("Username already exists, err:", err)
 		utils.SendErrorResponse(w, "User already exists", http.StatusConflict)
 		return
 	}
-	
+
 	// Insert username and password
-	_, err = conn.Exec(context.Background(), sqlQueryInsertNewUSer, user.Username, hashedPW)
+	_, err = conn.Exec(context.Background(), sqlQueryInsertNewUser, user.Username, hashedPW)
 	if err != nil {
 		log.Println("Error registering user, error: ", err)
 		utils.SendErrorResponse(w, "Error registering user", http.StatusBadRequest)
@@ -62,8 +63,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 
 	response := map[string]string{
 		"message": "User registered",
-		"Code":   "200",
+		"Code":    "200",
 	}
-	utils.SendJSONResponse(w, response, http.StatusOK) 
-	
+	utils.SendJSONResponse(w, response, http.StatusOK)
+
 }

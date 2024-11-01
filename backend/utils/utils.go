@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type ErrorResponse struct {
@@ -32,4 +35,31 @@ func SendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 
 	json.NewEncoder(w).Encode(errorResponse)
 
+}
+
+// Returns the userid
+func GetUserId(conn *pgx.Conn, username string) (int, error) {
+	const sqlQueryFetchUserID = `SELECT id FROM users WHERE username=$1`
+
+	var userID int
+	// Fetch userid for user
+	err := conn.QueryRow(context.Background(), sqlQueryFetchUserID, username).Scan(&userID)
+	if err != nil {
+		return userID, err
+	}
+	return userID, nil
+
+}
+
+// Veryfies the provided beehive_id exists in the database
+func VerifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
+	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1 AND user_id=$2)`
+
+	// Verify the beehive ID exists
+	var exists bool
+	err := conn.QueryRow(context.Background(), sqlQueryCheckBeehive, beehiveId, userId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
