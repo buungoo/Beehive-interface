@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../providers/beehive_list_provider.dart';
 import '../widgets/shared.dart';
 import '../models/beehive.dart';
+import 'package:beehive/services/BeehiveNotificationService.dart';
+import 'dart:io';
 
 class OverviewPage extends StatelessWidget {
   const OverviewPage({super.key});
@@ -42,6 +44,11 @@ class OverviewPage extends StatelessWidget {
                   context: context,
                   title: Text(beehive.name),
                   onTap: () {
+                    BeeNotification().sendCriticalNotification(
+                        title: "Bee Hive 1 Issue",
+                        body:
+                            "Bee Hive 1 is currently experiencing issue with Co2");
+
                     // Navigate to the beehive detail page using GoRouter pathing
                     context.pushNamed(
                       'beehive-detail', // The name of the route
