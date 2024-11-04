@@ -35,7 +35,8 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 func main() {
 	// Set MQTT broker URL
 	// broker := "tcp://localhost:1883" // or any broker you want
-	broker := "broker.emqx.io:1883"//"tcp://broker.hivemq.com:1883"   // HiveMQ public broker
+	// broker := "broker.emqx.io:1883"//"tcp://broker.hivemq.com:1883"   // HiveMQ public broker
+	broker := "tcp://broker.hivemq.com:1883"   // HiveMQ public broker
 	topic := "d0039ebeehive/sensor"
 
 	// Open log file
