@@ -12,6 +12,8 @@ services:
         condition: service_healthy  # Wait until TimescaleDB is healthy
     environment:
       - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
+    volumes:
+      - ./logs:/logs
     container_name: api-container
     networks:
       - backend
