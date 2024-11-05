@@ -13,6 +13,7 @@ import (
 func main() {
 	// Set MQTT broker URL
 	// broker := "tcp://localhost:1883" // If we are running our own local broker
+	// broker := "broker.emqx.io:1883" // emqx public broker
 	broker := "tcp://broker.hivemq.com:1883"   // HiveMQ public broker
 	topic := "d0039ebeehive/sensor"
 
