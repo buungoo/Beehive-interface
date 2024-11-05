@@ -1,13 +1,13 @@
 package authentication
 
-import(
+import (
 	"beehive_api/utils"
-	"net/http"
-	"github.com/golang-jwt/jwt/v5"
-	"time"
-	"strings"
-	"log"
 	"context"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // This needs to be made properly in the near future
@@ -18,7 +18,7 @@ func CreateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"username": username,
-			"exp": time.Now().Add(time.Hour * 24).Unix(),
+			"exp":      time.Now().Add(time.Hour * 24).Unix(),
 		})
 
 	tokenString, err := token.SignedString(secretKey)
@@ -26,7 +26,7 @@ func CreateToken(username string) (string, error) {
 		return "", err
 	}
 
-return tokenString, nil
+	return tokenString, nil
 
 }
 
@@ -45,13 +45,11 @@ func verifyToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok == false {
+	if !ok {
 		return nil, err
 	}
-	
 
-	
-return claims, nil
+	return claims, nil
 
 }
 
@@ -63,14 +61,12 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		// Get token from Authorization-header
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
-			log.Println("Missing authorization header")
 			utils.SendErrorResponse(w, "Missing authorization header", http.StatusUnauthorized)
 			return
 		}
 
 		// In OAuth 2.0-specification
 		if !strings.HasPrefix(tokenString, "Bearer ") {
-			log.Println("Invalid authorization header format")
 			utils.SendErrorResponse(w, "Invalid authorization header format", http.StatusUnauthorized)
 			return
 		}
@@ -92,8 +88,7 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), "username", username)
 		r = r.WithContext(ctx)
 
-
 		// continue to next handler
-		next(w,r)
+		next(w, r)
 	}
 }

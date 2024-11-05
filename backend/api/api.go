@@ -6,13 +6,14 @@ import (
 	"beehive_api/models"
 	"beehive_api/utils"
 	"net/http"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"strconv"
-	"log"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
+
 // Register routes and send to correct handler
 func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
-	
+
 	mux.HandleFunc("POST /register", func(w http.ResponseWriter, r *http.Request) {
 		handlers.RegisterHandler(w, r, dbPool)
 	})
@@ -43,8 +44,8 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 
 		date1 := r.PathValue("startDate")
 		date2 := r.PathValue("endDate")
-	
-		handlers.GetDataByDate(w,r, dbPool, beehiveId, date1, date2)
+
+		handlers.GetDataByDate(w, r, dbPool, beehiveId, date1, date2)
 
 	}))
 
@@ -66,7 +67,6 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		// Validate the sensortype
 		sensorType := models.SensorType(r.PathValue("sensorType"))
 		if !sensorType.IsValid() {
-			log.Println("Requested invalid sensortype")
 			utils.SendErrorResponse(w, "Invalid sensortype", http.StatusBadRequest)
 			return
 		}
@@ -78,12 +78,9 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		testAuthentication(w, r)
 	}))
 
-
 }
 
-
-func testAuthentication(w http.ResponseWriter, r *http.Request,) {
+func testAuthentication(w http.ResponseWriter, r *http.Request) {
 	utils.SendJSONResponse(w, "Token is Valid", http.StatusOK)
 	return
 }
-

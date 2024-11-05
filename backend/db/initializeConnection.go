@@ -1,13 +1,15 @@
 package db
 
 import (
-	"fmt"
+	"beehive_api/utils"
 	"context"
+	"errors"
+	"log"
+	"os"
+	"time"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"os"
-	"log"
-	"time"
 )
 
 type Handle struct {
@@ -15,33 +17,17 @@ type Handle struct {
 }
 
 func InitializeDatabaseConnection() (*pgxpool.Pool, error) {
-	// // Get the DATABASE_URL from environment variables
-	// connStr := os.Getenv("DATABASE_URL")
-
-	// if connStr == "" {
-	// 	 fmt.Errorf("DATABASE_URL environment variable not set")
-	//	return nil
-	// }
 
 	// Connect to the database
-	// conn, err := pgx.Connect(context.Background(), connStr)
-	// if err != nil {
-	// 	fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-	// 	os.Exit(1)
-	// }
-	// dbpool, err := pgxpool.New(context.Background(), connStr)
 	dbpool, err := pgxpool.NewWithConfig(context.Background(), config())
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		utils.LogFatal("Unable to connect to database", err)
 	}
-
-	
 	return dbpool, nil
 
 }
 
-func config()(*pgxpool.Config) {
+func config() *pgxpool.Config {
 	const defaultMaxConns = int32(4)
 	const defaultMinConns = int32(0)
 	const defaultMaxConnLifetime = time.Hour
@@ -53,13 +39,13 @@ func config()(*pgxpool.Config) {
 	connStr := os.Getenv("DATABASE_URL")
 
 	if connStr == "" {
-		fmt.Errorf("DATABASE_URL environment variable not set")
-		return nil
+		log.Println()
+		utils.LogFatal("DATABASE_URL environment variable not set", errors.New("empty database url"))
 	}
 
 	dbConfig, err := pgxpool.ParseConfig(connStr)
 	if err != nil {
-		log.Fatal("Failed to create a connetionconfig, err: ", err)
+		utils.LogFatal("Failed to create a connetionconfig, err: ", err)
 	}
 
 	dbConfig.MaxConns = defaultMaxConns
@@ -76,7 +62,7 @@ func config()(*pgxpool.Config) {
 	// 	log.Println("Before acquiring the connection pool to the database!!")
 	// 	return true
 	// }
-	  
+
 	// // AfterRelease is called after a connection is released, but before it is returned to the pool. It must return true to
 	// // return the connection to the pool or false to destroy the connection.
 	// dbConfig.AfterRelease = func(c *pgx.Conn) bool {
@@ -90,6 +76,5 @@ func config()(*pgxpool.Config) {
 	// }
 
 	return dbConfig
-
 
 }

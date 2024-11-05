@@ -5,7 +5,6 @@ import (
 	"beehive_api/utils"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +23,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 	// Hash password with bcrypt
 	hashedPW, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal("Error hashing password:", err)
+		utils.LogFatal("Error hashing password:", err)
 	}
 
 	// Prepared statements
@@ -34,7 +33,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 	// Acuire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
-		log.Fatal("Error while acquiring connection from the database pool!")
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
 	}
 	defer conn.Release()
 
@@ -42,13 +41,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 	var exists bool
 	err = conn.QueryRow(context.Background(), sqlQueryCheckUsername, user.Username).Scan(&exists)
 	if err != nil {
-		log.Println("Error checking username:", err)
+		utils.LogError("Error checking username:", err)
 		utils.SendErrorResponse(w, "Error registering user", http.StatusInternalServerError)
 		return
 	}
 
 	if exists {
-		log.Println("Username already exists, err:", err)
+		utils.LogError("Username already exists, err:", err)
 		utils.SendErrorResponse(w, "User already exists", http.StatusConflict)
 		return
 	}
@@ -56,7 +55,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Poo
 	// Insert username and password
 	_, err = conn.Exec(context.Background(), sqlQueryInsertNewUser, user.Username, hashedPW)
 	if err != nil {
-		log.Println("Error registering user, error: ", err)
+		utils.LogError("Error registering user, error: ", err)
 		utils.SendErrorResponse(w, "Error registering user", http.StatusBadRequest)
 		return
 	}

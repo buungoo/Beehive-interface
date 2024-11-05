@@ -1,8 +1,8 @@
 package db
 
 import (
+	"beehive_api/utils"
 	"context"
-	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -43,7 +43,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	// Execute the SQL to create the tables
 	_, err := dbpool.Exec(context.Background(), createTablesSQL)
 	if err != nil {
-		return fmt.Errorf("failed to create tables: %v", err)
+		utils.LogFatal("Failed to create tables: ", err)
 	}
 
 	// Check if hypertable exists
@@ -54,7 +54,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	var hypertableExists bool
 	err = dbpool.QueryRow(context.Background(), hypertableCheckSQL).Scan(&hypertableExists)
 	if err != nil {
-		return fmt.Errorf("failed to check for hypertable: %v", err)
+		utils.LogFatal("Failed to check for hypertable: ", err)
 	}
 
 	// Create the hypertable if it doesn't already exist
@@ -65,7 +65,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 
 		_, err = dbpool.Exec(context.Background(), createHypertable)
 		if err != nil {
-			return fmt.Errorf("failed to create hypertable: %v", err)
+			utils.LogFatal("Failed to create hypertable: ", err)
 		}
 
 		// Add hash partitioning for sensor_id
@@ -75,7 +75,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 
 		_, err = dbpool.Exec(context.Background(), addHashPartitioning)
 		if err != nil {
-			return fmt.Errorf("failed to add hash partitioning: %v", err)
+			utils.LogFatal("Failed to add hash partitioning: ", err)
 		}
 	}
 
