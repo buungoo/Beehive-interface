@@ -41,7 +41,7 @@ func main() {
 
 	// Open log file
 	var err error
-	logFile, err = os.OpenFile("./subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err = os.OpenFile("/logs/subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)
 	}
