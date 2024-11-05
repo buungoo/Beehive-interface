@@ -16,7 +16,7 @@ var logFile *os.File
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	// Get the current timestamp
-	timestamp := time.Now().Format(time.RFC3339)
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// Log the received message to the log file with timestamp
 	if _, err := logFile.WriteString(fmt.Sprintf("%s - Received message: %s from topic: %s\n", timestamp, msg.Payload(), msg.Topic())); err != nil {
@@ -34,14 +34,14 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 
 func main() {
 	// Set MQTT broker URL
-	// broker := "tcp://localhost:1883" // or any broker you want
-	// broker := "broker.emqx.io:1883"//"tcp://broker.hivemq.com:1883"   // HiveMQ public broker
+	// broker := "tcp://localhost:1883" // For testing hosting the broker on a local machine
+	// broker := "broker.emqx.io:1883" // emqx public broker
 	broker := "tcp://broker.hivemq.com:1883"   // HiveMQ public broker
 	topic := "d0039ebeehive/sensor"
 
 	// Open log file
 	var err error
-	logFile, err = os.OpenFile("./subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err = os.OpenFile("/logs/subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)
 	}
@@ -68,7 +68,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Channel for graceful shutdown
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
 

@@ -1,84 +1,3 @@
-# version: '3.8'
-#
-# services:
-#   api:
-#     build:
-#       context: .  # path to your Go project
-#       dockerfile: Dockerfile  # Dockerfile for building your Go project
-#     ports:
-#       - "8080:8080"  # Expose the Go API to the host on port 8080
-#     depends_on:
-#       timescaledb:
-#         condition: service_healthy  # Wait until TimescaleDB is healthy
-#     environment:
-#       - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
-#     container_name: api-container
-#     networks:
-#       - backend
-#
-#   timescaledb:
-#     image: timescale/timescaledb:latest-pg14
-#     ports:
-#       - "5432:5432"
-#     environment:
-#       POSTGRES_USER: admin
-#       POSTGRES_PASSWORD: password
-#       POSTGRES_DB: beehivedb
-#     volumes:
-#       - timescaledb_data:/var/lib/postgresql/data
-#     networks:
-#       - backend
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
-#       interval: 10s
-#       timeout: 5s
-#       retries: 5
-#
-#   # mqtt_broker:
-#   #   image: eclipse-mosquitto
-#   #   ports:
-#   #     - "1883:1883"
-#   #   networks:
-#   #     - backend
-#   #   volumes:
-#   #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
-#
-# networks:
-#   backend:
-#     driver: bridge
-#
-# volumes:
-#   timescaledb_data:
-#
-#   mqtt_subscriber:
-#     build:
-#       context: .  # Path to your Go project
-#       dockerfile: Dockerfile  # Dockerfile for building your Go project
-#     command: ./mqtt_subscriber  # Run the MQTT subscriber binary
-#     depends_on:
-#       - mqtt_broker
-#     networks:
-#       - backend
-#
-#   # mqtt_publisher:
-#   #   build:
-#   #     context: .  # Path to your Go project
-#   #     dockerfile: Dockerfile  # Dockerfile for building your Go project
-#   #   command: go run mqtt/mqtt_publisher.go
-#   #   depends_on:
-#   #     - mqtt_broker
-#   #   networks:
-#   #     - backend
-#
-#   # mqtt_broker:
-#   #   image: eclipse-mosquitto
-#   #   ports:
-#   #     - "1883:1883"
-#   #   networks:
-#   #     - backend
-#
-#
-
 version: '3.8'
 
 services:
@@ -115,7 +34,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Can't run local broker yet
+  # Can't run local broker yet as the proxy manager I am using does not support it
   # mqtt_broker:
   #   image: eclipse-mosquitto
   #   ports:
@@ -125,21 +44,24 @@ services:
   #   volumes:
   #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  # mqtt_subscriber:
-  #   build:
-  #     context: .  # Path to your Go project
-  #     dockerfile: Dockerfile  # Dockerfile for building your Go project
-  #   command: ./mqtt_subscriber  # Run the MQTT subscriber binary
-  #   depends_on:
-  #     - mqtt_broker
-  #   networks:
-  #     - backend
+  mqtt_subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: go run mqtt/mqtt_subscriber.go
+    # Uncomment if the local broker is setup
+    # depends_on:
+    #   - mqtt_broker
+    networks:
+      - backend
+    volumes:
+      - ./logs:/logs
 
   # Only for testing the subsriber
   # mqtt_publisher:
   #   build:
-  #     context: .  # Path to your Go project
-  #     dockerfile: Dockerfile  # Dockerfile for building your Go project
+  #     context: .
+  #     dockerfile: Dockerfile  
   #   command: go run mqtt/mqtt_publisher.go
   #   depends_on:
   #     - mqtt_broker
