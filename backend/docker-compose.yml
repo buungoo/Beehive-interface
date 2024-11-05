@@ -48,7 +48,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ./mqtt_subscriber
+    command: go run mqtt/mqtt_subscriber.go
     # Uncomment if the local broker is setup
     # depends_on:
     #   - mqtt_broker
