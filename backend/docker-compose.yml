@@ -49,8 +49,9 @@ services:
       context: .
       dockerfile: Dockerfile
     command: ./mqtt_subscriber
-    depends_on:
-      - mqtt_broker
+    # Uncomment if the local broker is setup
+    # depends_on:
+    #   - mqtt_broker
     networks:
       - backend
     volumes:
