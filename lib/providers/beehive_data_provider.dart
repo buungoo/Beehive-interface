@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:beehive/models/beehive_data.dart';
 import 'dart:math';
+import 'package:beehive/config.dart' as config;
 
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
@@ -17,7 +18,7 @@ class BeehiveDataProvider {
 
     while (true) {
       if (init) {
-        await Future.delayed(Duration(seconds: 2));
+        await Future.delayed(config.refreshRate);
       } else {
         init = true;
       }
