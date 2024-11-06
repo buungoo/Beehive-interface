@@ -7,6 +7,8 @@ import 'package:beehive/config.dart' as config;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
+import '../models/beehive_data.dart';
+
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
   Stream<BeehiveData> getBeehiveDataStream(String beehiveid) async* {
@@ -80,5 +82,11 @@ class BeehiveDataProvider {
       }
       await Future.delayed(config.refreshRate);
     }
+  }
+
+  Stream<String> getBeehiveSensorData(String type) async* {
+
+    yield "Hello";
+
   }
 }
