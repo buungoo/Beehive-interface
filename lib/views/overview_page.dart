@@ -45,6 +45,7 @@ class OverviewPage extends StatelessWidget {
                 return SharedListTile(
                   context: context,
                   title: Text(beehive.name),
+                  issue: false,
                   onTap: () {
                     // Navigate to the beehive detail page using GoRouter pathing
                     context.pushNamed(

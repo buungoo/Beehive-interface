@@ -35,7 +35,7 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Temperature',
-                      value: "${beehiveData.temperature}°C",
+                      value: "${beehiveData.temperature.toString()}°C",
                       colors: [
                         Colors.green.withOpacity(0.2),
                         Colors.orange.withOpacity(0.3),
@@ -67,7 +67,7 @@ class DetailGrid extends StatelessWidget {
                 case 1:
                   return FrostedGlassBox(
                     title: 'Weight',
-                    value: "${beehiveData.weight}kg",
+                    value: "${beehiveData.weight.toString()}kg",
                     colors: [
                       Colors.deepPurple.withOpacity(0.2),
                       Colors.blueAccent.withOpacity(0.3),
@@ -77,7 +77,7 @@ class DetailGrid extends StatelessWidget {
                 case 2:
                   return FrostedGlassBox(
                     title: 'Humidity',
-                    value: "${beehiveData.humidity}%",
+                    value: "${beehiveData.humidity.toString()}%",
                     colors: [
                       Colors.blue.withOpacity(0.2),
                       Colors.lightBlue.withOpacity(0.3),
@@ -87,7 +87,7 @@ class DetailGrid extends StatelessWidget {
                 case 3:
                   return FrostedGlassBox(
                     title: 'CO2',
-                    value: "${beehiveData.ppm}ppm",
+                    value: "${beehiveData.ppm.toString()}ppm",
                     colors: [
                       Colors.grey.withOpacity(0.2),
                       Colors.grey.withOpacity(0.3),

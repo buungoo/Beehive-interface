@@ -80,7 +80,8 @@ final GoRouter _router = GoRouter(
       builder: (context, state) {
         final beehive =
             context.read<BeehiveListProvider>().findBeehiveById("1");
-        return BeeChartPage(beehive: beehive);
+        return BeeChartPage(
+            beehive: beehive, title: "Temperature", type: "temperature");
 
         // Retrieve the path parameter 'id'
         //final String id = state.pathParameters['id']!;
@@ -105,7 +106,7 @@ final GoRouter _router = GoRouter(
         }
 
         // If beehive is found, return the beehive detail page
-        return BeeChartPage(beehive: beehive);
+        //return BeeChartPage(beehive: beehive);
       },
     ),
   ],

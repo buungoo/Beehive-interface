@@ -12,6 +12,7 @@ class InitialPage extends StatelessWidget {
   void checkAuth(BuildContext context) async {
     print("Checking Auth");
     final authenticated = await BeehiveApi().verifyUser();
+    print("Authenticated: $authenticated");
     if (authenticated) {
       // Navigate to the 'overview' page on successful login
       context.go('/overview');

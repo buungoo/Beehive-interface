@@ -18,15 +18,20 @@ class BeehiveApi {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      var response = await get(Uri.parse(config.BackendServer + "/beehives/"),
+      print(config.BackendServer + "/beehive/list");
+
+      var response = await get(
+          Uri.parse(config.BackendServer + "/beehive/list"),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
           });
 
-      /*return (jsonDecode(response.body) as List)
+      print(response.body);
+
+      return (jsonDecode(response.body) as List)
           .map((e) => Beehive.fromJson(e))
-          .toList();*/
+          .toList();
     } catch (e) {
       print(e);
     }
@@ -43,13 +48,14 @@ class BeehiveApi {
     final perf = await SharedPreferences.getInstance();
     final token = await perf.getString('token');
 
+    print(Uri.parse(config.BackendServer + "/test"));
     print(token);
 
     if (token == null) {
       return false;
     }
 
-    var response = await get(Uri.parse(config.BackendServer + "/test"),
+    var response = await post(Uri.parse(config.BackendServer + "/test"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

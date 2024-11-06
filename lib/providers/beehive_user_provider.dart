@@ -14,8 +14,8 @@ class BeehiveUserProvider {
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode({
-            'Username': email,
-            'Password': password,
+            'username': email,
+            'password': password,
           }));
 
       final data = json.decode(response.body);
@@ -38,9 +38,11 @@ class BeehiveUserProvider {
             'Content-Type': 'application/json; charset=UTF-8',
           },
           body: jsonEncode({
-            'email': email,
+            'username': email,
             'password': password,
           }));
+
+      print(response);
 
       if (response.statusCode == 200) {
         return User.fromJson(response.body);

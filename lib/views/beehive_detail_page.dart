@@ -20,7 +20,7 @@ class BeehiveDetailPage extends StatelessWidget {
       initialData: null, // Nullable initial data
       create: (context) {
         // Setup the Stream which the StreamProvider should listen to
-        return BeehiveDataProvider().getBeehiveDataStream();
+        return BeehiveDataProvider().getBeehiveDataStream(beehive.id);
       },
       child: SharedScaffold(
         context: context,
