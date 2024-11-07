@@ -13,10 +13,10 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 	CREATE TABLE IF NOT EXISTS "users" (
-    "id" serial PRIMARY KEY,
-    "username" VARCHAR(255) UNIQUE NOT NULL CHECK (username <> ''),
-    "password" BYTEA NOT NULL
-);
+		"id" serial PRIMARY KEY,
+		"username" VARCHAR(255) UNIQUE NOT NULL CHECK (username <> ''),
+		"password" BYTEA NOT NULL
+	);
 
 	CREATE TABLE IF NOT EXISTS "beehives" (
 		"id" serial PRIMARY KEY,
@@ -30,6 +30,13 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"beehive_id" integer REFERENCES "beehives" ("id")
 	);
 
+	CREATE TABLE IF NOT EXISTS "beehive_status" (
+		"beehive_id" integer REFERENCES "beehives" ("id"),
+		"sensor_id" integer REFERENCES "sensors" ("id"),
+		"solved" boolean,
+		"read" boolean,
+		"time" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	);
 
 	CREATE TABLE IF NOT EXISTS "sensor_data" (
 		"sensor_id" integer REFERENCES "sensors" ("id"),
