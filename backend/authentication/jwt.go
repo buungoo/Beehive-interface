@@ -82,7 +82,11 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Extract the username
-		username := claims["username"].(string)
+		username, ok := claims["username"].(string)
+		if !ok {
+			utils.SendErrorResponse(w, "Error extrcting username", http.StatusInternalServerError)
+			return
+		}
 
 		// Add username to request context
 		ctx := context.WithValue(r.Context(), "username", username)
