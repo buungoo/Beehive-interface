@@ -68,15 +68,6 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 			utils.LogFatal("Failed to create hypertable: ", err)
 		}
 
-		// Add hash partitioning for sensor_id
-		addHashPartitioning := `
-		SELECT add_dimension('sensor_data', 'sensor_id', 4);
-		`
-
-		_, err = dbpool.Exec(context.Background(), addHashPartitioning)
-		if err != nil {
-			utils.LogFatal("Failed to add hash partitioning: ", err)
-		}
 	}
 
 	return nil
