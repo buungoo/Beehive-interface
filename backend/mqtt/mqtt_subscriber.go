@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/base64"
+	// "encoding/binary"
+	// "encoding/hex"
 	"encoding/json"
 	"fmt"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
 	"os/signal"
+	// "strings"
 	"syscall"
 	"time"
-
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type SensorMessage struct {
@@ -58,7 +61,40 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 		log.Printf("Error writing to log file: %v", err)
 	}
 
-	fmt.Println(logMessage)
+	// fmt.Println(logMessage)
+	// hx := hex.EncodeToString([]byte(sensorMessage.Data))
+	// fmt.Println(sensorMessage.Data + " ==> " + hx)
+
+	h, err := base64.StdEncoding.DecodeString(sensorMessage.Data)
+	if err != nil {
+		// handle error
+	}
+
+	// p, err := base64.StdEncoding.DecodeString(sensorMessage.Data)
+	// if err != nil {
+	// 	// handle error
+	// }
+	// h := hex.EncodeToString(p)
+	fmt.Println(h) // prints 415256494e
+
+	// // Split the hex string into slices of 2 characters each and convert to integers
+	// var intValues []int
+	// for i := 0; i < len(h); i += 2 {
+	// 	hexPair := h[i : i+2]
+	// 	intValue, err := strconv.ParseInt(hexPair, 16, 32)
+	// 	if err != nil {
+	// 		// handle error
+	// 		fmt.Println("Error parsing hex pair:", err)
+	// 		return
+	// 	}
+	// 	intValues = append(intValues, int(intValue))
+	// }
+
+	// Print the resulting integers
+	// fmt.Println("Integer values:", intValues)
+	// // myslice :=
+	// byteData := binary.BigEndian.Uint16([]byte(h))
+	// fmt.Println(byteData)
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -78,7 +114,7 @@ func main() {
 
 	// Open log file
 	var err error
-	logFile, err = os.OpenFile("/logs/subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err = os.OpenFile("./logs/subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)
 	}
@@ -86,7 +122,7 @@ func main() {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("local_subscriber")
+	opts.SetClientID("local_subscriber2")
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler
