@@ -29,6 +29,14 @@ class BeeChartPage extends StatelessWidget {
         maxValue = value.value;
       }
     }
+    double minVaue = maxValue;
+    for (var value in values) {
+      if (value.value < minVaue) {
+        minVaue = value.value;
+      }
+    }
+
+    print(minVaue);
 
     return LineChartData(
       gridData: FlGridData(show: true),
@@ -55,7 +63,14 @@ class BeeChartPage extends StatelessWidget {
                   DateTime.fromMillisecondsSinceEpoch(value.toInt());
               final formattedDate = DateFormat('y-M-d')
                   .format(dateTime); // Format the date as needed
-              return Text(formattedDate, style: TextStyle(fontSize: 10));
+
+              return Padding(
+                padding:
+                    const EdgeInsets.only(top: 20), // Add vertical space here
+                child: Transform.rotate(
+                    angle: 150, // Rotate by 90 degrees (π/2 radians)
+                    child: Text(formattedDate, style: TextStyle(fontSize: 10))),
+              );
             },
             reservedSize: 40,
           ),
@@ -65,7 +80,8 @@ class BeeChartPage extends StatelessWidget {
         show: true,
         border: Border.all(color: Colors.black),
       ),
-      maxY: maxValue,
+      maxY: maxValue + (maxValue / 4),
+      minY: minVaue,
       lineBarsData: [
         LineChartBarData(
           color: Colors.yellow,
@@ -123,7 +139,7 @@ class BeeChartPage extends StatelessWidget {
     return Consumer<List<SensorValues>?>(
       builder: (context, _data, child) {
         print(_data);
-        if (_data == null) {
+        if (_data == null || _data.length < 1) {
           return Center(child: SharedLoadingIndicator(context: context));
         }
         return Align(

@@ -78,10 +78,15 @@ final GoRouter _router = GoRouter(
       name: "testing",
       path: '/beehive/test/:id/:type',
       builder: (context, state) {
+        final String id = state.pathParameters['id']!;
+        final String type = state.pathParameters['type']!;
+
         final beehive =
             context.read<BeehiveListProvider>().findBeehiveById("1");
         return BeeChartPage(
-            beehive: beehive, title: "Temperature", type: "temperature");
+            beehive: beehive,
+            title: type[0].toUpperCase() + type.substring(1),
+            type: type);
 
         // Retrieve the path parameter 'id'
         //final String id = state.pathParameters['id']!;

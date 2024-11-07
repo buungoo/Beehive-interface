@@ -54,45 +54,74 @@ class DetailGrid extends StatelessWidget {
                       );
                     },
                   );
-
-                /*return FrostedGlassBox(
-                    title: 'Temperature',
-                    value: "${beehiveData.temperature}°C",
-                    colors: [
-                      Colors.green.withOpacity(0.2),
-                      Colors.orange.withOpacity(0.3),
-                      Colors.red.withOpacity(0.2),
-                    ],
-                  );*/
                 case 1:
-                  return FrostedGlassBox(
-                    title: 'Weight',
-                    value: "${beehiveData.weight.toString()}kg",
-                    colors: [
-                      Colors.deepPurple.withOpacity(0.2),
-                      Colors.blueAccent.withOpacity(0.3),
-                      Colors.cyanAccent.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Weight',
+                      value: "${beehiveData.weight.toString()}kg",
+                      colors: [
+                        Colors.deepPurple.withOpacity(0.2),
+                        Colors.blueAccent.withOpacity(0.3),
+                        Colors.cyanAccent.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "weight",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 case 2:
-                  return FrostedGlassBox(
-                    title: 'Humidity',
-                    value: "${beehiveData.humidity.toString()}%",
-                    colors: [
-                      Colors.blue.withOpacity(0.2),
-                      Colors.lightBlue.withOpacity(0.3),
-                      Colors.lightBlueAccent.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Humidity',
+                      value: "${beehiveData.humidity.toString()}%",
+                      colors: [
+                        Colors.blue.withOpacity(0.2),
+                        Colors.lightBlue.withOpacity(0.3),
+                        Colors.lightBlueAccent.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "humidity",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 case 3:
-                  return FrostedGlassBox(
-                    title: 'CO2',
-                    value: "${beehiveData.ppm.toString()}ppm",
-                    colors: [
-                      Colors.grey.withOpacity(0.2),
-                      Colors.grey.withOpacity(0.3),
-                      Colors.grey.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'CO2',
+                      value: "${beehiveData.ppm.toString()}ppm",
+                      colors: [
+                        Colors.grey.withOpacity(0.2),
+                        Colors.grey.withOpacity(0.3),
+                        Colors.grey.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "co2",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 default:
                   return FrostedGlassBox(title: 'null', value: 'null');

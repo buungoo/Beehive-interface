@@ -1,5 +1,5 @@
 library config;
 
 const BackendServer = "https://rockpi.bungos.duckdns.org";
-const refreshRate = Duration(seconds: 60);
+const refreshRate = Duration(minutes: 30);
 const bgWorkerFetchRate = Duration(minutes: 60);

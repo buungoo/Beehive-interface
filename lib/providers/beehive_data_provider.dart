@@ -67,6 +67,7 @@ class BeehiveDataProvider {
         print("formattedDate1: $formattedDate1");
         print("formattedDate2: $formattedDate2");
 
+        //TODO: Make sure to only extract the "type" from the request
         final uri = Uri.parse(
             '${config.BackendServer}/beehive/$beehiveid/sensor-data/$formattedDate1/$formattedDate2');
 
@@ -85,8 +86,6 @@ class BeehiveDataProvider {
   }
 
   Stream<String> getBeehiveSensorData(String type) async* {
-
     yield "Hello";
-
   }
 }
