@@ -12,7 +12,7 @@ import (
 // 	if len(b) < 2 || b[0] != '"' || b[len(b)-1] != '"' {
 // 		return errors.New("not a json string")
 // 	}
-	
+
 // 	// 1. Strip the double quotes from the JSON string.
 // 	b = b[1:len(b)-1]
 
@@ -30,37 +30,38 @@ import (
 // 	return nil
 // }
 
-
-
 type Beehives struct {
-	Id		int		`json: "id"`
-	Name 	string 	`json: "name`
-	UserID 	int 	`json: "user_id`
+	Id     int    `json: "id"`
+	Name   string `json: "name`
+	UserID int    `json: "user_id`
 }
 
 type SensorData struct {
-	SensorID		int 		`json:"sensor_id"`
-	BeehiveID 		int 		`json:"beehive_id"`
-	Value			float64 	`json:"value"`
-	Time			time.Time 	`json:"time"`
+	SensorID   int       `json:"sensor_id"`
+	BeehiveID  int       `json:"beehive_id"`
+	SensorType string    `json:"sensor_type"`
+	Value      float64   `json:"value"`
+	Time       time.Time `json:"time"`
 }
 
 type SensorType string
 
 const (
 	SensorTypeTemperature SensorType = "temperature"
-	SensorTypeHumidity SensorType = "humidity"
-	SensorTypeOxygen SensorType = "oxygen"
-	SensorTypeWeight SensorType = "weight"
+	SensorTypeHumidity    SensorType = "humidity"
+	SensorTypeOxygen      SensorType = "oxygen"
+	SensorTypeWeight      SensorType = "weight"
+	SensorTypeMicrophone  SensorType = "microphone"
 )
 
 var validSensorTypes = map[SensorType]bool{
 	SensorTypeTemperature: true,
-	SensorTypeHumidity: true,
-	SensorTypeOxygen: true,
-	SensorTypeWeight: true,
+	SensorTypeHumidity:    true,
+	SensorTypeOxygen:      true,
+	SensorTypeWeight:      true,
+	SensorTypeMicrophone:  true,
 }
 
-func(st SensorType) IsValid() bool {
+func (st SensorType) IsValid() bool {
 	return validSensorTypes[st]
 }

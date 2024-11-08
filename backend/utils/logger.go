@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-var ApiLogger *Logger
+var apiLogger *Logger
 
 type Logger struct {
 	Info  *log.Logger
@@ -16,6 +16,7 @@ type Logger struct {
 	Fatal *log.Logger
 }
 
+// Open/Create a logfile and return it with write permission and initialize the logger
 func InitLogger() (*os.File, error) {
 	logFile, err := os.OpenFile("/logs/logFile.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
@@ -23,7 +24,7 @@ func InitLogger() (*os.File, error) {
 	}
 
 	logFlags := log.Ldate | log.Ltime
-	ApiLogger = &Logger{
+	apiLogger = &Logger{
 		Info:  log.New(logFile, "INFO: ", logFlags),
 		Warn:  log.New(logFile, "WARN: ", logFlags),
 		Error: log.New(logFile, "ERROR: ", logFlags),
@@ -33,6 +34,7 @@ func InitLogger() (*os.File, error) {
 	return logFile, nil
 }
 
+// Find calling function from the callstack
 func callerInfo() string {
 	_, file, line, ok := runtime.Caller(2)
 	if !ok {
@@ -41,26 +43,26 @@ func callerInfo() string {
 	return fmt.Sprintf("%s:%d", file, line)
 }
 func LogInfo(message string) {
-	if ApiLogger != nil {
-		ApiLogger.Info.Println(callerInfo(), message)
+	if apiLogger != nil {
+		apiLogger.Info.Println(callerInfo(), message)
 	}
 }
 
 func LogWarn(message string) {
-	if ApiLogger != nil {
-		ApiLogger.Warn.Println(callerInfo(), message)
+	if apiLogger != nil {
+		apiLogger.Warn.Println(callerInfo(), message)
 	}
 }
 
 func LogError(message string, err error) {
-	if ApiLogger != nil {
-		ApiLogger.Error.Println(callerInfo(), message, err)
+	if apiLogger != nil {
+		apiLogger.Error.Println(callerInfo(), message, err)
 	}
 }
 
 func LogFatal(message string, err error) {
-	if ApiLogger != nil {
-		ApiLogger.Fatal.Println(callerInfo(), message, err)
+	if apiLogger != nil {
+		apiLogger.Fatal.Println(callerInfo(), message, err)
 		os.Exit(1)
 	}
 }

@@ -49,6 +49,20 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 
 	}))
 
+	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/average/{startDate}/{endDate}", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
+		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
+			return
+		}
+
+		date1 := r.PathValue("startDate")
+		date2 := r.PathValue("endDate")
+
+		handlers.GetAverageDataByDate(w, r, dbPool, beehiveId, date1, date2)
+
+	}))
+
 	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/latest", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
 		if err != nil {

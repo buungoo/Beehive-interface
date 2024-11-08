@@ -56,7 +56,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		return
 	}
 
-	const sqlQueryInsertNewData = `INSERT INTO sensor_data (sensor_id, beehive_id, value, time) VALUES($1, $2, $3, $4)`
+	const sqlQueryInsertNewData = `INSERT INTO sensor_data (sensor_id, beehive_id, sensor_type, value, time) VALUES($1, $2, $3, $4, $5)`
 
 	// Check if its a single or multiple input and handle each case accordingly
 	if len(reqBody) > 0 && reqBody[0] == '[' {
@@ -67,7 +67,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		}
 
 		for _, data := range inputArray {
-			_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, data.SensorID, data.BeehiveID, data.Value, data.Time)
+			_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, data.SensorID, data.BeehiveID, data.SensorType, data.Value, data.Time)
 			if err != nil {
 				utils.LogError("Error inserting data, err: ", err)
 				utils.SendErrorResponse(w, "Error inserting data", http.StatusInternalServerError)
@@ -85,7 +85,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 			utils.SendErrorResponse(w, "Invalid payload", http.StatusBadRequest)
 			return
 		}
-		_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, inputObject.SensorID, inputObject.BeehiveID, inputObject.Value, inputObject.Time)
+		_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, inputObject.SensorID, inputObject.BeehiveID, inputObject.SensorType, inputObject.Value, inputObject.Time)
 		if err != nil {
 			utils.LogError("Error inserting data, err: ", err)
 			utils.SendErrorResponse(w, "Error inserting data", http.StatusInternalServerError)
@@ -98,7 +98,6 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 
 }
 
-// func dataValidation() error {
-
+// func dataValidation(data models.SensorData) error {
 // 	return nil
 // }

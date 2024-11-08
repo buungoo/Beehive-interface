@@ -2,6 +2,7 @@ package test
 
 import (
 	//"beehive_api/models"
+
 	"beehive_api/utils"
 	"context"
 	"encoding/json"
@@ -48,47 +49,48 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
 	}
 
 	// Insert test data into the beehives table
-	var beehive1ID, beehive2ID int
-	err = conn.QueryRow(context.Background(), "INSERT INTO beehives (name, user_id) VALUES ($1, $2) RETURNING id", "Beehive A", user1ID).Scan(&beehive1ID)
+	var beehive1ID = 1
+	var beehive2ID = 2
+	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name, user_id) VALUES ($1, $2, $3)", beehive1ID, "Beehive A", user1ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert beehive1: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO beehives (name, user_id) VALUES ($1, $2) RETURNING id", "Beehive B", user2ID).Scan(&beehive2ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name, user_id) VALUES ($1, $2, $3)", beehive2ID, "Beehive B", user2ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert beehive2: %v", err)
 	}
 
 	// Insert test data into the sensors table
-	var sensor1ID, sensor2ID, sensor3ID, sensor4ID, sensor5ID, sensor6ID, sensor7ID, sensor8ID int
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "temperature", beehive1ID).Scan(&sensor1ID)
+
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 1, "temperature", beehive1ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor1: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "humidity", beehive1ID).Scan(&sensor2ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 2, "humidity", beehive1ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor2: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "weight", beehive1ID).Scan(&sensor3ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 3, "weight", beehive1ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor3: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "oxygen", beehive1ID).Scan(&sensor4ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 4, "oxygen", beehive1ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor4: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "temperature", beehive2ID).Scan(&sensor5ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 5, "temperature", beehive2ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor5: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "humidity", beehive2ID).Scan(&sensor6ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 6, "humidity", beehive2ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor6: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "weight", beehive2ID).Scan(&sensor7ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 7, "weight", beehive2ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor7: %v", err)
 	}
-	err = conn.QueryRow(context.Background(), "INSERT INTO sensors (type, beehive_id) VALUES ($1, $2) RETURNING id", "oxygen", beehive2ID).Scan(&sensor8ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ", 8, "oxygen", beehive2ID)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor8: %v", err)
 	}
@@ -107,11 +109,13 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
 	}
 
 	// Unmarshal JSON data
+	//var readings []models.SensorData
 	var readings []struct {
-		SensorID  int     `json:"sensor_id"`
-		BeehiveID int     `json:"beehive_id"`
-		Value     float64 `json:"value"`
-		Time      string  `json:"time"`
+		SensorID   int     `json:"sensor_id"`
+		BeehiveID  int     `json:"beehive_id"`
+		SensorType string  `json:"sensor_type"`
+		Value      float64 `json:"value"`
+		Time       string  `json:"time"`
 	}
 	err = json.Unmarshal(data, &readings)
 	if err != nil {
@@ -128,8 +132,8 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
 		}
 
 		_, err = conn.Exec(context.Background(),
-			"INSERT INTO sensor_data (sensor_id, beehive_id, value, time) VALUES ($1, $2, $3, $4)",
-			reading.SensorID, reading.BeehiveID, reading.Value, parsedTime)
+			"INSERT INTO sensor_data (sensor_id, beehive_id, sensor_type, value, time) VALUES ($1, $2, $3, $4, $5)",
+			reading.SensorID, reading.BeehiveID, reading.SensorType, reading.Value, parsedTime)
 		if err != nil {
 			utils.LogFatal("Failed to insert sensor data for sensor_id %d: %v", err)
 		}
