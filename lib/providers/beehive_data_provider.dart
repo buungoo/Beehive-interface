@@ -1,13 +1,10 @@
 import 'dart:async';
 import 'package:beehive/models/beehive_data.dart';
-import 'dart:math';
 import 'dart:convert';
 import 'package:http/http.dart';
 import 'package:beehive/config.dart' as config;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-
-import '../models/beehive_data.dart';
 
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data

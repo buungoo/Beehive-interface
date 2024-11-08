@@ -6,6 +6,7 @@ import '../models/beehive_data.dart';
 import '../providers/beehive_data_provider.dart';
 import '../widgets/shared.dart';
 import '../widgets/BeeDetailView/detailgrid.dart';
+import 'package:beehive/widgets/BeeDetailView/statusbox.dart';
 
 class BeehiveDetailPage extends StatelessWidget {
   final Beehive beehive;
@@ -26,15 +27,28 @@ class BeehiveDetailPage extends StatelessWidget {
         context: context,
         appBar: getNavigationBar(
             context: context, title: beehive.name, bgcolor: Color(0xFFf4991a)),
-        body: Column(
+        body: Stack(
           children: [
-            Expanded(
-              child: DetailGrid(id: beehive.id),
-            ),
-            // Add more children here if needed
+            _buildDetailGrid(beehive.id),
+            _buildStatusBox(beehive.id),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDetailGrid(String id) {
+    return Positioned.fill(
+      child: DetailGrid(id: id),
+    );
+  }
+
+  Widget _buildStatusBox(String id) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Statusbox(id: id),
     );
   }
 }

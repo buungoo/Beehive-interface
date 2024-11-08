@@ -25,7 +25,8 @@ class OverviewPage extends StatelessWidget {
       appBar: getNavigationBar(
           context: context,
           title: 'Beehive Overview',
-          bgcolor: Color(0xFFf4991a)),
+          bgcolor: Color(0xFFf4991a),
+          Action: true),
       body: FutureBuilder<List<Beehive>>(
         future: beehiveList,
         builder: (context, snapshot) {

@@ -88,28 +88,6 @@ final GoRouter _router = GoRouter(
             title: type[0].toUpperCase() + type.substring(1),
             type: type);
 
-        // Retrieve the path parameter 'id'
-        //final String id = state.pathParameters['id']!;
-        //final String type = state.pathParameters['type']!;
-        // Fetch the beehive from the provider
-        //final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
-
-        // If beehive is not found, display an error message
-        if (beehive == null) {
-          return SharedScaffold(
-            context: context,
-            appBar: AppBar(
-              title: const Text('Error'),
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                // Navigate to overview page using go to get a clean stack
-                onPressed: () => context.go('/'),
-              ),
-            ),
-            body: const Center(child: Text('Beehive not found 2!')),
-          );
-        }
-
         // If beehive is found, return the beehive detail page
         //return BeeChartPage(beehive: beehive);
       },

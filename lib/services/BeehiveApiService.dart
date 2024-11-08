@@ -3,7 +3,6 @@ import 'package:http/http.dart';
 import 'package:beehive/config.dart' as config;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:beehive/models/beehive_user.dart';
 
 class BeehiveApi {
   BeehiveApi() {}

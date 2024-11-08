@@ -28,7 +28,7 @@ class DetailGrid extends StatelessWidget {
               mainAxisSpacing: 10.0,
               childAspectRatio: 1,
             ),
-            itemCount: 4, // Example grid size
+            itemCount: 5, // Example grid size
             itemBuilder: (context, index) {
               switch (index) {
                 case 0:
@@ -58,7 +58,7 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Weight',
-                      value: "${beehiveData.weight.toString()}kg",
+                      value: "${beehiveData.weight.toString()} kg",
                       colors: [
                         Colors.deepPurple.withOpacity(0.2),
                         Colors.blueAccent.withOpacity(0.3),
@@ -81,7 +81,7 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Humidity',
-                      value: "${beehiveData.humidity.toString()}%",
+                      value: "${beehiveData.humidity.toString()} %",
                       colors: [
                         Colors.blue.withOpacity(0.2),
                         Colors.lightBlue.withOpacity(0.3),
@@ -103,8 +103,8 @@ class DetailGrid extends StatelessWidget {
                 case 3:
                   return GestureDetector(
                     child: FrostedGlassBox(
-                      title: 'CO2',
-                      value: "${beehiveData.ppm.toString()}ppm",
+                      title: 'Oxygen',
+                      value: "${beehiveData.ppm.toString()} ppm",
                       colors: [
                         Colors.grey.withOpacity(0.2),
                         Colors.grey.withOpacity(0.3),
@@ -116,7 +116,30 @@ class DetailGrid extends StatelessWidget {
                         'testing',
                         pathParameters: {
                           'id': id,
-                          'type': "co2",
+                          'type': "oxygen",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
+                  );
+                case 4:
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Battery',
+                      value: "98 %",
+                      colors: [
+                        Colors.green.withOpacity(0.2),
+                        Colors.green.withOpacity(0.3),
+                        Colors.green.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "battery",
 
                           // Ensure id is a string if needed
                         }, // Use 'pathParameters' to pass the id

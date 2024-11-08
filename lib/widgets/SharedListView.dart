@@ -23,8 +23,4 @@ Widget SharedListTile(
           child: ListTile(
               leading: Icon(Icons.inventory_2), title: title, onTap: onTap),
         );
-
-  return isIOS(context)
-      ? CupertinoListTile(title: title, onTap: onTap)
-      : ListTile(title: title, onTap: onTap);
 }

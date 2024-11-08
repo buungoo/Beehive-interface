@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:beehive/config.dart' as config;
 
 class User {
   final String? uid;
