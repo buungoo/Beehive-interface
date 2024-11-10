@@ -35,6 +35,7 @@ void main() {
       final responseBody =
           jsonEncode({'message': 'User Validated', 'token': 'a mock token'});
 
+      // Mock a successful login.
       when(mockClient.post(
         Uri.parse('https://rockpi.bungos.duckdns.org/login'),
         headers: anyNamed('headers'),
