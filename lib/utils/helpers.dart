@@ -5,6 +5,10 @@ bool isIOS(BuildContext context) {
   return Theme.of(context).platform == TargetPlatform.iOS;
 }
 
+bool isAndroid(BuildContext context) {
+  return Theme.of(context).platform == TargetPlatform.android;
+}
+
 bool isDarkMode() {
   var brightness =
       SchedulerBinding.instance.platformDispatcher.platformBrightness;

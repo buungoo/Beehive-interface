@@ -10,7 +10,11 @@ class BeeNotification {
 
   init(BuildContext context) async {
     if (isIOS(context)) {
-      this.askPermIOS();
+      askPermIOS();
+    }
+
+    if (isAndroid(context)) {
+      askPermAndroid();
     }
   }
 
@@ -56,7 +60,7 @@ class BeeNotification {
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
-      icon: 'ic_launcher',
+      icon: '@mipmap/ic_launcher',
     );
 
     const DarwinNotificationDetails iOSNotificationDetails =
