@@ -1,7 +1,17 @@
+buildscript {
+    repositories {
+        google()          // Ensure Google repository is defined here
+        mavenCentral()    // Ensure Maven Central is also included
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.1' // Your Android Gradle Plugin version
+    }
+}
+
 allprojects {
     repositories {
-        google()
-        mavenCentral()
+        google()          // Google repository for Android-related dependencies
+        mavenCentral()    // Maven Central for other libraries
     }
 }
 
@@ -15,9 +25,4 @@ subprojects {
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
-}
-buildscript {
-    dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.0'
-    }
 }
