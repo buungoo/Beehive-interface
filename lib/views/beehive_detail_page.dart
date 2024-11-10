@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/cupertino.dart';
-import '../models/beehive.dart';
-import '../models/beehive_data.dart';
+import 'package:beehive/models/beehive.dart';
+import 'package:beehive/models/beehive_data.dart';
 import '../providers/beehive_data_provider.dart';
 import '../widgets/shared.dart';
 import '../widgets/BeeDetailView/detailgrid.dart';

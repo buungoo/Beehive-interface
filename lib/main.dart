@@ -18,6 +18,7 @@ import 'utils/helpers.dart';
 import 'widgets/shared.dart';
 import 'config.dart' as config;
 
+import 'package:beehive/models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -52,7 +53,8 @@ final GoRouter _router = GoRouter(
         // Retrieve the path parameter 'id'
         final String id = state.pathParameters['id']!;
         // Fetch the beehive from the provider
-        final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
+        Beehive? beehive =
+            context.read<BeehiveListProvider>().findBeehiveById(id);
 
         // If beehive is not found, display an error message
         if (beehive == null) {
