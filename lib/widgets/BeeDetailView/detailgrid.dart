@@ -5,8 +5,12 @@ import 'package:beehive/models/beehive_data.dart';
 import 'package:beehive/widgets/shared.dart';
 import 'package:beehive/utils/helpers.dart';
 import 'dart:ui';
+import 'package:go_router/go_router.dart'; // GoRouter for navigation
 
 class DetailGrid extends StatelessWidget {
+  final String id;
+  DetailGrid({required this.id, super.key});
+
   @override
   Widget build(BuildContext context) {
     // Use Consumer to listen for changes from the StreamProvider
@@ -24,72 +28,127 @@ class DetailGrid extends StatelessWidget {
               mainAxisSpacing: 10.0,
               childAspectRatio: 1,
             ),
-            itemCount: 4, // Example grid size
+            itemCount: 5, // Example grid size
             itemBuilder: (context, index) {
               switch (index) {
                 case 0:
-                  return FrostedGlassBox(
-                    title: 'Temperature',
-                    value: "${beehiveData.temperature}°C",
-                    colors: [
-                      Colors.green.withOpacity(0.2),
-                      Colors.orange.withOpacity(0.3),
-                      Colors.red.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Temperature',
+                      value: "${beehiveData.temperature.toString()}°C",
+                      colors: [
+                        Colors.green.withOpacity(0.2),
+                        Colors.orange.withOpacity(0.3),
+                        Colors.red.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "temperature",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 case 1:
-                  return FrostedGlassBox(
-                    title: 'Weight',
-                    value: "${beehiveData.weight}kg",
-                    colors: [
-                      Colors.deepPurple.withOpacity(0.2),
-                      Colors.blueAccent.withOpacity(0.3),
-                      Colors.cyanAccent.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Weight',
+                      value: "${beehiveData.weight.toString()} kg",
+                      colors: [
+                        Colors.deepPurple.withOpacity(0.2),
+                        Colors.blueAccent.withOpacity(0.3),
+                        Colors.cyanAccent.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "weight",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 case 2:
-                  return FrostedGlassBox(
-                    title: 'Humidity',
-                    value: "${beehiveData.humidity}%",
-                    colors: [
-                      Colors.blue.withOpacity(0.2),
-                      Colors.lightBlue.withOpacity(0.3),
-                      Colors.lightBlueAccent.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Humidity',
+                      value: "${beehiveData.humidity.toString()} %",
+                      colors: [
+                        Colors.blue.withOpacity(0.2),
+                        Colors.lightBlue.withOpacity(0.3),
+                        Colors.lightBlueAccent.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "humidity",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 case 3:
-                  return FrostedGlassBox(
-                    title: 'CO2',
-                    value: "${beehiveData.ppm}ppm",
-                    colors: [
-                      Colors.grey.withOpacity(0.2),
-                      Colors.grey.withOpacity(0.3),
-                      Colors.grey.withOpacity(0.2),
-                    ],
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Oxygen',
+                      value: "${beehiveData.ppm.toString()} ppm",
+                      colors: [
+                        Colors.grey.withOpacity(0.2),
+                        Colors.grey.withOpacity(0.3),
+                        Colors.grey.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "oxygen",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
+                  );
+                case 4:
+                  return GestureDetector(
+                    child: FrostedGlassBox(
+                      title: 'Battery',
+                      value: "98 %",
+                      colors: [
+                        Colors.green.withOpacity(0.2),
+                        Colors.green.withOpacity(0.3),
+                        Colors.green.withOpacity(0.2),
+                      ],
+                    ),
+                    onTap: () {
+                      context.pushNamed(
+                        'testing',
+                        pathParameters: {
+                          'id': id,
+                          'type': "battery",
+
+                          // Ensure id is a string if needed
+                        }, // Use 'pathParameters' to pass the id
+                      );
+                    },
                   );
                 default:
                   return FrostedGlassBox(title: 'null', value: 'null');
               }
-
-              /*switch (index) {
-                case 0:
-                  return FrostedDataBox(
-                    title: "Temperature",
-                    value: "${beehiveData.temperature}°C",
-                  );
-                case 1:
-                  return FrostedDataBox(
-                    title: "Weight",
-                    value: "${beehiveData.weight}kg",
-                  );
-                case 2:
-                  return FrostedDataBox(
-                    title: "Humidity",
-                    value: "${beehiveData.humidity}%",
-                  );
-                default:
-                  return FrostedDataBox(title: "null", value: "null");
-              }*/
             },
           ),
         );

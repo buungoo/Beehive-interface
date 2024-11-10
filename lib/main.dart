@@ -12,6 +12,7 @@ import 'providers/beehive_list_provider.dart';
 import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
 import 'views/login_page.dart';
+import 'package:beehive/views/detail_chart_page.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
@@ -73,6 +74,24 @@ final GoRouter _router = GoRouter(
         return BeehiveDetailPage(beehive: beehive);
       },
     ),
+    GoRoute(
+      name: "testing",
+      path: '/beehive/test/:id/:type',
+      builder: (context, state) {
+        final String id = state.pathParameters['id']!;
+        final String type = state.pathParameters['type']!;
+
+        final beehive =
+            context.read<BeehiveListProvider>().findBeehiveById("1");
+        return BeeChartPage(
+            beehive: beehive,
+            title: type[0].toUpperCase() + type.substring(1),
+            type: type);
+
+        // If beehive is found, return the beehive detail page
+        //return BeeChartPage(beehive: beehive);
+      },
+    ),
   ],
 );
 
@@ -119,10 +138,10 @@ class BeehiveApp extends StatelessWidget {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    BeeNotification().sendCriticalNotification(
+    /*BeeNotification().sendCriticalNotification(
       title: "Beehive #32 is having issues",
       body: "Unable to connect to the beehive",
-    );
+    );*/
     return Future.value(true);
   });
 }
@@ -135,12 +154,13 @@ void main() {
     callbackDispatcher,
     isInDebugMode: false,
   );
-  Workmanager().registerPeriodicTask(
+  /*Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
     frequency: config.bgWorkerFetchRate,
   );
   Workmanager().printScheduledTasks();
+  */
 
   runApp(const BeehiveApp()); // Entry point for the app
 }
