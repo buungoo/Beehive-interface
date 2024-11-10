@@ -7,7 +7,6 @@ import 'dart:convert';
 import 'package:beehive/models/beehive_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Step 3: Generate the mock class for http.Client
 @GenerateMocks([http.Client])
 import 'beehive_user_provider_test.mocks.dart';
 
