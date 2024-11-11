@@ -7,14 +7,11 @@ import (
 	"runtime"
 )
 
-var apiLogger *Logger
-
-type Logger struct {
-	Info  *log.Logger
-	Warn  *log.Logger
-	Error *log.Logger
-	Fatal *log.Logger
-}
+// Pointers to custom loggers
+var infoLogger *log.Logger
+var warnLogger *log.Logger
+var errorLogger *log.Logger
+var fatalLogger *log.Logger
 
 // Open/Create a logfile and return it with write permission and initialize the logger
 func InitLogger() (*os.File, error) {
@@ -24,12 +21,11 @@ func InitLogger() (*os.File, error) {
 	}
 
 	logFlags := log.Ldate | log.Ltime
-	apiLogger = &Logger{
-		Info:  log.New(logFile, "INFO: ", logFlags),
-		Warn:  log.New(logFile, "WARN: ", logFlags),
-		Error: log.New(logFile, "ERROR: ", logFlags),
-		Fatal: log.New(logFile, "FATAL: ", logFlags),
-	}
+	// Initialize the loggers
+	infoLogger = log.New(logFile, "INFO: ", logFlags)
+	warnLogger = log.New(logFile, "WARN: ", logFlags)
+	errorLogger = log.New(logFile, "ERROR: ", logFlags)
+	fatalLogger = log.New(logFile, "FATAL: ", logFlags)
 
 	return logFile, nil
 }
@@ -43,26 +39,26 @@ func callerInfo() string {
 	return fmt.Sprintf("%s:%d", file, line)
 }
 func LogInfo(message string) {
-	if apiLogger != nil {
-		apiLogger.Info.Println(callerInfo(), message)
+	if infoLogger != nil {
+		infoLogger.Println(callerInfo(), message)
 	}
 }
 
 func LogWarn(message string) {
-	if apiLogger != nil {
-		apiLogger.Warn.Println(callerInfo(), message)
+	if warnLogger != nil {
+		warnLogger.Println(callerInfo(), message)
 	}
 }
 
 func LogError(message string, err error) {
-	if apiLogger != nil {
-		apiLogger.Error.Println(callerInfo(), message, err)
+	if errorLogger != nil {
+		errorLogger.Println(callerInfo(), message, err)
 	}
 }
 
 func LogFatal(message string, err error) {
-	if apiLogger != nil {
-		apiLogger.Fatal.Println(callerInfo(), message, err)
+	if fatalLogger != nil {
+		fatalLogger.Println(callerInfo(), message, err)
 		os.Exit(1)
 	}
 }
