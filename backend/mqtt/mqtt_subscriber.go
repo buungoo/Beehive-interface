@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"strings"
 	// "encoding/binary"
 	// "encoding/hex"
 	"encoding/json"
@@ -15,11 +16,131 @@ import (
 	"time"
 )
 
+// Sensor enum to represent sensor types
+type Sensor uint8
+
+const (
+	LoadCell    Sensor = 1
+	Temperature        = 2
+	Humidity           = 3
+	Microphone         = 4
+	Oxygen             = 5
+)
+
+// SensorReading struct to hold a parsed sensor reading
+type SensorReading struct {
+	SensorType Sensor
+	SensorID   uint8
+	Value      interface{} // Allows for different types, like int8 or uint8
+	Timestamp  time.Time   // To store the timestamp of the reading
+}
+
+// Builder pattern for SensorReading
+type SensorReadingBuilder struct {
+	sensorType Sensor
+	sensorID   uint8
+	value      interface{}
+	timestamp  time.Time
+}
+
+func NewSensorReadingBuilder(sensorType Sensor, timestamp time.Time) *SensorReadingBuilder {
+	return &SensorReadingBuilder{sensorType: sensorType, timestamp: timestamp}
+}
+func (b *SensorReadingBuilder) SetSensorID(id uint8) *SensorReadingBuilder {
+	b.sensorID = id
+	return b
+}
+
+func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder {
+	switch b.sensorType {
+	case Temperature:
+		if v, ok := value.(int8); ok {
+			b.value = v
+		} else {
+			log.Println("Invalid value type for Temperature. Expected int8.")
+		}
+	default:
+		if v, ok := value.(uint8); ok {
+			b.value = v
+		} else {
+			log.Println("Invalid value type for non-temperature sensor. Expected uint8.")
+		}
+	}
+	return b
+}
+
+func (b *SensorReadingBuilder) Build() *SensorReading {
+	return &SensorReading{
+		SensorType: b.sensorType,
+		SensorID:   b.sensorID,
+		Value:      b.value,
+		Timestamp:  b.timestamp,
+	}
+}
+
+func parseSensorMessage(message SensorMessage) ([]*SensorReading, error) {
+	decodedData, err := base64.StdEncoding.DecodeString(message.Data)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding base64 data: %v", err)
+	}
+
+	if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
+		message.Time = message.Time[:dotIndex] + "Z" // Add "Z" to indicate UTC
+		// fmt.Println(message.Time)
+	}
+
+	timeStamp, err := time.Parse("2006-01-02T15:04:05Z", message.Time)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing time: %v", err)
+	}
+
+	var readings []*SensorReading
+	for i := 0; i < len(decodedData); i += 3 {
+		sensorType := Sensor(decodedData[i])
+		sensorId := decodedData[i+1]
+		rawValue := decodedData[i+2]
+
+		builder := NewSensorReadingBuilder(sensorType, timeStamp).SetSensorID(sensorId)
+		switch sensorType {
+		case Temperature:
+			builder.SetValue(int8(rawValue)) // Temperature uses int8
+		default:
+			builder.SetValue(rawValue) // Other sensors use uint8
+		}
+
+		readings = append(readings, builder.Build())
+	}
+
+	return readings, nil
+}
+
+// Mock function to simulate message handling
+func handleSensorMessage(message SensorMessage) {
+	readings, err := parseSensorMessage(message)
+	if err != nil {
+		log.Printf("Error parsing sensor message: %v", err)
+		return
+	}
+
+	for _, reading := range readings {
+		fmt.Printf("Sensor Reading: %+v\n", reading)
+	}
+}
+
 type SensorMessage struct {
 	ApplicationName string `json:"applicationName"`
 	Data            string `json:"data"`
 	Time            string `json:"time"`
 }
+
+// type Sensor uint8
+//
+// const (
+// 	LoadCell    Sensor = 1
+// 	Temperature        = 2
+// 	Humidity           = 3
+// 	Microphone         = 4
+// )
 
 // Initialize the log file
 var logFile *os.File
@@ -48,6 +169,7 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 	// "time":"2024-11-05T14:01:49.217376Z",
 	// "txInfo":{"adr":true,"codeRate":"4/5","dataRate":{"bandwidth":125,"modulation":"LORA","spreadFactor":7},"frequency":868300000}
 	// }
+
 	logMessage := fmt.Sprintf("%s - applicationName: %s, data: %s, time: %s\n",
 		timestamp, sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time)
 
@@ -61,40 +183,36 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 		log.Printf("Error writing to log file: %v", err)
 	}
 
-	// fmt.Println(logMessage)
-	// hx := hex.EncodeToString([]byte(sensorMessage.Data))
-	// fmt.Println(sensorMessage.Data + " ==> " + hx)
+	handleSensorMessage(sensorMessage) //.Data)
 
-	h, err := base64.StdEncoding.DecodeString(sensorMessage.Data)
-	if err != nil {
-		// handle error
-	}
-
-	// p, err := base64.StdEncoding.DecodeString(sensorMessage.Data)
+	// h, err := base64.StdEncoding.DecodeString(sensorMessage.Data)
 	// if err != nil {
 	// 	// handle error
 	// }
-	// h := hex.EncodeToString(p)
-	fmt.Println(h) // prints 415256494e
+	//
+	// fmt.Println(h)
 
-	// // Split the hex string into slices of 2 characters each and convert to integers
-	// var intValues []int
-	// for i := 0; i < len(h); i += 2 {
-	// 	hexPair := h[i : i+2]
-	// 	intValue, err := strconv.ParseInt(hexPair, 16, 32)
-	// 	if err != nil {
-	// 		// handle error
-	// 		fmt.Println("Error parsing hex pair:", err)
-	// 		return
+	// sensorId byte := 0
+	// sensorType := 0
+	// sensorValue := 0
+	// sensorId, sensorType, sensorValue byte
+	// sensorId, sensorType, sensorValue := byte(0), byte(0), byte(0)
+	//
+	// for index, element := range h {
+	// 	fmt.Println("Index:", index, "Element:", element)
+	//
+	// 	switch {
+	// 	case index%3 == 1:
+	// 		sensorType = element
+	// 		fmt.Println("sensorType assigned:", sensorType)
+	// 	case index%3 == 2:
+	// 		sensorId = element
+	// 		fmt.Println("sensorId assigned:", sensorId)
+	// 	case index%3 == 0:
+	// 		sensorValue = element
+	// 		fmt.Println("sensorValue assigned:", sensorValue)
 	// 	}
-	// 	intValues = append(intValues, int(intValue))
 	// }
-
-	// Print the resulting integers
-	// fmt.Println("Integer values:", intValues)
-	// // myslice :=
-	// byteData := binary.BigEndian.Uint16([]byte(h))
-	// fmt.Println(byteData)
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
@@ -122,7 +240,7 @@ func main() {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("local_subscriber2")
+	opts.SetClientID("local_subscriber")
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler

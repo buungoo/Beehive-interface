@@ -33,36 +33,7 @@ func main() {
 	}
 
 	// JSON payload
-	sensorValue := `{
-		"applicationID":"1",
-		"applicationName":"beehive-sensor-card",
-		"data":"YWFhYWE=",
-		"devEUI":"0080e115000adf82",
-		"deviceName":"beehive-sensor-card-dn",
-		"fCnt":319,
-		"fPort":2,
-		"rxInfo":[{
-			"altitude":0,
-			"latitude":0,
-			"loRaSNR":7.5,
-			"longitude":0,
-			"mac":"24e124fffef0b4f9",
-			"name":"24e124fffef0b4f9",
-			"rssi":-109,
-			"time":"2024-11-05T14:01:49.217376Z"
-		}],
-		"time":"2024-11-05T14:01:49.217376Z",
-		"txInfo":{
-			"adr":true,
-			"codeRate":"4/5",
-			"dataRate":{
-				"bandwidth":125,
-				"modulation":"LORA",
-				"spreadFactor":7
-			},
-			"frequency":868300000
-		}
-	}`
+	sensorValue := `{"applicationID":"1","applicationName":"beehive-sensor-card","data":"AwEgAgHs","devEUI":"0080e115000adf82","deviceName":"beehive-sensor-card-dn","fCnt":200,"fPort":2,"rxInfo":[{"altitude":0,"latitude":0,"loRaSNR":5.2,"longitude":0,"mac":"24e124fffef0b4f9","name":"24e124fffef0b4f9","rssi":-113,"time":"2024-11-07T13:39:29.776959Z"}],"time":"2024-11-07T13:39:29.776959Z","txInfo":{"adr":true,"codeRate":"4/5","dataRate":{"bandwidth":125,"modulation":"LORA","spreadFactor":7},"frequency":868100000}}`
 
 	// Publish float data to the topic at regular intervals
 	for {
