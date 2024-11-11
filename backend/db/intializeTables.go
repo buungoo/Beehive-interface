@@ -13,40 +13,56 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	CREATE EXTENSION IF NOT EXISTS timescaledb;
 
 	CREATE TABLE IF NOT EXISTS "users" (
-		"id" SERIAL PRIMARY KEY,
+		"id" SERIAL,
 		"username" VARCHAR(255) UNIQUE NOT NULL CHECK (username <> ''),
-		"password" BYTEA NOT NULL
+		"password" BYTEA NOT NULL,
+		PRIMARY KEY ("id")
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehives" (
-		"id" INTEGER PRIMARY KEY,
+		"id" INTEGER NOT NULL,
 		"name" VARCHAR NOT NULL,
-		"user_id" INTEGER REFERENCES "users" ("id")
+		PRIMARY KEY ("id")
+	);
+
+	CREATE TABLE IF NOT EXISTS "user_beehive" (
+		"user_id" INTEGER NOT NULL,
+		"beehive_id" INTEGER NOT NULL,
+		PRIMARY KEY ("user_id", "beehive_id"),
+		FOREIGN KEY ("user_id") REFERENCES "users",
+		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id")
 	);
 
 	CREATE TABLE IF NOT EXISTS "sensors" (
-		"id" INTEGER UNIQUE,
+		"id" INTEGER NOT NULL,
 		"type" VARCHAR NOT NULL,
-		"beehive_id" INTEGER REFERENCES "beehives" ("id"),
-		PRIMARY KEY ("id", "type")
+		"beehive_id" INTEGER NOT NULL,
+		PRIMARY KEY ("id", "type", "beehive_id"),
+		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id")
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehive_status" (
-		"beehive_id" INTEGER REFERENCES "beehives" ("id"),
-		"sensor_id" INTEGER REFERENCES "sensors" ("id"),
+		"sensor_id" INTEGER NOT NULL,
+		"beehive_id" INTEGER NOT NULL,
+		"sensor_type" VARCHAR NOT NULL,
+		"description" VARCHAR,
 		"solved" BOOLEAN,
 		"read" BOOLEAN,
-		"time" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		"time_of_error" TIMESTAMPTZ,
+		"time_read" TIMESTAMPTZ,
+		PRIMARY KEY ("beehive_id", "sensor_id"),
+		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id"), 
+		FOREIGN KEY ("sensor_id", "sensor_type", "beehive_id") REFERENCES "sensors" ("id", "type", "beehive_id")
 	);
 
 	CREATE TABLE IF NOT EXISTS "sensor_data" (
-		"sensor_id" INTEGER REFERENCES "sensors" ("id"),
-		"beehive_id" INTEGER REFERENCES "beehives" ("id"),
+		"sensor_id" INTEGER NOT NULL,
+		"beehive_id" INTEGER NOT NULL,
 		"sensor_type" VARCHAR NOT NULL,
 		"value" FLOAT NOT NULL,
 		"time" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 		PRIMARY KEY ("sensor_id","beehive_id", "time"),
-		FOREIGN KEY ("sensor_id", "sensor_type") REFERENCES "sensors" ("id", "type")
+		FOREIGN KEY ("sensor_id", "sensor_type", "beehive_id") REFERENCES "sensors" ("id", "type", "beehive_id")
 	);
 	`
 

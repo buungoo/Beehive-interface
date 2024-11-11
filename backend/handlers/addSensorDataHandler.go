@@ -67,6 +67,11 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		}
 
 		for _, data := range inputArray {
+			err := dataValidation(data)
+			if err != nil {
+				utils.LogError("Error adding a value, err: ", err)
+
+			}
 			_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, data.SensorID, data.BeehiveID, data.SensorType, data.Value, data.Time)
 			if err != nil {
 				utils.LogError("Error inserting data, err: ", err)
@@ -85,6 +90,11 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 			utils.SendErrorResponse(w, "Invalid payload", http.StatusBadRequest)
 			return
 		}
+		err := dataValidation(inputObject)
+		if err != nil {
+			utils.LogError("Error adding a value, err: ", err)
+
+		}
 		_, err = conn.Exec(context.Background(), sqlQueryInsertNewData, inputObject.SensorID, inputObject.BeehiveID, inputObject.SensorType, inputObject.Value, inputObject.Time)
 		if err != nil {
 			utils.LogError("Error inserting data, err: ", err)
@@ -98,6 +108,72 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 
 }
 
-// func dataValidation(data models.SensorData) error {
-// 	return nil
-// }
+// Check for weird values in the input data
+func dataValidation(data models.SensorData) error {
+	switch data.SensorType {
+	case "temperature":
+		return validateTemperature(data)
+	case "humidity":
+		return validateHumidity(data)
+	case "oxygen":
+		return validateOxygen(data)
+	case "weight":
+		return validateWeight(data)
+	case "microphone":
+		return validateMicrophone(data)
+	default:
+		utils.LogWarn("Invalid sensortype")
+		return errors.New("invalid sensortype")
+	}
+
+}
+
+func validateTemperature(data models.SensorData) error {
+	if data.Value > 40 {
+		return errors.New("temperature above 40 Celcius")
+	} else if data.Value < 40 {
+		return errors.New("temperature below 40 Celsius")
+	} else {
+		return nil
+	}
+}
+
+func validateHumidity(data models.SensorData) error {
+	if data.Value < 0 {
+		return errors.New("humidity below 0%")
+	} else if data.Value > 100 {
+		return errors.New("humidity over 100%")
+	} else {
+		return nil
+	}
+}
+
+func validateOxygen(data models.SensorData) error {
+	if data.Value < 15 {
+		return errors.New("oxygenlevel below 15%")
+	} else if data.Value > 25 {
+		return errors.New("oxygenlevel above 15%")
+	} else {
+		return nil
+	}
+}
+
+func validateWeight(data models.SensorData) error {
+	if data.Value < 0 {
+		return errors.New("weight is below 0kg")
+	} else if data.Value > 50 {
+		return errors.New("weight is above 50kg")
+	} else {
+		return nil
+	}
+}
+
+func validateMicrophone(data models.SensorData) error {
+	if data.Value < 0 {
+		return errors.New("microphone reading is below 0")
+	} else if data.Value > 100 {
+		return errors.New("microphone value is above 100")
+	} else {
+		return nil
+	}
+}

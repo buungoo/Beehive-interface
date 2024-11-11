@@ -31,9 +31,8 @@ import (
 // }
 
 type Beehives struct {
-	Id     int    `json: "id"`
-	Name   string `json: "name`
-	UserID int    `json: "user_id`
+	Id   int    `json: "id"`
+	Name string `json: "name`
 }
 
 type SensorData struct {

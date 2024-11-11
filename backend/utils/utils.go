@@ -53,7 +53,7 @@ func GetUserId(conn *pgx.Conn, username string) (int, error) {
 
 // Veryfies the provided beehive_id exists in the database
 func VerifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
-	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1 AND user_id=$2)`
+	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM user_beehive WHERE beehive_id=$1 AND user_id=$2)`
 
 	// Verify the beehive ID exists
 	var exists bool

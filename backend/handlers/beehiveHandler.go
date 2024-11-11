@@ -20,28 +20,27 @@ func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
-	// Acuire connection from the connection pool
+	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
 		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
 	}
 	defer conn.Release()
 
-	const sqlQueryFetchUserID = `SELECT id FROM users WHERE username=$1`
-
-	var userID int
-	// Fetch userid for user
-	err = conn.QueryRow(context.Background(), sqlQueryFetchUserID, username).Scan(&userID)
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
 	if err != nil {
 		utils.LogError("Error fetching user id, err: ", err)
 		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
-		return
 	}
 
 	// Fetch all beehives connected to the user
-	const sqlQueryFetchAllBeehives = `SELECT id, name, user_id FROM beehives WHERE user_id=$1`
+	const sqlQueryFetchAllBeehives = `SELECT b.id, b.name 
+						FROM user_beehive ub
+						JOIN beehives b ON ub.beehive_id = b.id 
+						WHERE ub.user_id=$1`
 
-	rows, err := conn.Query(context.Background(), sqlQueryFetchAllBeehives, userID)
+	rows, err := conn.Query(context.Background(), sqlQueryFetchAllBeehives, userId)
 	if err != nil {
 		utils.LogError("Error fetching all beehives, err: ", err)
 		utils.SendErrorResponse(w, "Error fetching all beehives", http.StatusInternalServerError)
@@ -68,7 +67,7 @@ func iterateBeehives(rows pgx.Rows) ([]models.Beehives, error) {
 
 	for rows.Next() {
 		var beehive models.Beehives
-		if err := rows.Scan(&beehive.Id, &beehive.Name, &beehive.UserID); err != nil {
+		if err := rows.Scan(&beehive.Id, &beehive.Name); err != nil {
 			return dataResponse, err
 		}
 		dataResponse = append(dataResponse, beehive)

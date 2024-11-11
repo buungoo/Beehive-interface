@@ -51,13 +51,23 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
 	// Insert test data into the beehives table
 	var beehive1ID = 1
 	var beehive2ID = 2
-	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name, user_id) VALUES ($1, $2, $3)", beehive1ID, "Beehive A", user1ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name) VALUES ($1, $2)", beehive1ID, "Beehive A")
 	if err != nil {
 		return fmt.Errorf("failed to insert beehive1: %v", err)
 	}
-	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name, user_id) VALUES ($1, $2, $3)", beehive2ID, "Beehive B", user2ID)
+	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (id, name) VALUES ($1, $2)", beehive2ID, "Beehive B")
 	if err != nil {
 		return fmt.Errorf("failed to insert beehive2: %v", err)
+	}
+
+	// Insert test data into the user_beehive table
+	_, err = conn.Exec(context.Background(), "INSERT INTO user_beehive (user_id, beehive_id) VALUES ($1, $2)", user1ID, beehive1ID)
+	if err != nil {
+		return fmt.Errorf("failed to insert userId and beehive_id: %v", err)
+	}
+	_, err = conn.Exec(context.Background(), "INSERT INTO user_beehive (user_id, beehive_id) VALUES ($1, $2)", user2ID, beehive2ID)
+	if err != nil {
+		return fmt.Errorf("failed to insert userId and beehive_id: %v", err)
 	}
 
 	// Insert test data into the sensors table
