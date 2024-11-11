@@ -1,19 +1,14 @@
 import 'dart:async';
 import 'package:beehive/models/beehive_data.dart';
-import 'dart:math';
+import 'dart:convert';
+import 'package:http/http.dart';
 import 'package:beehive/config.dart' as config;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
-  Stream<BeehiveData> getBeehiveDataStream() async* {
-    // TODO: Investigate if its possible to do socket connection instead
-
-    var random = Random();
-    int temp = 35; // Initial temperature in °C
-    int weight = 50; // Initial hive weight in kg
-    int humidity = 60; // Initial humidity percentage
-    int ppm = 416; // Initial CO2 concentration in ppm
-
+  Stream<BeehiveData> getBeehiveDataStream(String beehiveid) async* {
     bool init = false;
 
     while (true) {
@@ -23,27 +18,71 @@ class BeehiveDataProvider {
         init = true;
       }
 
-      print("Fetch Data");
-      // Simulate small fluctuations in temperature (±0.5°C)
-      temp += random.nextInt(3) - 1;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
 
-      // Simulate weight change, gradual increase or decrease (±1 kg)
-      weight += random.nextInt(3) - 1;
+        final uri = Uri.parse(
+            '${config.BackendServer}/beehive/$beehiveid/sensor-data/latest');
 
-      // Simulate humidity change (±2%)
-      humidity += random.nextInt(5) - 2;
+        var response = await get(uri, headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        });
 
-      // Simulate CO2 concentration change (±5 ppm)
-      ppm += random.nextInt(2) - 1;
+        print(response.body);
+        final data = json.decode(response.body);
 
-      // Ensure realistic bounds
-      //temp = temp.clamp(30, 40); // Keep within realistic hive temperature range
-      //weight = weight.clamp(45, 60); // Hive weight fluctuation range
-      //humidity = humidity.clamp(50, 80); // Humidity percentage range
-      //ppm = ppm.clamp(400, 450); // CO2 concentration range
+        double temp = data[0]['value']; // Temperature in °C
+        double weight = data[1]['value']; // Weight in grams
+        double humidity = data[2]['value']; // Humidity in %
+        double ppm = data[3]['value']; // Particles Per Million (PPM)
 
-      yield BeehiveData(
-          temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
+        yield BeehiveData(
+            temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
+      } catch (e) {
+        print(e);
+      }
     }
+  }
+
+  Stream<String> getBeehiveDataChartStream(
+      String beehiveid, String sensor) async* {
+    while (true) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('token');
+
+        var date1 = DateTime.now().subtract(Duration(days: 40));
+        var date2 = DateTime.now();
+
+        // parse it to string in 2006-01-02 format
+        final formatter = DateFormat('yyyy-MM-dd');
+        String formattedDate1 = formatter.format(date1);
+        String formattedDate2 = formatter.format(date2);
+
+        print("formattedDate1: $formattedDate1");
+        print("formattedDate2: $formattedDate2");
+
+        //TODO: Make sure to only extract the "type" from the request
+        final uri = Uri.parse(
+            '${config.BackendServer}/beehive/$beehiveid/sensor-data/$formattedDate1/$formattedDate2');
+
+        print(uri);
+
+        var response = await get(uri, headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        });
+        yield response.body.toString();
+      } catch (e) {
+        print(e);
+      }
+      await Future.delayed(config.refreshRate);
+    }
+  }
+
+  Stream<String> getBeehiveSensorData(String type) async* {
+    yield "Hello";
   }
 }

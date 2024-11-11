@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter for navigation
+import 'package:beehive/services/BeehiveApiService.dart';
 
-
-class InitialPage extends StatelessWidget{
+class InitialPage extends StatelessWidget {
   const InitialPage({super.key});
 
-  void printText(){
+  void printText() {
     print("Yeet");
   }
 
+  void checkAuth(BuildContext context) async {
+    print("Checking Auth");
+    final authenticated = await BeehiveApi().verifyUser();
+    print("Authenticated: $authenticated");
+    if (authenticated) {
+      // Navigate to the 'overview' page on successful login
+      context.go('/overview');
+    }
+  }
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
+    checkAuth(context);
+
     return Scaffold(
       body: Center(
-          child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,  // Center Y axis
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center, // Center Y axis
           children: [
             Text('Hello'),
             SizedBox(height: 25),
@@ -24,7 +36,9 @@ class InitialPage extends StatelessWidget{
               },
               child: Text('Login'),
             ),
-            SizedBox(height: 15,),
+            SizedBox(
+              height: 15,
+            ),
             ElevatedButton(
               onPressed: () {
                 context.push('/signup_page');
@@ -35,9 +49,5 @@ class InitialPage extends StatelessWidget{
         ),
       ),
     );
-
-
   }
-
-
 }

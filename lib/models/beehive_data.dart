@@ -1,9 +1,8 @@
 class BeehiveData {
-  final int temperature;
-  final int weight;
-  final int humidity;
-  final int ppm;
-  final int test = 10;
+  final double temperature;
+  final double weight;
+  final double humidity;
+  final double ppm;
 
   BeehiveData(
       {required this.temperature,

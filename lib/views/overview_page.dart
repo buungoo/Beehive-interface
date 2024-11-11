@@ -25,7 +25,8 @@ class OverviewPage extends StatelessWidget {
       appBar: getNavigationBar(
           context: context,
           title: 'Beehive Overview',
-          bgcolor: Color(0xFFf4991a)),
+          bgcolor: Color(0xFFf4991a),
+          Action: true),
       body: FutureBuilder<List<Beehive>>(
         future: beehiveList,
         builder: (context, snapshot) {
@@ -45,12 +46,13 @@ class OverviewPage extends StatelessWidget {
                 return SharedListTile(
                   context: context,
                   title: Text(beehive.name),
+                  issue: false,
                   onTap: () {
                     // Navigate to the beehive detail page using GoRouter pathing
                     context.pushNamed(
                       'beehive-detail', // The name of the route
                       pathParameters: {
-                        'id': beehive.id.toString()
+                        'id': beehive.id.toString(),
                         // Ensure id is a string if needed
                       }, // Use 'pathParameters' to pass the id
                     );
