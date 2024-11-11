@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/beehive_list_provider.dart';
 import '../widgets/shared.dart';
-import '../models/beehive.dart';
+import 'package:beehive/models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'dart:io';
 

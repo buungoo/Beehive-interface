@@ -31,6 +31,7 @@ class InitialPage extends StatelessWidget {
             Text('Hello'),
             SizedBox(height: 25),
             ElevatedButton(
+              key: Key("Login"),
               onPressed: () {
                 context.push('/login_page');
               },
@@ -40,6 +41,7 @@ class InitialPage extends StatelessWidget {
               height: 15,
             ),
             ElevatedButton(
+              key: Key("Signin"),
               onPressed: () {
                 context.push('/signup_page');
               },
