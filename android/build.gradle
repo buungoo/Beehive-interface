@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()    // Ensure Maven Central is also included
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.0' // Your Android Gradle Plugin version
+        classpath 'com.android.tools.build:gradle:7.4.1' // Your Android Gradle Plugin version
     }
 }
 
@@ -25,4 +25,4 @@ subprojects {
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
-
+}
