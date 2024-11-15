@@ -55,8 +55,8 @@ func InjectTestData(dbPool *pgxpool.Pool) error {
 	// // Insert test data into the beehives table
 	var beehive1ID int
 	var beehive2ID int
-	var MacAddr1 string = "0A:0A:0A:0A:0A:0A"
-	var MacAddr2 string = "1B:1B:1B:1B:1B:1B"
+	var MacAddr1 string = "0A:0A:0A:0A:0A:0A:0A:0A"
+	var MacAddr2 string = "0080e115000adf82"
 
 	err = conn.QueryRow(context.Background(), "INSERT INTO beehives (name, key) VALUES ($1, $2) RETURNING id", "Beehive A", MacAddr1).Scan(&beehive1ID)
 	if err != nil {
