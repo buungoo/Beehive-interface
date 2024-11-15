@@ -4,6 +4,7 @@ import (
 	"beehive_api/models"
 	"beehive_api/utils"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -11,8 +12,74 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Connect a beehive to a user by using the sensor-cards mac address
+func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Retrieve the macaddress from http-body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	macAddr := struct {
+		Addr string `json:"macaddress"`
+	}{}
+	err := decoder.Decode(&macAddr)
+	if err != nil {
+		utils.LogError("Could not decode macaddress", err)
+		utils.SendErrorResponse(w, "Could not decode macaddress", http.StatusInternalServerError)
+		return
+	}
+	utils.LogInfo("Macaddress is: " + macAddr.Addr)
+	macAddress := macAddr.Addr
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the mac address is correct
+	beehiveExists, err := utils.VerifyBeehive(conn.Conn(), beehiveId, macAddress)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryAddBeehive = `INSERT INTO user_beehive (user_id, beehive_id) VALUES ($1, $2)`
+
+	_, err = conn.Exec(context.Background(), sqlQueryAddBeehive, userId, beehiveId)
+	if err != nil {
+		utils.LogError("Error adding beehive to user, error: ", err)
+		utils.SendErrorResponse(w, "Error adding beehive to user", http.StatusBadRequest)
+		return
+	}
+
+	utils.SendJSONResponse(w, "Beehive added to user", http.StatusOK)
+
+}
+
 func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
+
+}
+
+func UpdateBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 
 }
 

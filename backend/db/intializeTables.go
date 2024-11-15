@@ -20,8 +20,9 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehives" (
-		"id" INTEGER NOT NULL,
+		"id" SERIAL,
 		"name" VARCHAR NOT NULL,
+		"key" MACADDR NOT NULL,
 		PRIMARY KEY ("id")
 	);
 
