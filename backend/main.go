@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Initialize the logger
-	logFile, err := utils.InitLogger()
+	logFile, err := utils.InitLogger("./logs/logFile.log")
 	if err != nil {
 		log.Fatalf("Error initializing logger: %v", err)
 	}

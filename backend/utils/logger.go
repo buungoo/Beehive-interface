@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"path/filepath"
 )
 
 // Pointers to custom loggers
@@ -14,8 +15,15 @@ var errorLogger *log.Logger
 var fatalLogger *log.Logger
 
 // Open/Create a logfile and return it with write permission and initialize the logger
-func InitLogger() (*os.File, error) {
-	logFile, err := os.OpenFile("/logs/logFile.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+func InitLogger(filePath string) (*os.File, error) {
+	// Ensure the parent directory exists
+	dir := filepath.Dir(filePath)
+	err := os.MkdirAll(dir, 0755) // Create directory and parents if they don't exist
+	if err != nil {
+		return nil, err
+	}
+
+	logFile, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return nil, err
 	}

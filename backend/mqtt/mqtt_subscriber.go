@@ -1,6 +1,7 @@
 package main
 
 import (
+	"beehive_api/utils"
 	"encoding/base64"
 	"strings"
 
@@ -60,19 +61,22 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 		if v, ok := value.(int8); ok {
 			b.value = v
 		} else {
-			log.Println("Received invalid value type for Temperature. Expected int8.")
+			// log.Println("Received invalid value type for Temperature. Expected int8.")
+			utils.LogWarn("Received invalid value type for Temperature. Expected int8.")
 		}
 	case Microphone:
 		if v, ok := value.(uint8); ok {
 			b.value = v == 1 // Microphone can be either 0 or 1. We should assign a boolean value.
 		} else {
-			log.Println("Received invalid value type for Microphone. Expected uint8.")
+			// log.Println("Invalid value type for Temperature. Expected int8.")
+			utils.LogWarn("Invalid value type for Temperature. Expected int8.")
 		}
 	default:
 		if v, ok := value.(uint8); ok {
 			b.value = v
 		} else {
-			log.Println("Received invalid value type for default sensors. Expected uint8.")
+			// log.Println("Received invalid value type for default sensors. Expected uint8.")
+			utils.LogWarn("Received invalid value type for default sensors. Expected uint8.")
 		}
 	}
 	return b
@@ -86,6 +90,8 @@ func (b *SensorReadingBuilder) Build() *SensorReading {
 		Timestamp:  b.timestamp,
 	}
 }
+
+
 
 func parseSensorMessage(message SensorMessage) ([]*SensorReading, error) {
 	decodedData, err := base64.StdEncoding.DecodeString(message.Data)
@@ -127,12 +133,14 @@ func parseSensorMessage(message SensorMessage) ([]*SensorReading, error) {
 func handleSensorMessage(message SensorMessage) {
 	readings, err := parseSensorMessage(message)
 	if err != nil {
-		log.Printf("Error parsing sensor message: %v", err)
+		// log.Printf("Error parsing sensor message: %v", err)
+		utils.LogError("Error parsing sensor message: %v", err)
 		return
 	}
 
 	for _, reading := range readings {
-		fmt.Printf("Sensor Reading: %+v\n", reading)
+		// fmt.Printf("Sensor Reading: %+v\n", reading)
+		utils.LogInfo(fmt.Sprint("Sensor Reading: %+v\n", reading))
 		// Parse the message into sensor objects
 	}
 }
@@ -157,7 +165,8 @@ var logFile *os.File
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	// Get the current timestamp
-	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	// not needed if we use the new logging function
+	// timestamp := time.Now().Format("2006-01-02 15:04:05")
 
 	// Parse the received message payload
 	var sensorMessage SensorMessage
@@ -180,8 +189,10 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 	// "txInfo":{"adr":true,"codeRate":"4/5","dataRate":{"bandwidth":125,"modulation":"LORA","spreadFactor":7},"frequency":868300000}
 	// }
 
-	logMessage := fmt.Sprintf("%s - applicationName: %s, data: %s, time: %s\n",
-		timestamp, sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time)
+	// logMessage := fmt.Sprintf("%s - applicationName: %s, data: %s, time: %s",
+	// 	timestamp, sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time)
+	utils.LogInfo(fmt.Sprintf("Received message - applicationName: %s, data: %s, time: %s",
+		sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time))
 
 	// Log the received message to the log file with timestamp
 	// if _, err := logFile.WriteString(fmt.Sprintf("%s - Received message: %s from topic: %s\n", timestamp, msg.Payload(), msg.Topic())); err != nil {
@@ -189,9 +200,10 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 	// }
 
 	// Log the parsed message to the log file
-	if _, err := logFile.WriteString(logMessage); err != nil {
-		log.Printf("Error writing to log file: %v", err)
-	}
+	// if _, err := logFile.WriteString(logMessage); err != nil {
+	// 	log.Printf("Error writing to log file: %v", err)
+	// }
+	// utils.LogInfo(logMessage)
 
 	handleSensorMessage(sensorMessage) //.Data)
 
@@ -230,58 +242,53 @@ var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 }
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-	fmt.Printf("Connection lost: %v\n", err)
+	// fmt.Printf("Connection lost: %v\n", err)
+	utils.LogError("Connection lost", err)
 }
 
 func main() {
-	// Set MQTT broker URL
-	// broker := "tcp://localhost:1883" // For testing hosting the broker on a local machine
-	// broker := "broker.emqx.io:1883" // emqx public broker
-	broker := "broker.hivemq.com:1883" // HiveMQ public broker
-	topic := "d0039ebeehive/sensor"
+    broker := "broker.hivemq.com:1883" // HiveMQ public broker
+    topic := "d0039ebeehive/sensor"
 
-	// Open log file
-	var err error
-	logFile, err = os.OpenFile("./logs/subscriberlog", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("Error opening log file: %v", err)
-	}
-	defer logFile.Close()
+    // Initialize the logger
+    logFile, err := utils.InitLogger("./logs/subscriberlog")
+    if err != nil {
+        utils.LogFatal("Failed to initialize logger", err)
+    }
+    defer logFile.Close() // Ensure the log file is closed when the program terminates
 
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(broker)
-	opts.SetClientID("local_subscriber")
-	opts.SetDefaultPublishHandler(messagePubHandler)
-	opts.OnConnect = connectHandler
-	opts.OnConnectionLost = connectLostHandler
+    opts := mqtt.NewClientOptions()
+    opts.AddBroker(broker)
+    opts.SetClientID("local_subscriber")
+    opts.SetDefaultPublishHandler(messagePubHandler)
+    opts.OnConnect = connectHandler
+    opts.OnConnectionLost = connectLostHandler
 
-	// Create client
-	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error connecting to broker: %v", token.Error())
-		os.Exit(1)
-	}
+    // Create client
+    client := mqtt.NewClient(opts)
+    if token := client.Connect(); token.Wait() && token.Error() != nil {
+        utils.LogFatal("Error connecting to broker", token.Error())
+    }
 
-	// Subscribe to the topic
-	if token := client.Subscribe(topic, 1, nil); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error subscribing to topic: %v", token.Error())
-		os.Exit(1)
-	}
+    // Subscribe to the topic
+    if token := client.Subscribe(topic, 1, nil); token.Wait() && token.Error() != nil {
+        utils.LogFatal("Error subscribing to topic", token.Error())
+    }
 
-	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+    stopChan := make(chan os.Signal, 1)
+    signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Keep the subscriber running
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-		}
-	}()
+    // Keep the subscriber running
+    go func() {
+        for {
+            time.Sleep(1 * time.Second)
+        }
+    }()
 
-	// Wait for shutdown signal
-	<-stopChan
+    // Wait for shutdown signal
+    <-stopChan
 
-	// Cleanup before exiting
-	client.Disconnect(250)
-	fmt.Println("Subscriber disconnected and exiting")
+    // Cleanup before exiting
+    client.Disconnect(250)
+    utils.LogInfo("Subscriber disconnected and exiting")
 }
