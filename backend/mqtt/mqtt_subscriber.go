@@ -3,14 +3,17 @@ package main
 import (
 	"encoding/base64"
 	"strings"
+
 	// "encoding/binary"
 	// "encoding/hex"
 	"encoding/json"
 	"fmt"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"os"
 	"os/signal"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+
 	// "strings"
 	"syscall"
 	"time"
@@ -57,13 +60,19 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 		if v, ok := value.(int8); ok {
 			b.value = v
 		} else {
-			log.Println("Invalid value type for Temperature. Expected int8.")
+			log.Println("Received invalid value type for Temperature. Expected int8.")
+		}
+	case Microphone:
+		if v, ok := value.(uint8); ok {
+			b.value = v == 1 // Microphone can be either 0 or 1. We should assign a boolean value.
+		} else {
+			log.Println("Received invalid value type for Microphone. Expected uint8.")
 		}
 	default:
 		if v, ok := value.(uint8); ok {
 			b.value = v
 		} else {
-			log.Println("Invalid value type for non-temperature sensor. Expected uint8.")
+			log.Println("Received invalid value type for default sensors. Expected uint8.")
 		}
 	}
 	return b
@@ -124,6 +133,7 @@ func handleSensorMessage(message SensorMessage) {
 
 	for _, reading := range readings {
 		fmt.Printf("Sensor Reading: %+v\n", reading)
+		// Parse the message into sensor objects
 	}
 }
 
