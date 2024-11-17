@@ -22,6 +22,15 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		handlers.LoginHandler(w, r, dbPool)
 	})
 
+	mux.HandleFunc("GET /beehive/{beehiveId}/status", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
+		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
+			return
+		}
+		handlers.GetBeehiveStatus(w, r, dbPool, beehiveId)
+	}))
+
 	mux.HandleFunc("POST /beehive/{beehiveId}/add", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
 		if err != nil {
