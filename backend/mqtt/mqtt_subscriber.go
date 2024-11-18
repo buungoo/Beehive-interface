@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -143,6 +144,11 @@ func handleSensorMessage(message SensorMessage) {
 	for _, reading := range readings {
 		utils.LogInfo(fmt.Sprint("Sensor Reading: %+v\n", reading))
 		// Parse the message into sensor objects
+
+		// Insert the parsed reading into the database
+		// if err := insertSensorReading(reading); err != nil {
+		// 	utils.LogError("Failed to insert sensor reading: %v", err)
+		// }
 	}
 }
 
@@ -198,6 +204,9 @@ var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err
 }
 
 func main() {
+	var wg sync.WaitGroup
+	wg.Add(1) // Add a task to the WaitGroup
+
 	broker := "broker.hivemq.com:1883" // HiveMQ public broker
 	topic := "d0039ebeehive/sensor"
 
@@ -229,15 +238,21 @@ func main() {
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Keep the subscriber running
+	// // Keep the subscriber running
+	// go func() {
+	// 	for {
+	// 		time.Sleep(1 * time.Second)
+	// 	}
+	// }()
+	//
+	// // Wait for shutdown signal
+	// <-stopChan
 	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-		}
+		<-stopChan // Wait for a termination signal
+		wg.Done()  // Mark the task as done
 	}()
 
-	// Wait for shutdown signal
-	<-stopChan
+	wg.Wait() // Wait for all tasks in the WaitGroup to complete
 
 	// Cleanup before exiting
 	client.Disconnect(250)
