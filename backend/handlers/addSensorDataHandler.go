@@ -69,6 +69,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		for _, data := range inputArray {
 			err := dataValidation(data)
 			if err != nil {
+				UpdateBeehiveStatusOnAdd(w, r, dbPool, beehiveId, err, data)
 				utils.LogError("Error adding a value, err: ", err)
 
 			}
@@ -92,6 +93,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		}
 		err := dataValidation(inputObject)
 		if err != nil {
+			UpdateBeehiveStatusOnAdd(w, r, dbPool, beehiveId, err, inputObject)
 			utils.LogError("Error adding a value, err: ", err)
 
 		}

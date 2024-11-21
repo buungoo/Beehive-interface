@@ -65,14 +65,15 @@ func VerifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
 }
 
 // Veryfies the provided beehive_id exists in the database
-func VerifyBeehive(conn *pgx.Conn, beehiveId int, macAdrr string) (bool, error) {
-	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM beehives WHERE id=$1 AND key=$2)`
+func VerifyBeehive(conn *pgx.Conn, macAdrr string) (int, error) {
+	const sqlQueryCheckBeehive = `SELECT id FROM beehives WHERE EXISTS (SELECT id FROM beehives WHERE key = $1)`
 
 	// Verify the beehive ID exists
-	var exists bool
-	err := conn.QueryRow(context.Background(), sqlQueryCheckBeehive, beehiveId, macAdrr).Scan(&exists)
+	//var exists bool
+	var beehiveId int
+	err := conn.QueryRow(context.Background(), sqlQueryCheckBeehive, macAdrr).Scan(&beehiveId)
 	if err != nil {
-		return false, err
+		return 0, err
 	}
-	return exists, nil
+	return beehiveId, nil
 }

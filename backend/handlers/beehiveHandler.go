@@ -14,7 +14,7 @@ import (
 )
 
 // Connect a beehive to a user by using the sensor-cards mac address
-func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
@@ -49,14 +49,14 @@ func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, be
 	}
 
 	// Verify the mac address is correct
-	beehiveExists, err := utils.VerifyBeehive(conn.Conn(), beehiveId, macAddress)
+	beehiveId, err := utils.VerifyBeehive(conn.Conn(), macAddress)
 	if err != nil {
 		utils.LogError("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
 		return
 	}
 
-	if !beehiveExists {
+	if beehiveId == 0 {
 		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
 		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
 		return
@@ -138,6 +138,7 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 	for rows.Next() {
 		var data BeehiveStatus
 		if err := rows.Scan(&data.SensorId, &data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead); err != nil {
+			utils.LogError("error reading beehivestatus: ", err)
 			utils.SendErrorResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
 			return
 		}
@@ -153,8 +154,25 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 
 }
 
-func UpdateBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
+func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, errorMessage error, data models.SensorData) {
+	// Retrieve message
+	var statusMessage string = errorMessage.Error()
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
 
+	const sqlQueryUpdateBeehiveStatus = `INSERT INTO beehive_status (sensor_id, beehive_id, sensor_type, description, solved, read, time_of_error) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+
+	// Insert username and password
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, data.SensorID, data.BeehiveID, data.SensorType, statusMessage, false, false, data.Time)
+	if err != nil {
+		utils.LogError("Error updating status of beehive: ", err)
+		utils.SendErrorResponse(w, "Error updating status of beehive", http.StatusBadRequest)
+		return
+	}
 }
 
 func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
