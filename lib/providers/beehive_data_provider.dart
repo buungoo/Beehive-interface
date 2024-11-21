@@ -53,7 +53,7 @@ class BeehiveDataProvider {
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('token');
 
-        var date1 = DateTime.now().subtract(Duration(days: 40));
+        var date1 = DateTime.now().subtract(Duration(days: 10));
         var date2 = DateTime.now();
 
         // parse it to string in 2006-01-02 format

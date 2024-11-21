@@ -36,8 +36,6 @@ class BeeChartPage extends StatelessWidget {
       }
     }
 
-    print(minVaue);
-
     return LineChartData(
       gridData: FlGridData(show: true),
       titlesData: FlTitlesData(
@@ -86,10 +84,11 @@ class BeeChartPage extends StatelessWidget {
         LineChartBarData(
           color: Colors.yellow,
           spots: values
-              .map((item) => FlSpot(
-                  item.time.millisecondsSinceEpoch.toDouble(), item.value))
+              .map((item) => FlSpot(item.time.millisecondsSinceEpoch.toDouble(),
+                  item.value.floorToDouble()))
               .toList(),
-          isCurved: true,
+          isCurved: false,
+          isStepLineChart: true,
           barWidth: 4,
           dotData: FlDotData(show: false),
         ),

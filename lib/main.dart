@@ -13,6 +13,7 @@ import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
 import 'views/login_page.dart';
 import 'package:beehive/views/detail_chart_page.dart';
+import 'package:beehive/views/camera.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
@@ -76,6 +77,12 @@ final GoRouter _router = GoRouter(
         return BeehiveDetailPage(beehive: beehive);
       },
     ),
+    GoRoute(
+        name: "Camera",
+        path: "/camera",
+        builder: (context, state) {
+          return Camera();
+        }),
     GoRoute(
       name: "testing",
       path: '/beehive/test/:id/:type',

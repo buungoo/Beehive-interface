@@ -19,6 +19,10 @@ class DetailGrid extends StatelessWidget {
         if (beehiveData == null) {
           return Center(child: SharedLoadingIndicator(context: context));
         }
+        print("TEST!!!");
+        beehiveData.toMap().forEach((key, value) => {print('$key: $value')});
+        Map<String, dynamic> dataMap = beehiveData.toMap();
+
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: GridView.builder(
@@ -30,12 +34,43 @@ class DetailGrid extends StatelessWidget {
             ),
             itemCount: 5, // Example grid size
             itemBuilder: (context, index) {
-              switch (index) {
+              String key = dataMap.keys.elementAt(index);
+              String value = dataMap[key].floorToDouble().toString();
+              String Suffix = "";
+
+              if (key == "temperature") Suffix = "°C";
+              if (key == "battery") Suffix = "%";
+
+              return GestureDetector(
+                child: FrostedGlassBox(
+                  title: key,
+                  value: "${value} ${Suffix}",
+                  colors: [
+                    Colors.green.withOpacity(0.2),
+                    Colors.orange.withOpacity(0.3),
+                    Colors.red.withOpacity(0.2),
+                  ],
+                ),
+                onTap: () {
+                  context.pushNamed(
+                    'testing',
+                    pathParameters: {
+                      'id': id,
+                      'type': key,
+
+                      // Ensure id is a string if needed
+                    }, // Use 'pathParameters' to pass the id
+                  );
+                },
+              );
+
+              /*switch (index) {
                 case 0:
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Temperature',
-                      value: "${beehiveData.temperature.toString()}°C",
+                      value:
+                          "${beehiveData.temperature.floorToDouble().toString()}°C",
                       colors: [
                         Colors.green.withOpacity(0.2),
                         Colors.orange.withOpacity(0.3),
@@ -58,7 +93,8 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Weight',
-                      value: "${beehiveData.weight.toString()} kg",
+                      value:
+                          "${beehiveData.weight.floorToDouble().toString()} kg",
                       colors: [
                         Colors.deepPurple.withOpacity(0.2),
                         Colors.blueAccent.withOpacity(0.3),
@@ -81,7 +117,8 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Humidity',
-                      value: "${beehiveData.humidity.toString()} %",
+                      value:
+                          "${beehiveData.humidity.floorToDouble().toString()} %",
                       colors: [
                         Colors.blue.withOpacity(0.2),
                         Colors.lightBlue.withOpacity(0.3),
@@ -104,7 +141,8 @@ class DetailGrid extends StatelessWidget {
                   return GestureDetector(
                     child: FrostedGlassBox(
                       title: 'Oxygen',
-                      value: "${beehiveData.ppm.toString()} ppm",
+                      value:
+                          "${beehiveData.ppm.floorToDouble().toString()} ppm",
                       colors: [
                         Colors.grey.withOpacity(0.2),
                         Colors.grey.withOpacity(0.3),
@@ -148,7 +186,7 @@ class DetailGrid extends StatelessWidget {
                   );
                 default:
                   return FrostedGlassBox(title: 'null', value: 'null');
-              }
+              }*/
             },
           ),
         );

@@ -2,6 +2,8 @@ import 'package:beehive/models/beehive_user.dart';
 import 'package:beehive/config.dart' as config;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:beehive/utils/helpers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BeehiveUserProvider {
   final http.Client client;
@@ -86,5 +88,32 @@ class BeehiveUserProvider {
 
   Future<User?> getUserFromStorage() async {
     return await User.getUser();
+  }
+
+  Future<bool> addBeehive(String mac) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      var macaddr = formatHexString(mac);
+
+      var response =
+          await client.post(Uri.parse(config.BackendServer + '/beehive/add'),
+              headers: <String, String>{
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                'macaddrr': macaddr,
+              }));
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+    } catch (e) {
+      print(e);
+    }
+
+    return false;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../utils/helpers.dart';
+import 'package:go_router/go_router.dart'; //
 
 PreferredSizeWidget? getNavigationBar(
     {required BuildContext context,
@@ -15,7 +16,7 @@ PreferredSizeWidget? getNavigationBar(
               ? CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () {
-                    // Add your onPressed code here
+                    context.pushNamed("Camera");
                   },
                   child: Icon(CupertinoIcons.add),
                 )
@@ -25,7 +26,13 @@ PreferredSizeWidget? getNavigationBar(
           title: Text(title),
           backgroundColor: bgcolor,
           actions: Action
-              ? [IconButton(onPressed: () {}, icon: Icon(Icons.add))]
+              ? [
+                  IconButton(
+                      onPressed: () {
+                        Navigator.of(context).pushNamed('Camera');
+                      },
+                      icon: Icon(Icons.add))
+                ]
               : null,
         );
 }
