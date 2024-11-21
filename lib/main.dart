@@ -96,9 +96,6 @@ final GoRouter _router = GoRouter(
             beehive: beehive,
             title: type[0].toUpperCase() + type.substring(1),
             type: type);
-
-        // If beehive is found, return the beehive detail page
-        //return BeeChartPage(beehive: beehive);
       },
     ),
   ],

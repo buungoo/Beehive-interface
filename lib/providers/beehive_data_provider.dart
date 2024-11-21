@@ -30,7 +30,6 @@ class BeehiveDataProvider {
           'Authorization': 'Bearer $token',
         });
 
-        print(response.body);
         final data = json.decode(response.body);
 
         double temp = data[0]['value']; // Temperature in °C
@@ -41,7 +40,7 @@ class BeehiveDataProvider {
         yield BeehiveData(
             temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
       } catch (e) {
-        print(e);
+        //print(e);
       }
     }
   }
@@ -53,7 +52,7 @@ class BeehiveDataProvider {
         final prefs = await SharedPreferences.getInstance();
         final token = prefs.getString('token');
 
-        var date1 = DateTime.now().subtract(Duration(days: 10));
+        var date1 = DateTime.now().subtract(const Duration(days: 7));
         var date2 = DateTime.now();
 
         // parse it to string in 2006-01-02 format
@@ -61,14 +60,9 @@ class BeehiveDataProvider {
         String formattedDate1 = formatter.format(date1);
         String formattedDate2 = formatter.format(date2);
 
-        print("formattedDate1: $formattedDate1");
-        print("formattedDate2: $formattedDate2");
-
         //TODO: Make sure to only extract the "type" from the request
         final uri = Uri.parse(
             '${config.BackendServer}/beehive/$beehiveid/sensor-data/$formattedDate1/$formattedDate2');
-
-        print(uri);
 
         var response = await get(uri, headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
@@ -76,7 +70,7 @@ class BeehiveDataProvider {
         });
         yield response.body.toString();
       } catch (e) {
-        print(e);
+        //print(e);
       }
       await Future.delayed(config.refreshRate);
     }

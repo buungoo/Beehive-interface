@@ -32,7 +32,6 @@ class User {
     // check if user is already stored in shared preferences
     final perf = await SharedPreferences.getInstance();
     var token = perf.getString('token');
-    print(token);
     if (token == null) {
       return null;
     }

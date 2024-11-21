@@ -14,7 +14,7 @@ class BeehiveUserProvider {
 
   Future<User?> login(String email, String password) async {
     try {
-      print(config.BackendServer + '/login');
+      //print(config.BackendServer + '/login');
       //print("Mock login attempt");
       var response =
           await client.post(Uri.parse(config.BackendServer + '/login'),
@@ -33,7 +33,7 @@ class BeehiveUserProvider {
         return null;
       }
     } catch (e) {
-      print(e);
+      //print(e);
       throw Exception(e);
       //print(e);
     }
@@ -52,13 +52,13 @@ class BeehiveUserProvider {
                 'password': password,
               }));
 
-      print(response);
+      //print(response);
 
       if (response.statusCode == 200) {
         return User.fromJson(response.body);
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     throw Exception('Failed to register');
@@ -80,7 +80,7 @@ class BeehiveUserProvider {
         return User.fromJson(response.body);
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     return null;
@@ -111,7 +111,7 @@ class BeehiveUserProvider {
         return true;
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     return false;
