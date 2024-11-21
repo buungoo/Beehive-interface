@@ -45,11 +45,12 @@ class DetailGrid extends StatelessWidget {
                 child: FrostedGlassBox(
                   title: key,
                   value: "${value} ${Suffix}",
-                  colors: [
+                  colors: generateColorsFromString(key),
+                  /*colors: [
                     Colors.green.withOpacity(0.2),
                     Colors.orange.withOpacity(0.3),
                     Colors.red.withOpacity(0.2),
-                  ],
+                  ],*/
                 ),
                 onTap: () {
                   context.pushNamed(
