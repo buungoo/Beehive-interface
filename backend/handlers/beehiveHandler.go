@@ -21,17 +21,16 @@ func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the macaddress from http-body
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	macAddr := struct {
+	macAddrStruct := struct {
 		Addr string `json:"macaddress"`
 	}{}
-	err := decoder.Decode(&macAddr)
+	err := decoder.Decode(&macAddrStruct)
 	if err != nil {
 		utils.LogError("Could not decode macaddress", err)
 		utils.SendErrorResponse(w, "Could not decode macaddress", http.StatusInternalServerError)
 		return
 	}
-	utils.LogInfo("Macaddress is: " + macAddr.Addr)
-	macAddress := macAddr.Addr
+	utils.LogInfo("Macaddress is: " + macAddrStruct.Addr)
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
@@ -49,14 +48,26 @@ func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	}
 
 	// Verify the mac address is correct
-	beehiveId, err := utils.VerifyBeehive(conn.Conn(), macAddress)
+	beehiveExists, err := utils.VerifyBeehive(conn.Conn(), macAddrStruct.Addr)
 	if err != nil {
 		utils.LogError("Error finding beehive, err: ", err)
 		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
 		return
 	}
 
-	if beehiveId == 0 {
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryFetchBeehiveId = `SELECT id FROM beehives WHERE key = $1::macaddr8`
+
+	var beehiveId int
+	// Fetch beehiveId for beehive
+	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveId, macAddrStruct.Addr).Scan(&beehiveId)
+	if err != nil {
+		utils.LogError("This is the error", err)
 		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
 		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
 		return

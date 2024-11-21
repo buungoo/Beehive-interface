@@ -22,7 +22,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	CREATE TABLE IF NOT EXISTS "beehives" (
 		"id" SERIAL,
 		"name" VARCHAR NOT NULL,
-		"key" MACADDR8 NOT NULL,
+		"key" MACADDR8 UNIQUE NOT NULL,
 		PRIMARY KEY ("id")
 	);
 
@@ -30,7 +30,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"user_id" INTEGER NOT NULL,
 		"beehive_id" INTEGER NOT NULL,
 		PRIMARY KEY ("user_id", "beehive_id"),
-		FOREIGN KEY ("user_id") REFERENCES "users",
+		FOREIGN KEY ("user_id") REFERENCES "users" ("id"),
 		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id")
 	);
 
