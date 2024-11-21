@@ -43,16 +43,16 @@ lib
 
 ## Web Api
 
-| **Route**                                   | **HTTP Method** | **Name**                     | **Required Data**                                                                 |
-|---------------------------------------------|-----------------|------------------------------|-----------------------------------------------------------------------------------|
-| `/register`                                 | POST            | Register                     | - User registration data (e.g., username, password)                              |
-| `/login`                                    | POST            | Login                        | - User credentials (e.g., username, password)                                    |
-| `/beehive/{beehiveId}/status`               | GET             | Get Beehive Status            | - Beehive ID (integer)                                                           |
-| `/beehive/add`                              | POST            | Add Beehive                   | - Beehive data (e.g., name, location, etc.)                                      |
-| `/beehive/{beehiveId}/sensor-data/add`      | POST            | Add Sensor Data               | - Beehive ID (integer) <br> - Sensor data (e.g., temperature, humidity, etc.)    |
-| `/beehive/list`                             | GET             | Get Beehive List              | - None                                                                            |
-| `/beehive/{beehiveId}/sensor-data/{startDate}/{endDate}` | GET | Get Sensor Data by Date Range | - Beehive ID (integer) <br> - Start date and end date (strings in date format)   |
-| `/beehive/{beehiveId}/sensor-data/average/{startDate}/{endDate}` | GET | Get Average Sensor Data by Date Range | - Beehive ID (integer) <br> - Start date and end date (strings in date format)   |
-| `/beehive/{beehiveId}/sensor-data/latest`    | GET             | Get Latest Sensor Data        | - Beehive ID (integer)                                                           |
-| `/beehive/{beehiveId}/{sensorType}/latest`   | GET             | Get Latest Sensor Type Data   | - Beehive ID (integer) <br> - Sensor type (string)                               |
-| `/test`                                     | POST            | Test Authentication           | - None                                                                            |
+| **Route**                                                        | **HTTP Method** | **Name**                              | **Required Data**                                                              |
+|------------------------------------------------------------------|-----------------|---------------------------------------|--------------------------------------------------------------------------------|
+| `/register`                                                      | POST            | Register                              | - User registration data (e.g., username, password)                            |
+| `/login`                                                         | POST            | Login                                 | - User credentials (e.g., username, password)                                  |
+| `/beehive/{beehiveId}/status`                                    | GET             | Get Beehive Status                    | - Beehive ID (integer)                                                         |
+| `/beehive/add`                                                   | POST            | Add Beehive                           | - Beehive data (e.g., name, location, etc.)                                    |
+| `/beehive/list`                                                  | GET             | Get Beehive List                      | - None                                                                         |
+| `/beehive/{beehiveId}/sensor-data/add`                           | POST            | Add Sensor Data                       | - Beehive ID (integer) <br> - Sensor data (e.g., temperature, humidity, etc.)  |
+| `/beehive/{beehiveId}/sensor-data/latest`                        | GET             | Get Latest Sensor Data                | - Beehive ID (integer)                                                         |
+| `/beehive/{beehiveId}/sensor-data/{startDate}/{endDate}`         | GET             | Get Sensor Data by Date Range         | - Beehive ID (integer) <br> - Start date and end date (strings in date format) |
+| `/beehive/{beehiveId}/sensor-data/average/{startDate}/{endDate}` | GET             | Get Average Sensor Data by Date Range | - Beehive ID (integer) <br> - Start date and end date (strings in date format) |
+| `/beehive/{beehiveId}/{sensorType}/latest`     s                 | GET             | Get Latest Sensor Type Data           | - Beehive ID (integer) <br> - Sensor type (string)                             |
+| `/test`                                                          | POST            | Test Authentication                   | - None                                                                         |
