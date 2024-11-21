@@ -19,7 +19,6 @@ import (
 
 // Sensor enum to represent sensor types
 type Sensor uint8
-
 const (
 	LoadCell    Sensor = 1
 	Temperature        = 2
@@ -32,7 +31,7 @@ const (
 type SensorReading struct {
 	SensorType    Sensor
 	SensorID      uint8
-	Value         interface{}      // Allows for different types, like int8 or uint8
+	Value         interface{}      // Allows for the different types we need, i.e. uint8, int8, bool
 	Timestamp     time.Time        // To store the timestamp of the reading
 	ParentBeehive net.HardwareAddr // MAC address of the parent Beehive
 }
@@ -49,6 +48,7 @@ type SensorReadingBuilder struct {
 func NewSensorReadingBuilder(sensorType Sensor, timestamp time.Time) *SensorReadingBuilder {
 	return &SensorReadingBuilder{sensorType: sensorType, timestamp: timestamp}
 }
+
 func (b *SensorReadingBuilder) SetSensorID(id uint8) *SensorReadingBuilder {
 	b.sensorID = id
 	return b
@@ -64,7 +64,7 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 		}
 	case Microphone:
 		if v, ok := value.(uint8); ok {
-			b.value = v == 1 // Microphone can be either 0 or 1. We should assign a boolean value.
+			b.value = v == 1 // Microphone can be either 0 or 1 and we should assign a boolean value.
 		} else {
 			utils.LogWarn("Invalid value type for Temperature. Expected int8.")
 		}
@@ -79,12 +79,28 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 }
 
 func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBuilder {
-	mac, err := net.ParseMAC(parentBeehive)
+	// Ensure the string is the correct length for a MAC address
+	if len(parentBeehive) != 16 {
+		utils.LogWarn("Invalid DevEUI length. Expected 16 characters.")
+		return b
+	}
+
+	// Insert colons to format as a MAC address
+	macFormatted := strings.ToLower(parentBeehive[:2] + ":" +
+		parentBeehive[2:4] + ":" +
+		parentBeehive[4:6] + ":" +
+		parentBeehive[6:8] + ":" +
+		parentBeehive[8:10] + ":" +
+		parentBeehive[10:12])
+
+	// Parse the formatted MAC address
+	mac, err := net.ParseMAC(macFormatted)
 	if err != nil {
-		utils.LogWarn("Invalid DevEUI format. Expected MAC address.")
+		utils.LogWarn("Failed to parse DevEUI as MAC address.")
 	} else {
 		b.parentBeehive = mac
 	}
+
 	return b
 }
 
@@ -119,7 +135,7 @@ func parseSensorMessage(message SensorMessage) ([]*SensorReading, error) {
 		sensorId := decodedData[i+1]
 		rawValue := decodedData[i+2]
 
-		builder := NewSensorReadingBuilder(sensorType, timeStamp).SetSensorID(sensorId).SetDevEUI(message.DevEUI)
+		builder := NewSensorReadingBuilder(sensorType, timeStamp /* net.HardwareAddr(message.DevEUI) */).SetSensorID(sensorId).SetDevEUI(message.DevEUI)
 		switch sensorType {
 		case Temperature:
 			builder.SetValue(int8(rawValue)) // Temperature uses int8
@@ -133,7 +149,6 @@ func parseSensorMessage(message SensorMessage) ([]*SensorReading, error) {
 	return readings, nil
 }
 
-// Mock function to simulate message handling
 func handleSensorMessage(message SensorMessage) {
 	readings, err := parseSensorMessage(message)
 	if err != nil {
@@ -142,7 +157,7 @@ func handleSensorMessage(message SensorMessage) {
 	}
 
 	for _, reading := range readings {
-		utils.LogInfo(fmt.Sprint("Sensor Reading: %+v\n", reading))
+		utils.LogInfo(fmt.Sprintf("Sensor Reading: %+v", reading))
 		// Parse the message into sensor objects
 
 		// Insert the parsed reading into the database
@@ -160,7 +175,7 @@ type SensorMessage struct {
 }
 
 // Initialize the log file
-var logFile *os.File
+// var logFile *os.File
 
 var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	// Get the current timestamp
@@ -190,6 +205,7 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 
 	// utils.LogInfo(fmt.Sprintf("Received message - applicationName: %s, data: %s, time: %s",
 	// 	sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time))
+	fmt.Println("Received message:", sensorMessage)
 	utils.LogInfo(fmt.Sprintf("Received message: %+v", sensorMessage))
 
 	handleSensorMessage(sensorMessage) //.Data)
@@ -201,13 +217,25 @@ var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 	utils.LogError("Connection lost", err)
+	fmt.Printf("Connection lost: %v\n", err)
+
+	// Retry to connect if connection was lost
+	for {
+		fmt.Println("Attempting to reconnect...")
+		if token := client.Connect(); token.Wait() && token.Error() == nil {
+			fmt.Println("Reconnected successfully")
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func main() {
 	var wg sync.WaitGroup
 	wg.Add(1) // Add a task to the WaitGroup
 
-	broker := "broker.hivemq.com:1883" // HiveMQ public broker
+	// HiveMQ public broker
+	broker := "broker.hivemq.com:1883"
 	topic := "d0039ebeehive/sensor"
 
 	// Initialize the logger
@@ -215,46 +243,44 @@ func main() {
 	if err != nil {
 		utils.LogFatal("Failed to initialize logger", err)
 	}
-	defer logFile.Close() // Ensure the log file is closed when the program terminates
+	// Ensure the log file is closed when the program terminates
+	defer logFile.Close()
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("local_subscriber")
+	opts.SetClientID("beehive_subscriber")
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
 	opts.OnConnectionLost = connectLostHandler
 
 	// Create client
 	client := mqtt.NewClient(opts)
+
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		utils.LogFatal("Error connecting to broker", token.Error())
+		utils.LogError("Error connecting to broker", token.Error())
 	}
 
 	// Subscribe to the topic
-	if token := client.Subscribe(topic, 1, nil); token.Wait() && token.Error() != nil {
-		utils.LogFatal("Error subscribing to topic", token.Error())
+	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
+		utils.LogError("Error subscribing to topic", token.Error())
 	}
 
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// // Keep the subscriber running
-	// go func() {
-	// 	for {
-	// 		time.Sleep(1 * time.Second)
-	// 	}
-	// }()
-	//
-	// // Wait for shutdown signal
-	// <-stopChan
+	// Keep the subscriber running
 	go func() {
-		<-stopChan // Wait for a termination signal
-		wg.Done()  // Mark the task as done
+		// Wait for a termination signal
+		<-stopChan
+		// Mark the task as done
+		wg.Done()
 	}()
 
-	wg.Wait() // Wait for all tasks in the WaitGroup to complete
+	// Wait for all tasks in the WaitGroup to complete
+	wg.Wait()
+	close(stopChan)
 
-	// Cleanup before exiting
+	// Disconnect from broker
 	client.Disconnect(250)
 	utils.LogInfo("Subscriber disconnected and exiting")
 }

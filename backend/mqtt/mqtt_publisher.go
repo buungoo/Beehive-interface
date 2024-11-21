@@ -19,7 +19,7 @@ func main() {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("go_mqtt_publisher")
+	opts.SetClientID("beehive_publisher")
 
 	// If we set up authentication on the broker
 	// opts.SetUsername("your_username")
