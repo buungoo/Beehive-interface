@@ -60,3 +60,21 @@ List<Color> generateColorsFromString(String input) {
 
   return colors;
 }
+
+
+Duration parseDuration(String timeString) {
+  final parts = timeString.split(' '); // Split into parts: ["1", "Day"]
+  final int value = int.parse(parts[0]); // Convert "1" to an integer
+  final String unit = parts[1].toLowerCase(); // Convert "Day" to lowercase
+
+  switch (unit) {
+    case 'day':
+      return Duration(days: value);
+    case 'week':
+      return Duration(days: value * 7);
+    case 'month':
+      return Duration(days: value * 30); // Approximate 1 month as 30 days
+    default:
+      throw ArgumentError('Unsupported time unit: $unit');
+  }
+}

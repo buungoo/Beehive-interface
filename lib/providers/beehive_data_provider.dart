@@ -6,6 +6,8 @@ import 'package:beehive/config.dart' as config;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
+import 'package:beehive/utils/helpers.dart';
+
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
   Stream<BeehiveData> getBeehiveDataStream(String beehiveid) async* {
@@ -45,34 +47,45 @@ class BeehiveDataProvider {
     }
   }
 
-  Stream<String> getBeehiveDataChartStream(
-      String beehiveid, String sensor) async* {
-    while (true) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('token');
+  Future<String> fetchBeehiveDataChart({
+      required String beehiveId, required String sensor, String timescale = '1 Week'}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
 
-        var date1 = DateTime.now().subtract(const Duration(days: 7));
-        var date2 = DateTime.now();
 
-        // parse it to string in 2006-01-02 format
-        final formatter = DateFormat('yyyy-MM-dd');
-        String formattedDate1 = formatter.format(date1);
-        String formattedDate2 = formatter.format(date2);
+      Duration timeRange = parseDuration(timescale);
 
-        //TODO: Make sure to only extract the "type" from the request
-        final uri = Uri.parse(
-            '${config.BackendServer}/beehive/$beehiveid/sensor-data/$formattedDate1/$formattedDate2');
+      var date1 = DateTime.now().subtract(timeRange);
+      var date2 = DateTime.now();
 
-        var response = await get(uri, headers: <String, String>{
+      // Format dates to "yyyy-MM-dd"
+      final formatter = DateFormat('yyyy-MM-dd');
+      String formattedDate1 = formatter.format(date1);
+      String formattedDate2 = formatter.format(date2);
+
+      final uri = Uri.parse(
+        '${config.BackendServer}/beehive/$beehiveId/sensor-data/$formattedDate1/$formattedDate2',
+      );
+
+      var response = await get(
+        uri,
+        headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',
-        });
-        yield response.body.toString();
-      } catch (e) {
-        //print(e);
-      }
-      await Future.delayed(config.refreshRate);
+        },
+      );
+
+      print("Hello!!");
+      print(response.statusCode);
+      print(response.body);
+
+      // Return the response body as a string
+      return response.body.toString();
+    } catch (e) {
+      // Handle error gracefully
+      print("Error fetching beehive data: $e");
+      return 'Error fetching data';
     }
   }
 

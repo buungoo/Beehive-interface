@@ -14,10 +14,8 @@ class BeehiveUserProvider {
 
   Future<User?> login(String email, String password) async {
     try {
-      //print(config.BackendServer + '/login');
-      //print("Mock login attempt");
       var response =
-          await client.post(Uri.parse(config.BackendServer + '/login'),
+          await client.post(Uri.parse('${config.BackendServer}/login'),
               headers: <String, String>{
                 'Content-Type': 'application/json; charset=UTF-8',
               },
@@ -25,6 +23,8 @@ class BeehiveUserProvider {
                 'username': email,
                 'password': password,
               }));
+
+      print(response.body);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -37,7 +37,6 @@ class BeehiveUserProvider {
       throw Exception(e);
       //print(e);
     }
-    return null;
   }
 
   Future<User> register(String email, String password) async {

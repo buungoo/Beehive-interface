@@ -1,12 +1,57 @@
+import 'dart:math';
+
+import 'package:beehive/widgets/shared_dropdown.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/beehive.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:beehive/widgets/shared.dart';
-import 'package:beehive/providers/beehive_data_provider.dart';
 import 'package:beehive/models/SensorValues.dart';
 import 'package:intl/intl.dart';
+
+class BeeChartDataProvider with ChangeNotifier {
+  List<SensorValues> _sensorValues = [];
+  String _selectedTimescale = '1 Month';
+  bool _isLoading = false;
+
+  List<SensorValues> get sensorValues => _sensorValues;
+  String get selectedTimescale => _selectedTimescale;
+  bool get isLoading => _isLoading;
+
+  void setIsLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+  
+  void fetchData() async {
+    setIsLoading(true);
+
+    //TODO: Make sure this works with the API, atm we do not have any live data I can test with
+    //var fetchedData = await BeehiveDataProvider().fetchBeehiveDataChart(beehiveId: "2", sensor: "temperature", timescale: _selectedTimescale);
+    //setValues(SensorValues.fromJsonList(fetchedData));
+
+    List<SensorValues> temp = [];
+
+    for (int i = 0; i < 30; i++) {
+      temp.add(SensorValues(sensor_id: 1, beehive_id: 2, value: Random().nextDouble() * 20, time: DateTime.now().subtract(Duration(days: i))));
+    }
+
+    _sensorValues = temp;
+
+    setIsLoading(false);
+  }
+  
+
+  void setValues(List<SensorValues> values) {
+    _sensorValues = values;
+    notifyListeners();
+  }
+
+  void setTimescale(String range) {
+    _selectedTimescale = range;
+    fetchData();
+  }
+}
 
 class BeeChartPage extends StatelessWidget {
   final String? id;
@@ -21,156 +66,120 @@ class BeeChartPage extends StatelessWidget {
       required this.title,
       required this.type});
 
-  LineChartData buildChartData(List<SensorValues> values) {
-    // find max value in values
-    double maxValue = values.isNotEmpty ? values.first.value : 0;
-    double minValue = values.isNotEmpty ? values.first.value : 0;
+  @override
+  Widget build(BuildContext context) {
+    final dataProvider = BeeChartDataProvider();
 
-    for (var value in values) {
-      if (value.value > maxValue) maxValue = value.value;
-      if (value.value < minValue) minValue = value.value;
+    return ChangeNotifierProvider<BeeChartDataProvider>.value(
+        value: dataProvider,
+        child: Consumer<BeeChartDataProvider>(builder:
+            (BuildContext context, BeeChartDataProvider Data, Widget? child) {
+          return beeContent(context, Data);
+        }));
+  }
+
+  Widget beeContent(BuildContext context, BeeChartDataProvider dataProvider) {
+    return SharedScaffold(
+        context: context,
+        appBar: getNavigationBar(
+            context: context, title: "Test", bgcolor: const Color(0xFFf4991a)),
+        body: Center(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+              _Settings(dataProvider: dataProvider),
+              _ChartView(dataProvider: dataProvider)
+            ])));
+  }
+}
+
+class _Settings extends StatelessWidget {
+  final BeeChartDataProvider dataProvider;
+
+  const _Settings({required this.dataProvider});
+
+  @override
+  Widget build(BuildContext context) {
+
+    void onTimeRangeChange(String value) {
+      context.read<BeeChartDataProvider>().setTimescale(value);
     }
 
-    if (values.isEmpty) {
-      return LineChartData(
-        lineBarsData: [],
-        gridData: FlGridData(show: false),
-        titlesData: FlTitlesData(show: false),
-        borderData: FlBorderData(show: false),
-      );
-    }
+    final List<String> timeVariables = <String>[
+      '1 Day',
+      '1 Week',
+      '1 Month',
+    ];
 
-    return LineChartData(
-      gridData: FlGridData(show: true),
-      titlesData: FlTitlesData(
-        rightTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false, reservedSize: 40),
-        ),
-        topTitles: AxisTitles(
-          sideTitles: SideTitles(showTitles: false, reservedSize: 40),
-        ),
-        leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-          showTitles: true,
-          getTitlesWidget: (value, meta) {
-            return Text(value.toString(), style: TextStyle(fontSize: 10));
-          },
-          reservedSize: 30,
-        )),
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            getTitlesWidget: (value, meta) {
-              final DateTime dateTime =
-                  DateTime.fromMillisecondsSinceEpoch(value.toInt());
-              final formattedDate = DateFormat('y-M-d').format(dateTime);
-
-              return Padding(
-                padding: const EdgeInsets.only(
-                    top: 10.0), // Add padding to prevent overlap
-                child: Transform.rotate(
-                  angle: -0.5, // Slight tilt for better readability
-                  child: Text(formattedDate, style: TextStyle(fontSize: 10)),
-                ),
-              );
-            },
-            reservedSize: 60,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const Text(
+          'Over the last ',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
         ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: Colors.black),
-      ),
-      maxY: (maxValue + (maxValue / 4)).floorToDouble(),
-      minY: (minValue - 10).floorToDouble(),
-      lineBarsData: [
-        LineChartBarData(
-          color: Colors.yellow,
-          spots: values
-              .map((item) => FlSpot(item.time.millisecondsSinceEpoch.toDouble(),
-                  item.value.floorToDouble()))
-              .toList(),
-          isCurved: false,
-          isStepLineChart: true,
-          barWidth: 4,
-          dotData: FlDotData(show: false),
+        SharedDropdownMenu(
+          itemList: timeVariables,
+          onItemChanged: onTimeRangeChange,
         ),
       ],
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureProvider<List<SensorValues>?>(
-      initialData: [],
-      create: (context) async {
-        final beehiveId = beehive?.id;
-        if (beehiveId == null) return [];
-        try {
-          final onValue = await BeehiveDataProvider()
-              .getBeehiveDataChartStream(beehiveId.toString(), type)
-              .first;
-          return SensorValues.fromJsonList(onValue);
-        } catch (e) {
-          print('Error fetching data: $e');
-          return [];
-        }
-      },
-      catchError: (context, error) {
-        print('Caught error: $error');
-        return [];
-      },
-      child: SharedScaffold(
-        context: context,
-        appBar: getNavigationBar(
-            context: context, title: title, bgcolor: Color(0xFFf4991a)),
-        body: _DrawChart(type: type),
-      ),
-    );
-  }
-
-  Widget DrawChart(context) {
-    return Consumer<List<SensorValues>?>(
-      builder: (context, _data, child) {
-        print(_data);
-        if (_data == null || _data.length < 1) {
-          return Center(child: SharedLoadingIndicator(context: context));
-        }
-        return Align(
-          alignment: Alignment.topCenter,
-          child: Container(
-            height: MediaQuery.of(context).size.height,
-            width: double.infinity,
-            padding: const EdgeInsets.all(16.0),
-            child: LineChart(buildChartData(_data)),
-          ),
-        );
-      },
-    );
-  }
 }
 
-class _DrawChart extends StatefulWidget {
-  final String type;
+class _ChartView extends StatefulWidget {
+  final BeeChartDataProvider dataProvider;
 
-  const _DrawChart({required this.type});
+  const _ChartView({required this.dataProvider});
 
   @override
-  State<_DrawChart> createState() => _DrawChartState();
+  State<StatefulWidget> createState() => _ChartViewState();
 }
 
-class _DrawChartState extends State<_DrawChart> {
+class _ChartViewState extends State<_ChartView> {
+
   late double touchedValue;
 
   final Color? lineColor = Colors.yellow[700];
   final Color? avgLineColor = Colors.yellow[800];
-  final Color pointColor = Color(0xFFFFEB3B);
+  final Color pointColor = const Color(0xFFFFEB3B);
+
 
   @override
   void initState() {
-    touchedValue = -1;
     super.initState();
+    touchedValue = -1;
+    context.read<BeeChartDataProvider>().setValues([
+      SensorValues(
+          time: DateTime.now().add(const Duration(days: -5)),
+          value: Random().nextDouble() * 20,
+          sensor_id: 1,
+          beehive_id: 1),
+      SensorValues(
+          time: DateTime.now().add(const Duration(days: -4)),
+          value: Random().nextDouble() * 20,
+          sensor_id: 1,
+          beehive_id: 1),
+      SensorValues(
+      time: DateTime.now().add(const Duration(days: -3)),
+          value: Random().nextDouble() * 20,
+          sensor_id: 1,
+          beehive_id: 1),
+      SensorValues(
+          time: DateTime.now().add(const Duration(days: -2)),
+          value: Random().nextDouble() * 20,
+          sensor_id: 1,
+          beehive_id: 1),
+      SensorValues(
+          time: DateTime.now().add(const Duration(days: -1)),
+          value: Random().nextDouble() * 20,
+          sensor_id: 1,
+          beehive_id: 1),
+    ]);
   }
 
   Widget leftTitleWidgets(double value, TitleMeta meta) {
@@ -215,24 +224,30 @@ class _DrawChartState extends State<_DrawChart> {
 
   @override
   Widget build(BuildContext context) {
-    //const weekday = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    return Consumer<BeeChartDataProvider>(
+      builder:
+          (BuildContext context, BeeChartDataProvider value, Widget? child) {
 
-    return Consumer<List<SensorValues>?>(
-      builder: (context, _data, child) {
-        if (_data == null || _data.length < 1) {
-          return Center(child: SharedLoadingIndicator(context: context));
+        if (!value.sensorValues.isNotEmpty) {
+          return const Center(
+            child: Text(
+              "No data available",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
         }
-        var yValues = _data
+
+        var yValues = value.sensorValues
             .where((item) =>
-                item.sensor_id ==
-                1) // Filter only items with sensor_id == 1 //TODO: Make this filter correct
+        item.sensor_id ==
+            1) // Filter only items with sensor_id == 1 //TODO: Make this filter correct
             .map((item) => item.value) // Map
             .toList(); // Convert to list
 
         // generate a weekday list for the x-axis based on yValues date values
         // _data contains DateTime time, convert it to 'Sun', ect..
         var weekday = [];
-        _data.toList().forEach((element) {
+        value.sensorValues.toList().forEach((element) {
           if (element.sensor_id != 1) return;
           weekday.add(DateFormat('E').format(element.time));
         });
@@ -249,20 +264,6 @@ class _DrawChartState extends State<_DrawChart> {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const SizedBox(height: 10),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Over the last 7 days',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
             const SizedBox(
               height: 18,
             ),
@@ -281,7 +282,7 @@ class _DrawChartState extends State<_DrawChart> {
                             return null;
                           }
                           return TouchedSpotIndicatorData(
-                            FlLine(
+                            const FlLine(
                               color: Colors.amber,
                               strokeWidth: 4,
                             ),
@@ -330,14 +331,14 @@ class _DrawChartState extends State<_DrawChart> {
 
                             return LineTooltipItem(
                               '${weekday[flSpot.x.toInt()]} \n',
-                              TextStyle(
+                              const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
                               ),
                               children: [
                                 TextSpan(
                                   text: flSpot.y.toString(),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.black,
                                     fontWeight: FontWeight.w900,
                                   ),
@@ -405,7 +406,7 @@ class _DrawChartState extends State<_DrawChart> {
                           ),
                           spotsLine: BarAreaSpotsLine(
                             show: true,
-                            flLineStyle: FlLine(
+                            flLineStyle: const FlLine(
                               color: Colors.yellow,
                               strokeWidth: 2,
                             ),
