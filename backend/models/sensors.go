@@ -26,50 +26,50 @@ type Beehives struct {
 
 type Season struct {
 	Name      string
-	LowTemp   float64
-	HighTemp  float64
-	LowHumid  float64
-	HighHumid float64
+	LowTemp   float32
+	HighTemp  float32
+	LowHumid  float32
+	HighHumid float32
 }
 
 // Limits for temperature
 const (
-	WinterLowTemp  float64 = -40.0
-	WinterHighTemp float64 = 40.0
-	SpringLowTemp  float64 = -30.0
-	SpringHighTemp float64 = 40.0
-	SummerLowTemp  float64 = 0.0
-	SummerHighTemp float64 = 40.0
-	FallLowTemp    float64 = -30.0
-	FallHighTemp   float64 = 30.0
+	WinterLowTemp  float32 = -40.0
+	WinterHighTemp float32 = 40.0
+	SpringLowTemp  float32 = -30.0
+	SpringHighTemp float32 = 40.0
+	SummerLowTemp  float32 = 0.0
+	SummerHighTemp float32 = 40.0
+	FallLowTemp    float32 = -30.0
+	FallHighTemp   float32 = 30.0
 )
 
 // Limits for humidity
 const (
-	WinterLowHumidity  float64 = 5.0
-	WinterHighHumidity float64 = 50.0
-	SpringLowHumidity  float64 = 5.0
-	SpringHighHumidity float64 = 60.0
-	SummerLowHumidity  float64 = 10.0
-	SummerHighHumidity float64 = 70.0
-	FallLowHumidity    float64 = 5.0
-	FallHighHumidity   float64 = 60.0
+	WinterLowHumidity  float32 = 5.0
+	WinterHighHumidity float32 = 50.0
+	SpringLowHumidity  float32 = 5.0
+	SpringHighHumidity float32 = 60.0
+	SummerLowHumidity  float32 = 10.0
+	SummerHighHumidity float32 = 70.0
+	FallLowHumidity    float32 = 5.0
+	FallHighHumidity   float32 = 60.0
 )
 
 // Limits for oxygen
 const (
-	LowOxygen  float64 = 18.0
-	HighOxygen float64 = 25.0
+	LowOxygen  float32 = 18.0
+	HighOxygen float32 = 25.0
 )
 
 // Limits for weight
 const (
-	LowWeight  float64 = 0.0
-	HighWeight float64 = 10.0
+	LowWeight  float32 = 0.0
+	HighWeight float32 = 10.0
 )
 
 // Limits for microphone
-const LowMicNoise float64 = 0.0
+const LowMicNoise float32 = 0.0
 
 var (
 	winter = &Season{Name: "winter", LowTemp: WinterLowTemp, HighTemp: WinterHighTemp,
@@ -82,6 +82,7 @@ var (
 		LowHumid: SpringLowHumidity, HighHumid: SpringHighHumidity}
 )
 
+// A map that maps each month to a season
 var seasons = map[time.Month]*Season{
 	time.January: winter, time.February: winter,
 	time.March: spring, time.April: spring, time.May: spring,
@@ -94,7 +95,7 @@ type SensorData struct {
 	SensorID   int       `json:"sensor_id"`
 	BeehiveID  int       `json:"beehive_id"`
 	SensorType string    `json:"sensor_type"`
-	Value      float64   `json:"value"`
+	Value      float32   `json:"value"`
 	Time       time.Time `json:"time"`
 }
 
@@ -116,14 +117,17 @@ var validSensorTypes = map[SensorType]bool{
 	SensorTypeMicrophone:  true,
 }
 
+// Returns true if the sensortype exists
 func (st SensorType) IsValid() bool {
 	return validSensorTypes[st]
 }
 
+// Convert SensorType to string
 func (st SensorType) String() string {
 	return string(st)
 }
 
+// Verify sensorvalue and return true if everything looks good, else return false with message
 func (sd SensorData) VerifyInputData() (bool, string) {
 	switch sd.SensorType {
 	case SensorTypeTemperature.String():
@@ -141,6 +145,7 @@ func (sd SensorData) VerifyInputData() (bool, string) {
 	}
 }
 
+// Verify temperature sensorvalues
 func (sd SensorData) verifyTemperature() (bool, string) {
 	month := sd.Time.Month()
 	season, exists := seasons[month]
@@ -157,6 +162,7 @@ func (sd SensorData) verifyTemperature() (bool, string) {
 	}
 }
 
+// Verify humidity sensorvalues
 func (sd SensorData) verifyHumidity() (bool, string) {
 	month := sd.Time.Month()
 	season, exists := seasons[month]
@@ -174,6 +180,7 @@ func (sd SensorData) verifyHumidity() (bool, string) {
 
 }
 
+// Verify oxygen sensorvalues
 func (sd SensorData) verifyOxygen() (bool, string) {
 	if sd.Value < LowOxygen {
 		return false, "humiditylevel is below " + fmt.Sprintf("%f", LowOxygen) + "%"
@@ -184,6 +191,7 @@ func (sd SensorData) verifyOxygen() (bool, string) {
 	}
 }
 
+// Verify weight sensorvalues
 func (sd SensorData) verifyWeight() (bool, string) {
 	if sd.Value < LowWeight {
 		return false, "weight is below " + fmt.Sprintf("%f", LowWeight) + "kg"
@@ -193,6 +201,7 @@ func (sd SensorData) verifyWeight() (bool, string) {
 	return true, "weight is within limits"
 }
 
+// Verify microphone sensorvalues
 func (sd SensorData) verifyMicrophone() (bool, string) {
 	if sd.Value > LowMicNoise {
 		return false, "microphone is detecting noise"
