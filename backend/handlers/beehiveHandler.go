@@ -14,7 +14,7 @@ import (
 )
 
 // Connect a beehive to a user by using the sensor-cards mac address
-func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
+func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
@@ -83,6 +83,52 @@ func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	}
 
 	utils.SendJSONResponse(w, "Beehive added to user", http.StatusOK)
+
+}
+
+// Connect a beehive to a user by using the sensor-cards mac address
+func RemoveBeehiveFromUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the user is already connected
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryRemoveBeehiveFromUser = `DELETE FROM user_beehive WHERE user_id = $1 AND beehive_id = $2`
+	_, err = conn.Exec(context.Background(), sqlQueryRemoveBeehiveFromUser, userId, beehiveId)
+	if err != nil {
+		utils.LogError("Error removing beehive from user, error: ", err)
+		utils.SendErrorResponse(w, "Error removing beehive to user", http.StatusBadRequest)
+		return
+	}
+
+	utils.SendJSONResponse(w, "Beehive removed from user", http.StatusOK)
 
 }
 

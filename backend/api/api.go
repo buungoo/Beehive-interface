@@ -32,7 +32,16 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 	}))
 
 	mux.HandleFunc("POST /beehive/add", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
-		handlers.AddBeehive(w, r, dbPool)
+		handlers.AddBeehiveToUser(w, r, dbPool)
+	}))
+
+	mux.HandleFunc("POST /beehive/{beehiveId}/remove", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
+		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
+			return
+		}
+		handlers.RemoveBeehiveFromUser(w, r, dbPool, beehiveId)
 	}))
 
 	mux.HandleFunc("POST /beehive/{beehiveId}/sensor-data/add", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
