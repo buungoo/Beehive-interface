@@ -43,6 +43,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehive_status" (
+		"issue_id" SERIAL,
 		"sensor_id" INTEGER NOT NULL,
 		"beehive_id" INTEGER NOT NULL,
 		"sensor_type" VARCHAR NOT NULL,
@@ -51,7 +52,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"read" BOOLEAN,
 		"time_of_error" TIMESTAMPTZ,
 		"time_read" TIMESTAMPTZ,
-		PRIMARY KEY ("beehive_id", "sensor_id"),
+		PRIMARY KEY ("issue_id", "beehive_id", "sensor_id"),
 		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id"), 
 		FOREIGN KEY ("sensor_id", "sensor_type", "beehive_id") REFERENCES "sensors" ("id", "type", "beehive_id")
 	);

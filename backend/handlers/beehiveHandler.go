@@ -86,6 +86,7 @@ func AddBeehive(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 
 }
 
+// Returns the beehive_status table which shows issues
 func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
@@ -121,53 +122,36 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 
 	const sqlQueryFetchBeehiveStatus = `SELECT * FROM beehive_status 
 										WHERE beehive_id=$1
-										ORDER BY beehive_id, time_of_error DESC; `
+										ORDER BY time_of_error DESC
+										LIMIT 1; `
+
+	// Hold the data
+	var data models.BeehiveStatus
 
 	// Fetch all data
-	rows, err := conn.Query(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId)
+	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId).Scan(&data.IssueId, &data.SensorId,
+		&data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead)
 	if err != nil {
-		utils.LogError("Error fetching data", err)
-		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
+		utils.LogError("error reading beehivestatus: ", err)
+		utils.SendErrorResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
 
-	type BeehiveStatus struct {
-		SensorId    int       `json: "sensor_id"`
-		BeehiveId   int       `json:"beehive_id"`
-		SensorType  string    `json: "sensor_type"`
-		Description string    `json: "description"`
-		Solved      bool      `json: "solved"`
-		Read        bool      `json: "read"`
-		TimeOfError time.Time `json: "time_of_error"`
-		TimeRead    time.Time `json: "time_read"`
-	}
-
-	// Slice to hold the data from returned rows
-	var dataResponse []BeehiveStatus
-
-	for rows.Next() {
-		var data BeehiveStatus
-		if err := rows.Scan(&data.SensorId, &data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead); err != nil {
-			utils.LogError("error reading beehivestatus: ", err)
-			utils.SendErrorResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
-			return
+	if !data.Read {
+		err = updateBeehiveStatusOnRead(dbPool, data)
+		if err != nil {
+			utils.LogError("error updating beehive_status: ", err)
 		}
-		dataResponse = append(dataResponse, data)
-	}
-	if err := rows.Err(); err != nil {
-		utils.SendJSONResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
-		return
 	}
 
-	utils.SendJSONResponse(w, dataResponse, http.StatusOK)
+	utils.SendJSONResponse(w, data, http.StatusOK)
 	//utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
 
 }
 
-func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, errorMessage error, data models.SensorData) {
-	// Retrieve message
-	var statusMessage string = errorMessage.Error()
+// Updates the beehive_status table when a value outside of the limits has been receive from the sensors
+func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, statusMessage string, data models.SensorData) {
+
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
@@ -186,6 +170,30 @@ func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pg
 	}
 }
 
+// Updates the read time after the issue has been read
+func updateBeehiveStatusOnRead(dbPool *pgxpool.Pool, data models.BeehiveStatus) error {
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	const sqlQueryUpdateBeehiveStatus = `UPDATE beehive_status 
+									SET read = $1, time_read = $2 
+									WHERE issue_id = $3 AND beehive_id = $4 AND sensor_id = $5`
+
+	// Update beehive_status
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, true, time.Now(), data.IssueId, data.BeehiveId, data.SensorId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Returns a list of the beehives connected to the user
 func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
