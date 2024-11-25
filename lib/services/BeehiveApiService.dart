@@ -33,14 +33,8 @@ class BeehiveApi {
           .toList();
     } catch (e) {
       print(e);
+      return [];
     }
-
-    return Future.delayed(
-        const Duration(seconds: 2),
-        () => [
-              Beehive(id: "1", name: "Beehive 1"),
-              Beehive(id: "2", name: "Beehive 2"),
-            ]);
   }
 
   Future<bool> verifyUser() async {

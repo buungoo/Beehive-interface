@@ -47,12 +47,13 @@ class BeehiveDataProvider {
     }
   }
 
-  Future<String> fetchBeehiveDataChart({
-      required String beehiveId, required String sensor, String timescale = '1 Week'}) async {
+  Future<String> fetchBeehiveDataChart(
+      {required String beehiveId,
+      required String sensor,
+      String timescale = '1 Week'}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-
 
       Duration timeRange = parseDuration(timescale);
 
@@ -68,6 +69,8 @@ class BeehiveDataProvider {
         '${config.BackendServer}/beehive/$beehiveId/sensor-data/$formattedDate1/$formattedDate2',
       );
 
+      print(uri);
+
       var response = await get(
         uri,
         headers: <String, String>{
@@ -77,8 +80,6 @@ class BeehiveDataProvider {
       );
 
       print("Hello!!");
-      print(response.statusCode);
-      print(response.body);
 
       // Return the response body as a string
       return response.body.toString();

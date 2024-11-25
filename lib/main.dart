@@ -92,8 +92,23 @@ final GoRouter _router = GoRouter(
 
         final beehive =
             context.read<BeehiveListProvider>().findBeehiveById("1");
+
+        if (beehive == null) {
+          return SharedScaffold(
+            context: context,
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/'),
+              ),
+            ),
+            body: const Center(child: Text('Beehive not found!')),
+          );
+        }
+
         return BeeChartPage(
-            beehive: beehive,
+            beehive: beehive!,
             title: type[0].toUpperCase() + type.substring(1),
             type: type);
       },

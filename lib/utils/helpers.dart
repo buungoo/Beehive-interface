@@ -61,6 +61,20 @@ List<Color> generateColorsFromString(String input) {
   return colors;
 }
 
+class TimeScaleNotifier extends ChangeNotifier {
+  String _timeScale;
+
+  TimeScaleNotifier(this._timeScale);
+
+  String get timeScale => _timeScale;
+
+  void updateTimeScale(String newTimeScale) {
+    if (_timeScale != newTimeScale) {
+      _timeScale = newTimeScale;
+      notifyListeners(); // Notify consumers about the change
+    }
+  }
+}
 
 Duration parseDuration(String timeString) {
   final parts = timeString.split(' '); // Split into parts: ["1", "Day"]

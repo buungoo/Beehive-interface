@@ -7,32 +7,18 @@ PreferredSizeWidget? getNavigationBar(
     {required BuildContext context,
     required String title,
     Color? bgcolor,
-    bool Action = false}) {
+    Widget? ActionButtn}) {
   return isIOS(context)
       ? CupertinoNavigationBar(
           middle: Text(title),
           backgroundColor: bgcolor,
-          trailing: Action
-              ? CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () {
-                    context.pushNamed("Camera");
-                  },
-                  child: Icon(CupertinoIcons.add),
-                )
-              : null,
+          trailing: ActionButtn,
+          //trailing: ActionButtn == null ? [ActionButtn] : null,
         )
       : AppBar(
           title: Text(title),
           backgroundColor: bgcolor,
-          actions: Action
-              ? [
-                  IconButton(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed('Camera');
-                      },
-                      icon: Icon(Icons.add))
-                ]
-              : null,
+          actions: ActionButtn != null ? [ActionButtn] : null,
+          //actions: ActionButtn != null ? [ActionButtn] : null,
         );
 }

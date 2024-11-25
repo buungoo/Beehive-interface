@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../widgets/shared.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:beehive/providers/beehive_user_provider.dart';
+import 'package:go_router/go_router.dart'; // GoRouter for navigation
 
 import 'dart:developer';
 import 'dart:io';
@@ -18,6 +19,7 @@ class Camera extends StatefulWidget {
 class _Camera extends State<Camera> {
   Barcode? result;
   QRViewController? controller;
+  bool isLoading = false;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
 
   @override
@@ -47,18 +49,6 @@ class _Camera extends State<Camera> {
             flex: 5,
             child: _buildQrView(context),
           ),
-          Expanded(
-              child: FittedBox(
-                  fit: BoxFit.contain,
-                  child: Column(
-                    children: <Widget>[
-                      if (result != null)
-                        Text(
-                            'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-                      else
-                        const Text('Scan a code'),
-                    ],
-                  )))
         ],
       ),
     );
@@ -90,16 +80,62 @@ class _Camera extends State<Camera> {
       this.controller = controller;
     });
     controller.scannedDataStream.listen((scanData) async {
-      print(scanData.format);
+      if (this.isLoading) return;
+
+      setState(() {
+        this.isLoading = true;
+      });
+
       if (scanData.format == BarcodeFormat.qrcode) {
         controller.pauseCamera();
         final token = scanData.code!;
         final response = await BeehiveUserProvider().addBeehive(token);
 
-        //TODO: Let the user know
+        if (response) {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('QR Code Scanned'),
+                content: Text('Beehive added successfully!'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('OK'),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context, true);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('QR Code Scanned'),
+                content: Text('Failed to add beehive. Please try again.'),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('OK'),
+                    onPressed: () async {
+                      controller.resumeCamera();
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+
+        // Show an alert dialog to let the user know the result
       }
       setState(() {
         result = scanData;
+        this.isLoading = false;
       });
     });
   }

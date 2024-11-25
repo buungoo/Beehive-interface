@@ -94,7 +94,7 @@ class BeehiveUserProvider {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      var macaddr = formatHexString(mac);
+      //var macaddr = formatHexString(mac);
 
       var response =
           await client.post(Uri.parse(config.BackendServer + '/beehive/add'),
@@ -103,16 +103,18 @@ class BeehiveUserProvider {
                 'Authorization': 'Bearer $token',
               },
               body: jsonEncode({
-                'macaddrr': macaddr,
+                'macaddress': mac,
               }));
 
-      if (response.statusCode == 200) {
+      print(response.body);
+      if (response.body.contains("Beehive added to user")) {
         return true;
+      } else {
+        return false;
       }
     } catch (e) {
       //print(e);
+      return false;
     }
-
-    return false;
   }
 }

@@ -8,11 +8,17 @@ import 'package:flutter/material.dart';
 import 'package:beehive/widgets/shared.dart';
 import 'package:beehive/models/SensorValues.dart';
 import 'package:intl/intl.dart';
+import 'package:beehive/providers/beehive_data_provider.dart';
 
 class BeeChartDataProvider with ChangeNotifier {
   List<SensorValues> _sensorValues = [];
-  String _selectedTimescale = '1 Month';
+  String _selectedTimescale = '1 Day';
   bool _isLoading = false;
+  String sensor;
+  String beehiveID;
+
+  // constructor with default values
+  BeeChartDataProvider({this.sensor = "temperature", this.beehiveID = "1"});
 
   List<SensorValues> get sensorValues => _sensorValues;
   String get selectedTimescale => _selectedTimescale;
@@ -22,25 +28,26 @@ class BeeChartDataProvider with ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
-  
+
+  void setSensor(String value) {
+    sensor = value;
+  }
+
   void fetchData() async {
     setIsLoading(true);
 
     //TODO: Make sure this works with the API, atm we do not have any live data I can test with
-    //var fetchedData = await BeehiveDataProvider().fetchBeehiveDataChart(beehiveId: "2", sensor: "temperature", timescale: _selectedTimescale);
-    //setValues(SensorValues.fromJsonList(fetchedData));
-
-    List<SensorValues> temp = [];
-
-    for (int i = 0; i < 30; i++) {
-      temp.add(SensorValues(sensor_id: 1, beehive_id: 2, value: Random().nextDouble() * 20, time: DateTime.now().subtract(Duration(days: i))));
+    var fetchedData = await BeehiveDataProvider().fetchBeehiveDataChart(
+        beehiveId: beehiveID, sensor: sensor, timescale: _selectedTimescale);
+    try {
+      setValues(SensorValues.fromJsonList(fetchedData));
+    } catch (e) {
+      print("Error fetching data");
+      setValues([]);
+    } finally {
+      setIsLoading(false);
     }
-
-    _sensorValues = temp;
-
-    setIsLoading(false);
   }
-  
 
   void setValues(List<SensorValues> values) {
     _sensorValues = values;
@@ -55,20 +62,21 @@ class BeeChartDataProvider with ChangeNotifier {
 
 class BeeChartPage extends StatelessWidget {
   final String? id;
-  final Beehive? beehive;
+  final Beehive beehive;
   final String title;
   final String type; // temperature, weight, humidity, ppm
 
   const BeeChartPage(
       {this.id,
-      this.beehive,
+      required this.beehive,
       super.key,
       required this.title,
       required this.type});
 
   @override
   Widget build(BuildContext context) {
-    final dataProvider = BeeChartDataProvider();
+    final dataProvider =
+        BeeChartDataProvider(beehiveID: this.beehive.id, sensor: this.type);
 
     return ChangeNotifierProvider<BeeChartDataProvider>.value(
         value: dataProvider,
@@ -82,7 +90,9 @@ class BeeChartPage extends StatelessWidget {
     return SharedScaffold(
         context: context,
         appBar: getNavigationBar(
-            context: context, title: "Test", bgcolor: const Color(0xFFf4991a)),
+            context: context,
+            title: this.title,
+            bgcolor: const Color(0xFFf4991a)),
         body: Center(
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -100,7 +110,6 @@ class _Settings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     void onTimeRangeChange(String value) {
       context.read<BeeChartDataProvider>().setTimescale(value);
     }
@@ -141,45 +150,17 @@ class _ChartView extends StatefulWidget {
 }
 
 class _ChartViewState extends State<_ChartView> {
-
   late double touchedValue;
 
   final Color? lineColor = Colors.yellow[700];
   final Color? avgLineColor = Colors.yellow[800];
   final Color pointColor = const Color(0xFFFFEB3B);
 
-
   @override
   void initState() {
     super.initState();
     touchedValue = -1;
-    context.read<BeeChartDataProvider>().setValues([
-      SensorValues(
-          time: DateTime.now().add(const Duration(days: -5)),
-          value: Random().nextDouble() * 20,
-          sensor_id: 1,
-          beehive_id: 1),
-      SensorValues(
-          time: DateTime.now().add(const Duration(days: -4)),
-          value: Random().nextDouble() * 20,
-          sensor_id: 1,
-          beehive_id: 1),
-      SensorValues(
-      time: DateTime.now().add(const Duration(days: -3)),
-          value: Random().nextDouble() * 20,
-          sensor_id: 1,
-          beehive_id: 1),
-      SensorValues(
-          time: DateTime.now().add(const Duration(days: -2)),
-          value: Random().nextDouble() * 20,
-          sensor_id: 1,
-          beehive_id: 1),
-      SensorValues(
-          time: DateTime.now().add(const Duration(days: -1)),
-          value: Random().nextDouble() * 20,
-          sensor_id: 1,
-          beehive_id: 1),
-    ]);
+    widget.dataProvider.fetchData();
   }
 
   Widget leftTitleWidgets(double value, TitleMeta meta) {
@@ -227,8 +208,7 @@ class _ChartViewState extends State<_ChartView> {
     return Consumer<BeeChartDataProvider>(
       builder:
           (BuildContext context, BeeChartDataProvider value, Widget? child) {
-
-        if (!value.sensorValues.isNotEmpty) {
+        if (!value.sensorValues.isNotEmpty && !value.isLoading) {
           return const Center(
             child: Text(
               "No data available",
@@ -237,10 +217,16 @@ class _ChartViewState extends State<_ChartView> {
           );
         }
 
+        if (value.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
         var yValues = value.sensorValues
             .where((item) =>
-        item.sensor_id ==
-            1) // Filter only items with sensor_id == 1 //TODO: Make this filter correct
+                item.sensor_id ==
+                1) // Filter only items with sensor_id == 1 //TODO: Make this filter correct
             .map((item) => item.value) // Map
             .toList(); // Convert to list
 
