@@ -3,10 +3,14 @@ package main
 import (
 	"beehive_api/api"
 	"beehive_api/db"
+	"beehive_api/mqtt"
 	"beehive_api/test"
 	"beehive_api/utils"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -53,5 +57,18 @@ func main() {
 	if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
 		utils.LogError("Http server could not start: ", err)
 	}
+
+	// Set up MQTT subscriber
+	go func() {
+		mqtt.SetupMQTTSubscriber(dbpool)
+	}()
+
+	// Wait for termination signals
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Block until a signal is received
+	<-stopChan
+	utils.LogInfo("Shutting down application")
 
 }
