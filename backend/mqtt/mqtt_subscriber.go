@@ -23,15 +23,21 @@ func handleSensorMessage(message SensorMessage, dbpool *pgxpool.Pool) {
 	readings, err := parseSensorMessage(message)
 	if err != nil {
 		utils.LogError("Error parsing sensor message", err)
+		fmt.Println("Error parsing sensor message", err)
 		return
 	}
 
 	for _, reading := range readings {
 		utils.LogInfo(fmt.Sprintf("Sensor Reading: %+v", reading))
+		fmt.Printf("Sensor Reading: %+v\n", reading) // print and log
 		// Insert the reading into the database
 		err := handlers.InsertSensorReading(dbpool, reading)
 		if err != nil {
 			utils.LogError("Failed to insert sensor reading: ", err)
+			fmt.Println("Failed to insert sensor reading: ", err)
+		} else {
+			utils.LogInfo(fmt.Sprintf("Successfully inserted reading into the database: %+v", reading))
+			fmt.Println("Successfully inserted reading into the database:", reading)
 		}
 	}
 }
@@ -40,16 +46,30 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 	// Decode the base64 data into decimal
 	decodedData, err := base64.StdEncoding.DecodeString(message.Data)
 	if err != nil {
+		utils.LogError("Error decoding base64 data", err)
+		fmt.Println("Error decoding base64 data", err)
 		return nil, fmt.Errorf("error decoding base64 data: %v", err)
 	}
 
 	// Format the time we received as it couldnt be parsed correctly otherwise
+	// if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
+	// 	message.Time = message.Time[:dotIndex] + "Z" // Add "Z" to indicate UTC
+	// }
+	// Format the time we received if it includes a timezone offset
 	if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
-		message.Time = message.Time[:dotIndex] + "Z" // Add "Z" to indicate UTC
+		message.Time = message.Time[:dotIndex+4] + "Z" // Truncate to microseconds and add "Z"
 	}
 
-	timeStamp, err := time.Parse("2006-01-02T15:04:05Z", message.Time)
+	// timeStamp, err := time.Parse("2006-01-02T15:04:05Z", message.Time)
+	// if err != nil {
+	// 	utils.LogError("Error parsing time", err)
+	// 	fmt.Println("Error parsing time", err)
+	// 	return nil, fmt.Errorf("error parsing time: %v", err)
+	// }
+	timeStamp, err := time.Parse(time.RFC3339, message.Time)
 	if err != nil {
+		utils.LogError("Error parsing time", err)
+		fmt.Println("Error parsing time", err)
 		return nil, fmt.Errorf("error parsing time: %v", err)
 	}
 
@@ -72,7 +92,6 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 			sensorType = "Unknown"
 		}
 
-		// (decodedData[i])
 		sensorId := decodedData[i+1]
 		rawValue := decodedData[i+2]
 
@@ -83,6 +102,9 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 
 		// Group each individual reading into a list
 		readings = append(readings, builder.Build())
+
+		utils.LogInfo(fmt.Sprintf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v", sensorType, sensorId, rawValue))
+		fmt.Printf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v\n", sensorType, sensorId, rawValue) // print and log
 	}
 
 	return readings, nil
@@ -138,31 +160,55 @@ func createMessagePubHandler(dbpool *pgxpool.Pool) mqtt.MessageHandler {
 		var sensorMessage SensorMessage
 		if err := json.Unmarshal(msg.Payload(), &sensorMessage); err != nil {
 			utils.LogError("Error parsing JSON", err)
+			fmt.Println("Error parsing JSON", err)
 			return
 		}
 
 		utils.LogInfo(fmt.Sprintf("Received message: %+v", sensorMessage))
+		fmt.Printf("Received message: %+v\n", sensorMessage) // print and log
 		handleSensorMessage(sensorMessage, dbpool)
 	}
 }
 
 var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
-	fmt.Println("Connected to MQTT broker")
+	utils.LogInfo("Connected to MQTT broker")
+	fmt.Println("Connected to MQTT broker") // print and log
 }
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 	utils.LogError("Connection lost", err)
-	fmt.Printf("Connection lost: %v\n", err)
+	fmt.Printf("Connection lost: %v\n", err) // print and log
 
 	// Retry to connect if connection was lost
 	for {
-		fmt.Println("Attempting to reconnect...")
+		utils.LogInfo("Attempting to reconnect...")
+		fmt.Println("Attempting to reconnect...") // print and log
 		if token := client.Connect(); token.Wait() && token.Error() == nil {
-			fmt.Println("Reconnected successfully")
+			utils.LogInfo("Reconnected successfully")
+			fmt.Println("Reconnected successfully") // print and log
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func retryConnect(client mqtt.Client) error {
+	for {
+		// Attempt to connect to the broker
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			utils.LogError("Failed to connect to MQTT broker", token.Error())
+			fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
+			// Wait before retrying
+			utils.LogInfo("Retrying to connect to MQTT broker...")
+			fmt.Println("Retrying to connect to MQTT broker...") // print and log
+			time.Sleep(5 * time.Second)                          // Sleep for 5 seconds before retrying
+			continue                                             // Retry connection
+		}
+
+		// If connection was successful, break out of the loop
+		break
+	}
+	return nil
 }
 
 // func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
@@ -217,35 +263,58 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("beehive_subscriber")
+	opts.SetClientID("fkjsdhflafhlhgds") //beehive_subscriber")
 	opts.SetDefaultPublishHandler(createMessagePubHandler(dbpool))
 
 	opts.OnConnect = func(client mqtt.Client) {
 		utils.LogInfo("Connected to MQTT broker")
+		fmt.Println("Connected to MQTT broker") // print and log
 	}
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
-		utils.LogError("Connection lost", err)
+		utils.LogError("Connection to MQTT broker lost", err)
+		fmt.Println("Connection to MQTT broker lost", err) // print and log
 	}
 
 	client := mqtt.NewClient(opts)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		utils.LogError("Error connecting to broker", token.Error())
-		return
+
+	// Connect to the MQTT broker
+	// if token := client.Connect(); token.Wait() && token.Error() != nil {
+	// 	utils.LogError("Failed to connect to MQTT broker", token.Error())
+	// 	fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
+	// 	return
+	// }
+	for {
+		// Attempt to connect to the broker
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			utils.LogError("Failed to connect to MQTT broker", token.Error())
+			fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
+			// Wait before retrying
+			utils.LogInfo("Retrying to connect to MQTT broker...")
+			fmt.Println("Retrying to connect to MQTT broker...") // print and log
+			time.Sleep(5 * time.Second)                          // Sleep for 5 seconds before retrying
+			continue                                             // Retry connection
+		}
+
+		// If connection was successful, break out of the loop
+		break
 	}
 
+	// Subscribe to the topic
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		utils.LogError("Error subscribing to topic", token.Error())
+		utils.LogError("Failed to subscribe to MQTT topic", token.Error())
+		fmt.Println("Failed to subscribe to MQTT topic", token.Error()) // print and log
 		return
 	}
 
 	utils.LogInfo("Subscribed to MQTT topic")
+	fmt.Println("Subscribed to MQTT topic") // print and log
 
-	// Block this goroutine until termination
+	// Use the main application's stop channel to block
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
 	<-stopChan
 
 	client.Disconnect(250)
 	utils.LogInfo("MQTT subscriber disconnected")
+	fmt.Println("MQTT subscriber disconnected") // print and log
 }
-
