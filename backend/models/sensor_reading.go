@@ -90,7 +90,9 @@ func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBui
 		parentBeehive[4:6] + ":" +
 		parentBeehive[6:8] + ":" +
 		parentBeehive[8:10] + ":" +
-		parentBeehive[10:12])
+		parentBeehive[10:12] + ":" +
+		parentBeehive[12:14] + ":" +
+		parentBeehive[14:16])
 
 	mac, err := net.ParseMAC(macFormatted)
 	if err != nil {

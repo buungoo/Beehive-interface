@@ -58,11 +58,11 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 
 	CREATE TABLE IF NOT EXISTS "sensor_data" (
 		"sensor_id" INTEGER NOT NULL,
-		"beehive_id" INTEGER NOT NULL,
 		"sensor_type" VARCHAR NOT NULL,
+		"beehive_id" INTEGER NOT NULL,
 		"value" FLOAT NOT NULL,
 		"time" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-		PRIMARY KEY ("sensor_id","beehive_id", "time"),
+		PRIMARY KEY ("sensor_id", "sensor_type", "time"),
 		FOREIGN KEY ("sensor_id", "sensor_type", "beehive_id") REFERENCES "sensors" ("id", "type", "beehive_id")
 	);
 	`

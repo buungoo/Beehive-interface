@@ -4,7 +4,7 @@ import (
 	"beehive_api/api"
 	"beehive_api/db"
 	"beehive_api/mqtt"
-	"beehive_api/test"
+	// "beehive_api/test"
 	"beehive_api/utils"
 	"log"
 	"net/http"
@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 )
+
 
 func main() {
 	// Initialize the logger
@@ -25,50 +26,45 @@ func main() {
 	dbpool, err := db.InitializeDatabaseConnection()
 	if err != nil {
 		utils.LogError("Error initializing database", err)
+		return
 	}
 	defer dbpool.Close()
 	utils.LogInfo("Successfully connected to the database")
 
-	// Initialize App struct with database connection
-	//app := &db.Handle{DB: conn}
-
-	// Initialize database tables if not already done
-	err = db.InitializeTables(dbpool)
-	if err != nil {
+	// Initialize database tables
+	if err := db.InitializeTables(dbpool); err != nil {
 		utils.LogError("Database initialization failed: ", err)
+		return
 	}
 	utils.LogInfo("Database tables successfully generated")
 
-	// Inject testdata
-	err = test.InjectTestData(dbpool)
-	if err != nil {
-		utils.LogError("Injection of testdata failed: %v", err)
-	}
-	utils.LogInfo("Test data successfully injected to the database!")
+	// Inject test data
+	// if err := test.InjectTestData(dbpool); err != nil {
+	// 	utils.LogError("Injection of test data failed: ", err)
+	// 	return
+	// }
+	// utils.LogInfo("Test data successfully injected to the database!")
 
-	// Create a new request multiplexer that takes incoming
-	// requests and dispatches them to matching handlers
+	// HTTP server setup
 	mux := http.NewServeMux()
-
 	api.InitRoutes(mux, dbpool)
-
-	utils.LogInfo("Starting http server")
-
-	if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
-		utils.LogError("Http server could not start: ", err)
-	}
-
-	// Set up MQTT subscriber
 	go func() {
-		mqtt.SetupMQTTSubscriber(dbpool)
+		utils.LogInfo("Starting HTTP server on port 8080")
+		if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+			utils.LogError("HTTP server failed: ", err)
+			os.Exit(1) // Exit on HTTP server failure
+		}
 	}()
+
+	utils.LogInfo("Starting MQTT subscriber")
+	// MQTT Subscriber setup
+	go mqtt.SetupMQTTSubscriber(dbpool)
 
 	// Wait for termination signals
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
-
-	// Block until a signal is received
 	<-stopChan
-	utils.LogInfo("Shutting down application")
 
+	utils.LogInfo("Shutting down application")
 }
+

@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"beehive_api/models"
+	"beehive_api/utils"
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"beehive_api/models"
 )
 
 // InsertSensorReading inserts a sensor reading into the `sensor_data` table.
@@ -34,10 +35,18 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 		return fmt.Errorf("error checking sensor existence: %v", err)
 	}
 
-	// If the sensor does not exist, return an error
+	// If the sensor does not exist, add it to the sensors table
 	if sensorExists == 0 {
-		return fmt.Errorf("sensor with ID %d and type %s not found for beehive ID %d",
-			reading.SensorID, reading.SensorType, beehiveID)
+		// Insert the sensor into the `sensors` table
+		insertSensorQuery := `
+			INSERT INTO sensors (id, type, beehive_id) 
+			VALUES ($1, $2, $3)`
+		_, err = conn.Exec(context.Background(), insertSensorQuery,
+			reading.SensorID, string(reading.SensorType), beehiveID)
+		if err != nil {
+			return fmt.Errorf("failed to insert sensor: %v", err)
+		}
+		utils.LogInfo(fmt.Sprintf("Added new sensor: ID=%d, Type=%s, BeehiveID=%d", reading.SensorID, reading.SensorType, beehiveID))
 	}
 
 	// Insert the sensor reading into the `sensor_data` table
@@ -52,4 +61,3 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 
 	return nil
 }
-
