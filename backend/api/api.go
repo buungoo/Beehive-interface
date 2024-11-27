@@ -1,3 +1,7 @@
+// Package api contains the all the endpoints and handles routing http-request to the correct handler.
+//
+// This package is the entrypoint for all Api calls. It sends requests to the correct handler.
+// In som occasions it performes some checks before passing it along to a handler.
 package api
 
 import (
@@ -11,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Register routes and send to correct handler
+// InitRouters registers routes and sends http-requests to the correct handler
 func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 
 	mux.HandleFunc("POST /register", func(w http.ResponseWriter, r *http.Request) {

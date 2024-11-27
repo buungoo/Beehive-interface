@@ -1,3 +1,8 @@
+// Package db contains all the functions that is used during initialization phase to set up the database and connection.
+//
+// This packaged is used from main to set up the database tables and initialize a connection to the database from the Api.
+// InitializeDatabaseConnection takes no input and returns a PGX connection-pool that can be used in the Api.
+
 package db
 
 import (
@@ -16,6 +21,7 @@ type Handle struct {
 	DB *pgx.Conn
 }
 
+// InitializeDatabaseConnection initializes a connection to the database and returns a PGX connection-pool
 func InitializeDatabaseConnection() (*pgxpool.Pool, error) {
 
 	// Connect to the database

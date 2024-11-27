@@ -1,3 +1,4 @@
+// Package models contains models and methods that is used to handle sensordata to and from the database.
 package models
 
 import (
@@ -7,6 +8,7 @@ import (
 	//"fmt"
 )
 
+// BeehiveStatus is a struct that is used for the beehive_status table.
 type BeehiveStatus struct {
 	IssueId     int        `json: "issue_id`
 	SensorId    int        `json: "sensor_id"`
@@ -19,11 +21,13 @@ type BeehiveStatus struct {
 	TimeRead    *time.Time `json: "time_read, omitempty"`
 }
 
+// Beehives is never used.
 type Beehives struct {
 	Id   int    `json: "id"`
 	Name string `json: "name`
 }
 
+// Season is used to implement seasons and map data.
 type Season struct {
 	Name      string
 	LowTemp   float32
@@ -71,6 +75,7 @@ const (
 // Limits for microphone
 const LowMicNoise float32 = 0.0
 
+// Pointers to each season
 var (
 	winter = &Season{Name: "winter", LowTemp: WinterLowTemp, HighTemp: WinterHighTemp,
 		LowHumid: WinterLowHumidity, HighHumid: WinterHighHumidity}
@@ -82,7 +87,7 @@ var (
 		LowHumid: SpringLowHumidity, HighHumid: SpringHighHumidity}
 )
 
-// A map that maps each month to a season
+// seasons maps each month to a season with a month as key a Season pointer as value
 var seasons = map[time.Month]*Season{
 	time.January: winter, time.February: winter,
 	time.March: spring, time.April: spring, time.May: spring,
@@ -91,6 +96,7 @@ var seasons = map[time.Month]*Season{
 	time.December: winter,
 }
 
+// SensorData is u
 type SensorData struct {
 	SensorID   int       `json:"sensor_id"`
 	BeehiveID  int       `json:"beehive_id"`
@@ -117,17 +123,17 @@ var validSensorTypes = map[SensorType]bool{
 	SensorTypeMicrophone:  true,
 }
 
-// Returns true if the sensortype exists
+// IsValid returns true if the sensortype exists.
 func (st SensorType) IsValid() bool {
 	return validSensorTypes[st]
 }
 
-// Convert SensorType to string
+// String convert SensorType to string.
 func (st SensorType) String() string {
 	return string(st)
 }
 
-// Verify sensorvalue and return true if everything looks good, else return false with message
+// VerifyInputData verifies sensorvalue and returns true if everything looks good, else return false with message
 func (sd SensorData) VerifyInputData() (bool, string) {
 	switch sd.SensorType {
 	case SensorTypeTemperature.String():
