@@ -10,14 +10,12 @@ import (
 	"beehive_api/utils"
 	"context"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
-
-// This needs to be made properly in the near future
-var secretKey = []byte("secret-key")
 
 // CreateToken signs and encodes the token with given claims and username.
 func CreateToken(username string) (string, error) {
@@ -26,8 +24,7 @@ func CreateToken(username string) (string, error) {
 			"username": username,
 			"exp":      time.Now().Add(time.Hour * 24).Unix(),
 		})
-
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString(getSecretKey())
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +36,7 @@ func CreateToken(username string) (string, error) {
 // VerifyToken verifies a JSON Web Token and returns the claims of the token and a error. It take a token in string format as input.
 func verifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return getSecretKey(), nil
 	})
 
 	if err != nil {
@@ -100,4 +97,15 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		// continue to next handler
 		next(w, r)
 	}
+}
+
+// Returns secret key
+func getSecretKey() []byte {
+	secretKey := os.Getenv("JWT_SECRET_KEY")
+	if secretKey == "" {
+		utils.LogWarn("failed to get the environtment variable")
+		return []byte("ThisIsAStandardPassword123")
+	}
+	utils.LogInfo("Succesfully implemented .env")
+	return []byte(secretKey)
 }

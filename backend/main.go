@@ -7,6 +7,8 @@ import (
 	"beehive_api/utils"
 	"log"
 	"net/http"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -16,6 +18,12 @@ func main() {
 		log.Fatalf("Error initializing logger: %v", err)
 	}
 	defer logFile.Close()
+
+	// Initialize environment variables
+	err = godotenv.Load()
+	if err != nil {
+		utils.LogFatal("failed to get environment variables", err)
+	}
 
 	// Connect to database
 	dbpool, err := db.InitializeDatabaseConnection()
