@@ -16,10 +16,10 @@ class DetailGrid extends StatelessWidget {
     // Use Consumer to listen for changes from the StreamProvider
     return Consumer<BeehiveData?>(
       builder: (context, beehiveData, child) {
+        print(beehiveData);
         if (beehiveData == null) {
           return Center(child: SharedLoadingIndicator(context: context));
         }
-        print("TEST!!!");
         beehiveData.toMap().forEach((key, value) => {print('$key: $value')});
         Map<String, dynamic> dataMap = beehiveData.toMap();
 

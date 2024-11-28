@@ -124,11 +124,8 @@ class BeehiveDataProvider {
     }
   }
 
-  Future<dynamic> fetchBeehiveIssueStatuses(String beehiveId, bool readOnly) async {
-    var path = '/beehive/$beehiveId/status';
-    if (readOnly) {
-      path += '/list';
-    }
+  Future<Map<String, dynamic>> fetchBeehiveIssueStatus(String beehiveId) async {
+    var path = 'beehive/$beehiveId/status';
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -141,57 +138,35 @@ class BeehiveDataProvider {
         'Authorization': 'Bearer $token',
       });
 
-      //final data = json.decode(response.body);
-
-      //return data;
-      if(readOnly) {
-        return {
-          "IssueId": 1,
-          "SensorId": 5,
-          "BeehiveId": 2,
-          "SensorType": "temperature",
-          "Description": "temperature is above 40.000000 Celsius",
-          "Solved": false,
-          "Read": false,
-          "TimeOfError": "2025-12-01T05:15:10Z",
-          "TimeRead": null
-        };
-      } else {
-        return [
-        {
-          "IssueId": 1,
-    "SensorId": 5,
-    "beehive_id": 2,
-    "SensorType": "temperature",
-    "Description": "temperature is above 40.000000 Celsius",
-    "Solved": false,
-    "Read": true,
-    "TimeOfError": "2025-12-01T05:15:10Z",
-    "TimeRead": "2024-11-28T10:52:35.778848Z"
-  },
-    {
-    "IssueId": 3,
-    "SensorId": 6,
-    "beehive_id": 2,
-    "SensorType": "humidity",
-    "Description": "temperature is above 60.000000 Celsius",
-    "Solved": false,
-    "Read": false,
-    "TimeOfError": "2025-10-11T05:15:12Z",
-    "TimeRead": null
-    }];
-      }
-
-
+      return json.decode(response.body);
     } catch (e) {
-      print("Error fetching beehive issue statuses: $e");
-      return null;
+      print("Error fetching beehive issue status: $e");
+      return {};
     }
-
-
-
   }
 
+  Future<List<Map<String, dynamic>>> fetchBeehiveIssueStatusesList(
+      String beehiveId) async {
+    var path = '/beehive/$beehiveId/status/list';
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final uri = Uri.parse('${config.BackendServer}/$path');
+
+      var response = await get(uri, headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      });
+
+      final Map<String, dynamic> data = json.decode(response.body);
+      return [data];
+    } catch (e) {
+      print("Error fetching beehive issue statuses: $e");
+      return [];
+    }
+  }
 
   Stream<String> getBeehiveSensorData(String type) async* {
     yield "Hello";

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter for navigation
 import 'package:beehive/services/BeehiveApiService.dart';
+import 'package:beehive/providers/beehive_data_provider.dart';
+import 'package:beehive/services/BeehiveNotificationService.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({super.key});
-
-  void printText() {
-    print("Yeet");
-  }
 
   void checkAuth(BuildContext context) async {
     print("Checking Auth");
     final authenticated = await BeehiveApi().verifyUser();
     print("Authenticated: $authenticated");
     if (authenticated) {
+      await BeeNotification().checkIssues();
       // Navigate to the 'overview' page on successful login
       context.go('/overview');
     }

@@ -44,21 +44,24 @@ class BeehiveDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusBox(String id) {
-    bool enabled = false;
-
-    List<Map<String, dynamic>> data = BeehiveDataProvider().fetchBeehiveIssueStatuses(id, false) as List<Map<String, dynamic>>;
-
-    if(data.isNotEmpty) {
-      enabled = true;
-    }
-
-    return enabled
-        ? Positioned(
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: BeehiveDataProvider().fetchBeehiveIssueStatusesList(id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(); // or a loading indicator
+        } else if (snapshot.hasError) {
+          return Container(); // or an error message
+        } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          return Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Statusbox(data: data),
-          )
-        : Container();
+            child: Statusbox(data: snapshot.data!),
+          );
+        } else {
+          return Container();
+        }
+      },
+    );
   }
 }

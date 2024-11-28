@@ -83,19 +83,20 @@ class BeeNotification {
         id, title, body, notificationDetails);
   }
 
-  void checkIssues() async {
+  Future<void> checkIssues() async {
+    print("CHECKING");
     final hives = await BeehiveApi().GetHives();
-
     for (var hive in hives) {
-      final data = await BeehiveDataProvider().fetchBeehiveIssueStatuses(hive.id, true);
+      final data = await BeehiveDataProvider().fetchBeehiveIssueStatus(hive.id);
       if (data.isNotEmpty) {
-        final issue = data[0];
-        if(issue["Read"] == true) {
+        if (data['Read']) {
+          await Future.delayed(const Duration(seconds: 5));
           continue;
         }
         sendCriticalNotification(
-          title: "Beehive #${hive.id} is having issues with ${issue['SensorType']}",
-          body: "${issue['Description']}",
+          title:
+              "Beehive #${hive.id} is having issues with ${data['SensorType']}",
+          body: "${data['Description']}",
         );
       }
       // add a delay to prevent spamming notifications
