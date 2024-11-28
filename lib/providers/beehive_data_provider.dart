@@ -5,6 +5,7 @@ import 'package:http/http.dart';
 import 'package:beehive/config.dart' as config;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:beehive/models/SensorValues.dart';
 
 import 'package:beehive/utils/helpers.dart';
 
@@ -47,7 +48,7 @@ class BeehiveDataProvider {
     }
   }
 
-  Future<String> fetchBeehiveDataChart(
+  Future<List<SensorValues>> fetchBeehiveDataChart(
       {required String beehiveId,
       required String sensor,
       String timescale = '1 Week'}) async {
@@ -79,14 +80,47 @@ class BeehiveDataProvider {
         },
       );
 
-      print("Hello!!");
+      // using timescale, if 1 day. take all data for today.
+      // else, take the average of the data for each day in the timescale
+
+      final values = SensorValues.fromJsonList(response.body);
+
+      print("INDAYS: ${timeRange.inDays}");
+      if (timeRange.inDays == 1) {
+        return values;
+      } else {
+        Map<String, List<SensorValues>> groupedData = {};
+        for (var value in values) {
+          String date = formatter.format(value.time);
+          if (!groupedData.containsKey(date)) {
+            groupedData[date] = [];
+          }
+          groupedData[date]!.add(value);
+        }
+
+        List<SensorValues> averagedValues = [];
+        groupedData.forEach((date, values) {
+          double avgValue = values.map((v) => v.value).reduce((a, b) => a + b) /
+              values.length;
+
+          averagedValues.add(SensorValues(
+            sensor_id: values.first.sensor_id,
+            beehive_id: values.first.beehive_id,
+            value: avgValue,
+            time: DateTime.parse(date),
+          ));
+        });
+
+        return averagedValues;
+      }
 
       // Return the response body as a string
-      return response.body.toString();
+      //return response.body.toString();
     } catch (e) {
       // Handle error gracefully
       print("Error fetching beehive data: $e");
-      return 'Error fetching data';
+      //return 'Error fetching data';
+      return [];
     }
   }
 

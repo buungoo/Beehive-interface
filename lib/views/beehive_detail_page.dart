@@ -44,11 +44,15 @@ class BeehiveDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusBox(String id) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Statusbox(id: id),
-    );
+    bool enabled = false;
+    //TODO: Send api request to check if any issues exist
+    return enabled
+        ? Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Statusbox(id: id),
+          )
+        : Container();
   }
 }

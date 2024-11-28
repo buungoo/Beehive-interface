@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:beehive/widgets/shared_dropdown.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../models/beehive.dart';
+import 'package:beehive/models/beehive.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:beehive/widgets/shared.dart';
@@ -21,7 +21,9 @@ class BeeChartDataProvider with ChangeNotifier {
   BeeChartDataProvider({this.sensor = "temperature", this.beehiveID = "1"});
 
   List<SensorValues> get sensorValues => _sensorValues;
+
   String get selectedTimescale => _selectedTimescale;
+
   bool get isLoading => _isLoading;
 
   void setIsLoading(bool value) {
@@ -40,7 +42,7 @@ class BeeChartDataProvider with ChangeNotifier {
     var fetchedData = await BeehiveDataProvider().fetchBeehiveDataChart(
         beehiveId: beehiveID, sensor: sensor, timescale: _selectedTimescale);
     try {
-      setValues(SensorValues.fromJsonList(fetchedData));
+      setValues(fetchedData);
     } catch (e) {
       print("Error fetching data");
       setValues([]);
@@ -233,10 +235,17 @@ class _ChartViewState extends State<_ChartView> {
         // generate a weekday list for the x-axis based on yValues date values
         // _data contains DateTime time, convert it to 'Sun', ect..
         var weekday = [];
-        value.sensorValues.toList().forEach((element) {
-          if (element.sensor_id != 1) return;
-          weekday.add(DateFormat('E').format(element.time));
-        });
+        if (value.selectedTimescale == '1 Day') {
+          value.sensorValues.toList().forEach((element) {
+            if (element.sensor_id != 1) return;
+            weekday.add(DateFormat('H').format(element.time));
+          });
+        } else {
+          value.sensorValues.toList().forEach((element) {
+            if (element.sensor_id != 1) return;
+            weekday.add(DateFormat('E').format(element.time));
+          });
+        }
 
         var average = yValues.reduce((a, b) => a + b) / yValues.length;
         double maxValue = yValues.isNotEmpty ? yValues[0] : 0;
@@ -279,14 +288,14 @@ class _ChartViewState extends State<_ChartView> {
                                     radius: 8,
                                     color: Colors.white,
                                     strokeWidth: 5,
-                                    strokeColor: Colors.green,
+                                    strokeColor: Colors.yellow,
                                   );
                                 } else {
                                   return FlDotSquarePainter(
                                     size: 16,
                                     color: Colors.white,
                                     strokeWidth: 5,
-                                    strokeColor: Colors.green,
+                                    strokeColor: Colors.yellow,
                                   );
                                 }
                               },
@@ -295,7 +304,7 @@ class _ChartViewState extends State<_ChartView> {
                         }).toList();
                       },
                       touchTooltipData: LineTouchTooltipData(
-                        getTooltipColor: (touchedSpot) => Colors.blueAccent,
+                        getTooltipColor: (touchedSpot) => Colors.orangeAccent,
                         getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                           return touchedBarSpots.map((barSpot) {
                             final flSpot = barSpot;
@@ -316,7 +325,7 @@ class _ChartViewState extends State<_ChartView> {
                             }
 
                             return LineTooltipItem(
-                              '${weekday[flSpot.x.toInt()]} \n',
+                              '${weekday[flSpot.x.toInt()]}\n',
                               const TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
