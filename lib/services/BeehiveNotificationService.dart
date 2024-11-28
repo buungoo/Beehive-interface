@@ -1,6 +1,10 @@
+import 'package:beehive/providers/beehive_data_provider.dart';
+import 'package:beehive/providers/beehive_list_provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:beehive/utils/helpers.dart';
 import 'package:flutter/material.dart';
+
+import 'BeehiveApiService.dart';
 
 class BeeNotification {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -77,5 +81,25 @@ class BeeNotification {
 
     await flutterLocalNotificationsPlugin.show(
         id, title, body, notificationDetails);
+  }
+
+  void checkIssues() async {
+    final hives = await BeehiveApi().GetHives();
+
+    for (var hive in hives) {
+      final data = await BeehiveDataProvider().fetchBeehiveIssueStatuses(hive.id, true);
+      if (data.isNotEmpty) {
+        final issue = data[0];
+        if(issue["Read"] == true) {
+          continue;
+        }
+        sendCriticalNotification(
+          title: "Beehive #${hive.id} is having issues with ${issue['SensorType']}",
+          body: "${issue['Description']}",
+        );
+      }
+      // add a delay to prevent spamming notifications
+      await Future.delayed(const Duration(seconds: 5));
+    }
   }
 }

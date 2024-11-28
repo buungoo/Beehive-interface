@@ -45,13 +45,19 @@ class BeehiveDetailPage extends StatelessWidget {
 
   Widget _buildStatusBox(String id) {
     bool enabled = false;
-    //TODO: Send api request to check if any issues exist
+
+    List<Map<String, dynamic>> data = BeehiveDataProvider().fetchBeehiveIssueStatuses(id, false) as List<Map<String, dynamic>>;
+
+    if(data.isNotEmpty) {
+      enabled = true;
+    }
+
     return enabled
         ? Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: Statusbox(id: id),
+            child: Statusbox(data: data),
           )
         : Container();
   }

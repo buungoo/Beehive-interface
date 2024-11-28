@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:beehive/widgets/shared.dart';
 
 class Statusbox extends StatefulWidget {
-  final String id;
-  const Statusbox({super.key, required this.id});
+  final List<Map<String, dynamic>> data;
+  const Statusbox({super.key, required this.data});
 
   @override
   State<Statusbox> createState() => _Statusbox();
@@ -50,13 +50,14 @@ class _Statusbox extends State<Statusbox> {
                   ),
                   Flexible(
                       child: Column(
-                    children: [
-                      Status(
-                          name: "name",
-                          value: "value",
-                          dateTime: DateTime.now(),
-                          description: "description")
-                    ],
+                        children: widget.data.map((issue) {
+                          return Status(
+                            name: issue['SensorType'],
+                            value: issue['Description'],
+                            dateTime: DateTime.parse(issue['TimeOfError']),
+                            description: issue['Description'],
+                          );
+                        }).toList(),
                   )),
                 ],
               ),

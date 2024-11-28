@@ -159,10 +159,7 @@ class BeehiveApp extends StatelessWidget {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    /*BeeNotification().sendCriticalNotification(
-      title: "Beehive #32 is having issues",
-      body: "Unable to connect to the beehive",
-    );*/
+    BeeNotification().checkIssues();
     return Future.value(true);
   });
 }
@@ -175,13 +172,13 @@ void main() {
     callbackDispatcher,
     isInDebugMode: false,
   );
-  /*Workmanager().registerPeriodicTask(
+  Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
     frequency: config.bgWorkerFetchRate,
   );
   Workmanager().printScheduledTasks();
-  */
+
 
   runApp(const BeehiveApp()); // Entry point for the app
 }
