@@ -9,8 +9,8 @@ services:
     depends_on:
       timescaledb:
         condition: service_healthy  # Wait until TimescaleDB is healthy
-    environment:
-      - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
+    #environment:
+     # - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
     volumes:
       - ./logs:/logs
     container_name: api-container
@@ -20,10 +20,10 @@ services:
   timescaledb:
     image: timescale/timescaledb:latest-pg14
     ports:
-      - "5432:5432"
+      - "${TS_PORT}:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${TS_USER}
+      POSTGRES_PASSWORD: ${TS_PASSWORD}
       POSTGRES_DB: beehivedb
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
