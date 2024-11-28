@@ -77,3 +77,20 @@ func VerifyBeehive(conn *pgx.Conn, macAdrr string) (bool, error) {
 	}
 	return exists, nil
 }
+
+// Check is there is an active issue with this sensor
+func CheckIfActiveIssue(conn *pgx.Conn, beehiveId int, sensorId int) (bool, error) {
+	const sqlQueryActiveIssue = `SELECT EXISTS 
+								(SELECT 1 FROM beehive_status WHERE beehive_id = $1 
+								AND sensor_id=$2
+								AND solved=$3)`
+
+	// Verify the beehive ID exists
+	var exists bool
+	//var beehiveId int
+	err := conn.QueryRow(context.Background(), sqlQueryActiveIssue, beehiveId, sensorId, false).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
+}

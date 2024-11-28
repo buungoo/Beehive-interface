@@ -167,7 +167,7 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 	}
 
 	const sqlQueryFetchBeehiveStatus = `SELECT * FROM beehive_status 
-										WHERE beehive_id=$1
+										WHERE beehive_id=$1 AND solved=$2
 										ORDER BY time_of_error DESC
 										LIMIT 1; `
 
@@ -175,7 +175,7 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 	var data models.BeehiveStatus
 
 	// Fetch all data
-	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId).Scan(&data.IssueId, &data.SensorId,
+	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId, false).Scan(&data.IssueId, &data.SensorId,
 		&data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead)
 	if err != nil {
 		utils.LogError("error reading beehivestatus: ", err)
@@ -230,11 +230,11 @@ func GetBeehiveStatusList(w http.ResponseWriter, r *http.Request, dbPool *pgxpoo
 	}
 
 	const sqlQueryFetchBeehiveStatus = `SELECT * FROM beehive_status 
-										WHERE beehive_id=$1
+										WHERE beehive_id=$1 AND solved=$2
 										ORDER BY time_of_error DESC `
 
 	// Fetch all data
-	rows, err := conn.Query(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId)
+	rows, err := conn.Query(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId, false)
 	if err != nil {
 		utils.LogError("Error fetching data", err)
 		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
@@ -312,6 +312,29 @@ func updateBeehiveStatusOnRead(dbPool *pgxpool.Pool, data models.BeehiveStatus) 
 
 	// Update beehive_status
 	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, true, time.Now(), data.IssueId, data.BeehiveId, data.SensorId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Updates the solved after issue has been solved
+func updateBeehiveStatusSolved(dbPool *pgxpool.Pool, data models.SensorData) error {
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	const sqlQueryUpdateBeehiveStatus = `UPDATE beehive_status 
+									SET solved = $1 
+									WHERE beehive_id = $2 AND sensor_id = $3`
+
+	// Update beehive_status
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, true, data.BeehiveID, data.SensorID)
 	if err != nil {
 		return err
 	}
