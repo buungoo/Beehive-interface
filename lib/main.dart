@@ -158,16 +158,18 @@ class BeehiveApp extends StatelessWidget {
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
+  Workmanager().executeTask((task, inputData) {
     try {
-      await BeeNotification().checkIssues();
-      return Future.value(true);
+      BeeNotification().checkIssues();
+
+      //return Future.value(true);
     } catch (e) {
       print(e.toString());
-      await BeeNotification().sendCriticalNotification(
+      BeeNotification().sendCriticalNotification(
           title: "Error", body: "Failed to check issues: " + e.toString());
-      return Future.value(false);
+      //return Future.value(false);
     }
+    return Future.value(true);
   });
 }
 
@@ -177,7 +179,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Workmanager().initialize(
     callbackDispatcher,
-    isInDebugMode: true,
+    isInDebugMode: false,
   );
   Workmanager().registerPeriodicTask(
     simplePeriodicTask,
@@ -188,6 +190,7 @@ void main() {
       networkType: NetworkType.connected,
     ),
   );
+
   Workmanager().printScheduledTasks();
 
   runApp(const BeehiveApp()); // Entry point for the app

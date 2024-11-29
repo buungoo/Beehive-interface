@@ -73,7 +73,7 @@ class BeeNotification {
             presentList: true,
             presentAlert: true,
             presentSound: true,
-            interruptionLevel: InterruptionLevel.critical,
+            interruptionLevel: InterruptionLevel.timeSensitive,
             threadIdentifier: 'beeHive');
 
     const NotificationDetails notificationDetails = NotificationDetails(
@@ -90,6 +90,8 @@ class BeeNotification {
       final data = await BeehiveDataProvider().fetchBeehiveIssueStatus(hive.id);
       if (data.isNotEmpty) {
         if (data['Read']) {
+          print(data);
+          print("Read is true");
           await Future.delayed(const Duration(seconds: 5));
           continue;
         }
