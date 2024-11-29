@@ -7,12 +7,13 @@
 package authentication
 
 import (
-	"beehive_api/utils"
 	"context"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 )

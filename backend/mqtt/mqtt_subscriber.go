@@ -1,7 +1,6 @@
 package main
 
 import (
-	"beehive_api/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,11 +13,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/buungoo/Beehive-interface/utils"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 // Sensor enum to represent sensor types
 type Sensor uint8
+
 const (
 	LoadCell    Sensor = 1
 	Temperature        = 2

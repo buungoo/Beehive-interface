@@ -1,4 +1,4 @@
-module beehive_api
+module github.com/buungoo/Beehive-interface
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0

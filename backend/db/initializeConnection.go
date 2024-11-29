@@ -6,13 +6,14 @@
 package db
 
 import (
-	"beehive_api/utils"
 	"context"
 	"errors"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

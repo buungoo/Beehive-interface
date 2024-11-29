@@ -1,12 +1,13 @@
 package main
 
 import (
-	"beehive_api/api"
-	"beehive_api/db"
-	"beehive_api/test"
-	"beehive_api/utils"
 	"log"
 	"net/http"
+
+	"github.com/buungoo/Beehive-interface/api"
+	"github.com/buungoo/Beehive-interface/db"
+	"github.com/buungoo/Beehive-interface/test"
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/joho/godotenv"
 )
