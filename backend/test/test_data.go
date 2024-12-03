@@ -3,12 +3,13 @@ package test
 import (
 	//"beehive_api/models"
 
-	"beehive_api/utils"
 	"context"
 	"encoding/json"
 	"io"
 	"os"
 	"time"
+
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"

@@ -1,27 +1,31 @@
+// Package authentication contains all the functions to both create a JSON Web Token and also verify it.
+//
+// This package is used when a user is logging in to the Api and needs to be verified.
+// The func CreateToken is used to create a JWT for that user.
+// JWTAuth is a wrapping function that acts as a middleware to protect secure endpoints.
+// It is used when a user is trying to access an endpoint with this function wrapping it.
 package authentication
 
 import (
-	"beehive_api/utils"
 	"context"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// This needs to be made properly in the near future
-var secretKey = []byte("secret-key")
-
-// Creates, signs and encodes the token with given claims and username
+// CreateToken signs and encodes the token with given claims and username.
 func CreateToken(username string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"username": username,
 			"exp":      time.Now().Add(time.Hour * 24).Unix(),
 		})
-
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString(getSecretKey())
 	if err != nil {
 		return "", err
 	}
@@ -30,10 +34,10 @@ func CreateToken(username string) (string, error) {
 
 }
 
-// Verifies the token
+// VerifyToken verifies a JSON Web Token and returns the claims of the token and a error. It take a token in string format as input.
 func verifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return getSecretKey(), nil
 	})
 
 	if err != nil {
@@ -53,8 +57,7 @@ func verifyToken(tokenString string) (jwt.MapClaims, error) {
 
 }
 
-// This acts as "middleware" by wrapping the handlers of the secure endpoints.
-// Will only let verified user pass
+// JWTAuth acts as middleware by wrapping the handlers of the secure endpoints. It takes a HandlerFunc as input and returns a Handlerfunc.
 func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -95,4 +98,15 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 		// continue to next handler
 		next(w, r)
 	}
+}
+
+// Returns secret key
+func getSecretKey() []byte {
+	secretKey := os.Getenv("JWT_SECRET_KEY")
+	if secretKey == "" {
+		utils.LogWarn("failed to get the environtment variable")
+		return []byte("ThisIsAStandardPassword123")
+	}
+	utils.LogInfo("Succesfully implemented .env")
+	return []byte(secretKey)
 }

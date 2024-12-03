@@ -4,15 +4,22 @@ import (
 	"beehive_api/api"
 	"beehive_api/db"
 	"beehive_api/mqtt"
+
 	// "beehive_api/test"
 	"beehive_api/utils"
 	"log"
 	"net/http"
+
+	"github.com/buungoo/Beehive-interface/api"
+	"github.com/buungoo/Beehive-interface/db"
+	"github.com/buungoo/Beehive-interface/utils"
+
 	"os"
 	"os/signal"
 	"syscall"
-)
 
+	"github.com/joho/godotenv"
+)
 
 func main() {
 	// Initialize the logger
@@ -21,6 +28,12 @@ func main() {
 		log.Fatalf("Error initializing logger: %v", err)
 	}
 	defer logFile.Close()
+
+	// Initialize environment variables
+	err = godotenv.Load()
+	if err != nil {
+		utils.LogFatal("failed to get environment variables", err)
+	}
 
 	// Connect to database
 	dbpool, err := db.InitializeDatabaseConnection()
@@ -67,4 +80,3 @@ func main() {
 
 	utils.LogInfo("Shutting down application")
 }
-

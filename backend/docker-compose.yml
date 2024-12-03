@@ -1,17 +1,16 @@
-version: '3.8'
 
 services:
   api:
     build:
       context: .  # path to your Go project
-      dockerfile: Dockerfile  # Dockerfile for building your Go project
+      dockerfile: Dockerfile.api # Dockerfile for building your Go project
     ports:
       - "8080:8080"  # Expose the Go API to the host on port 8080
     depends_on:
       timescaledb:
         condition: service_healthy  # Wait until TimescaleDB is healthy
-    environment:
-      - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
+    #environment:
+     # - DATABASE_URL=postgres://admin:password@timescaledb:5432/beehivedb?sslmode=disable
     volumes:
       - ./logs:/logs
     container_name: api-container
@@ -21,10 +20,10 @@ services:
   timescaledb:
     image: timescale/timescaledb:latest-pg14
     ports:
-      - "5432:5432"
+      - "${TS_PORT}:5432"
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${TS_USER}
+      POSTGRES_PASSWORD: ${TS_PASSWORD}
       POSTGRES_DB: beehivedb
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
@@ -36,6 +35,17 @@ services:
       timeout: 5s
       retries: 5
 
+  godoc:
+    build: 
+      context: . 
+      dockerfile: Dockerfile.godoc
+    command: ["godoc", "-http=:6060"]
+    ports: 
+      - "6060:6060"
+    container_name: godoc-container
+    networks:
+      - backend
+
   # Can't run local broker yet as the proxy manager I am using does not support it
   # mqtt_broker:
   #   image: eclipse-mosquitto
@@ -46,18 +56,18 @@ services:
   #   volumes:
   #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  # mqtt_subscriber:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   command: go run mqtt/mqtt_subscriber.go
-  #   # Uncomment if the local broker is setup
-  #   # depends_on:
-  #   #   - mqtt_broker
-  #   networks:
-  #     - backend
-  #   volumes:
-  #     - ./logs:/logs
+  mqtt_subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: go run mqtt/mqtt_subscriber.go
+    # Uncomment if the local broker is setup
+    # depends_on:
+    #   - mqtt_broker
+    networks:
+      - backend
+    volumes:
+      - ./logs:/logs
 
   # Only for testing the subscriber
   # mqtt_publisher:

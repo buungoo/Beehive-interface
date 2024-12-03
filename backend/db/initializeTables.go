@@ -1,8 +1,9 @@
 package db
 
 import (
-	"beehive_api/utils"
 	"context"
+
+	"github.com/buungoo/Beehive-interface/utils"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -22,7 +23,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	CREATE TABLE IF NOT EXISTS "beehives" (
 		"id" SERIAL,
 		"name" VARCHAR NOT NULL,
-		"key" MACADDR8 NOT NULL,
+		"key" MACADDR8 UNIQUE NOT NULL,
 		PRIMARY KEY ("id")
 	);
 
@@ -30,7 +31,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"user_id" INTEGER NOT NULL,
 		"beehive_id" INTEGER NOT NULL,
 		PRIMARY KEY ("user_id", "beehive_id"),
-		FOREIGN KEY ("user_id") REFERENCES "users",
+		FOREIGN KEY ("user_id") REFERENCES "users" ("id"),
 		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id")
 	);
 
@@ -43,6 +44,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 	);
 
 	CREATE TABLE IF NOT EXISTS "beehive_status" (
+		"issue_id" SERIAL,
 		"sensor_id" INTEGER NOT NULL,
 		"beehive_id" INTEGER NOT NULL,
 		"sensor_type" VARCHAR NOT NULL,
@@ -51,7 +53,7 @@ func InitializeTables(dbpool *pgxpool.Pool) error {
 		"read" BOOLEAN,
 		"time_of_error" TIMESTAMPTZ,
 		"time_read" TIMESTAMPTZ,
-		PRIMARY KEY ("beehive_id", "sensor_id"),
+		PRIMARY KEY ("issue_id", "beehive_id", "sensor_id"),
 		FOREIGN KEY ("beehive_id") REFERENCES "beehives" ("id"), 
 		FOREIGN KEY ("sensor_id", "sensor_type", "beehive_id") REFERENCES "sensors" ("id", "type", "beehive_id")
 	);
