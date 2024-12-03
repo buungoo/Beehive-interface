@@ -80,11 +80,13 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 }
 
 func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBuilder {
+	// Make sure the length of the macaddr is valid
 	if len(parentBeehive) != 16 {
 		utils.LogWarn("Invalid DevEUI length. Expected 16 characters.")
 		return b
 	}
 
+	// Format the macaddr as it is received without colons
 	macFormatted := strings.ToLower(parentBeehive[:2] + ":" +
 		parentBeehive[2:4] + ":" +
 		parentBeehive[4:6] + ":" +
@@ -94,6 +96,7 @@ func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBui
 		parentBeehive[12:14] + ":" +
 		parentBeehive[14:16])
 
+	// Parse the string into macaddr8 type
 	mac, err := net.ParseMAC(macFormatted)
 	if err != nil {
 		utils.LogWarn("Failed to parse DevEUI as MAC address.")

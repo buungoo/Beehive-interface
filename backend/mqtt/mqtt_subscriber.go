@@ -52,20 +52,11 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 	}
 
 	// Format the time we received as it couldnt be parsed correctly otherwise
-	// if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
-	// 	message.Time = message.Time[:dotIndex] + "Z" // Add "Z" to indicate UTC
-	// }
-	// Format the time we received if it includes a timezone offset
 	if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
-		message.Time = message.Time[:dotIndex+4] + "Z" // Truncate to microseconds and add "Z"
+		message.Time = message.Time[:dotIndex+4] + "Z" // We only need microseconds so truncate and add "Z" to indicate UTC
 	}
 
-	// timeStamp, err := time.Parse("2006-01-02T15:04:05Z", message.Time)
-	// if err != nil {
-	// 	utils.LogError("Error parsing time", err)
-	// 	fmt.Println("Error parsing time", err)
-	// 	return nil, fmt.Errorf("error parsing time: %v", err)
-	// }
+	// Parse the time string into the correct type
 	timeStamp, err := time.Parse(time.RFC3339, message.Time)
 	if err != nil {
 		utils.LogError("Error parsing time", err)
@@ -117,43 +108,6 @@ type SensorMessage struct {
 	DevEUI          string `json:"devEUI"`
 }
 
-// Initialize the log file
-// var logFile *os.File
-
-// var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
-// 	// Get the current timestamp
-// 	// not needed if we use the new logging function
-// 	// timestamp := time.Now().Format("2006-01-02 15:04:05")
-//
-// 	// Parse the received message payload
-// 	var sensorMessage SensorMessage
-// 	if err := json.Unmarshal(msg.Payload(), &sensorMessage); err != nil {
-// 		log.Printf("Error parsing JSON: %v", err)
-// 		return
-// 	}
-//
-// 	// Parse the message as it is received like this:
-// 	// {
-// 	// "applicationID":"1",
-// 	// "applicationName":"beehive-sensor-card",
-// 	// "data":"YWFhYWE=",
-// 	// "devEUI":"0080e115000adf82",
-// 	// "deviceName":"beehive-sensor-card-dn",
-// 	// "fCnt":319,
-// 	// "fPort":2,
-// 	// "rxInfo":[{"altitude":0,"latitude":0,"loRaSNR":7.5,"longitude":0,"mac":"24e124fffef0b4f9","name":"24e124fffef0b4f9","rssi":-109,"time":"2024-11-05T14:01:49.217376Z"}],
-// 	// "time":"2024-11-05T14:01:49.217376Z",
-// 	// "txInfo":{"adr":true,"codeRate":"4/5","dataRate":{"bandwidth":125,"modulation":"LORA","spreadFactor":7},"frequency":868300000}
-// 	// }
-//
-// 	// utils.LogInfo(fmt.Sprintf("Received message - applicationName: %s, data: %s, time: %s",
-// 	// 	sensorMessage.ApplicationName, sensorMessage.Data, sensorMessage.Time))
-// 	fmt.Println("Received message:", sensorMessage)
-// 	utils.LogInfo(fmt.Sprintf("Received message: %+v", sensorMessage))
-//
-// 	handleSensorMessage(sensorMessage) //.Data)
-// }
-
 // We have to use a closure function since the client should be able to use the dbpool
 func createMessagePubHandler(dbpool *pgxpool.Pool) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
@@ -177,15 +131,15 @@ var connectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 
 var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
 	utils.LogError("Connection lost", err)
-	fmt.Printf("Connection lost: %v\n", err) // print and log
+	fmt.Printf("Connection lost: %v\n", err)
 
 	// Retry to connect if connection was lost
 	for {
 		utils.LogInfo("Attempting to reconnect...")
-		fmt.Println("Attempting to reconnect...") // print and log
+		fmt.Println("Attempting to reconnect...")
 		if token := client.Connect(); token.Wait() && token.Error() == nil {
 			utils.LogInfo("Reconnected successfully")
-			fmt.Println("Reconnected successfully") // print and log
+			fmt.Println("Reconnected successfully")
 			break
 		}
 		time.Sleep(5 * time.Second)
@@ -197,12 +151,12 @@ func retryConnect(client mqtt.Client) error {
 		// Attempt to connect to the broker
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			utils.LogError("Failed to connect to MQTT broker", token.Error())
-			fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
+			fmt.Println("Failed to connect to MQTT broker", token.Error())
 			// Wait before retrying
 			utils.LogInfo("Retrying to connect to MQTT broker...")
-			fmt.Println("Retrying to connect to MQTT broker...") // print and log
-			time.Sleep(5 * time.Second)                          // Sleep for 5 seconds before retrying
-			continue                                             // Retry connection
+			fmt.Println("Retrying to connect to MQTT broker...")
+			time.Sleep(5 * time.Second) // Sleep for 5 seconds before retrying
+			continue                    // Retry connection
 		}
 
 		// If connection was successful, break out of the loop
@@ -210,52 +164,6 @@ func retryConnect(client mqtt.Client) error {
 	}
 	return nil
 }
-
-// func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
-// 	broker := "broker.hivemq.com:1883"
-// 	topic := "d0039ebeehive/sensor"
-//
-// 	opts := mqtt.NewClientOptions()
-// 	opts.AddBroker(broker)
-// 	opts.SetClientID("beehive_subscriber")
-// 	opts.SetDefaultPublishHandler(func(client mqtt.Client, msg mqtt.Message) {
-// 		// Parse the received message payload
-// 		var sensorMessage SensorMessage
-// 		if err := json.Unmarshal(msg.Payload(), &sensorMessage); err != nil {
-// 			utils.LogError("Error parsing JSON", err)
-// 			return
-// 		}
-//
-// 		handleSensorMessage(sensorMessage, dbpool)
-// 	})
-// 	opts.OnConnect = func(client mqtt.Client) {
-// 		utils.LogInfo("Connected to MQTT broker")
-// 	}
-// 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
-// 		utils.LogError("Connection lost", err)
-// 	}
-//
-// 	client := mqtt.NewClient(opts)
-// 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-// 		utils.LogError("Error connecting to broker", token.Error())
-// 		return
-// 	}
-//
-// 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-// 		utils.LogError("Error subscribing to topic", token.Error())
-// 		return
-// 	}
-//
-// 	utils.LogInfo("Subscribed to MQTT topic")
-//
-// 	// Block this goroutine until termination
-// 	stopChan := make(chan os.Signal, 1)
-// 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
-// 	<-stopChan
-//
-// 	client.Disconnect(250)
-// 	utils.LogInfo("MQTT subscriber disconnected")
-// }
 
 func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 	broker := "broker.hivemq.com:1883"
@@ -277,22 +185,16 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 
 	client := mqtt.NewClient(opts)
 
-	// Connect to the MQTT broker
-	// if token := client.Connect(); token.Wait() && token.Error() != nil {
-	// 	utils.LogError("Failed to connect to MQTT broker", token.Error())
-	// 	fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
-	// 	return
-	// }
+	// Attempt to connect to the broker
 	for {
-		// Attempt to connect to the broker
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			utils.LogError("Failed to connect to MQTT broker", token.Error())
-			fmt.Println("Failed to connect to MQTT broker", token.Error()) // print and log
+			fmt.Println("Failed to connect to MQTT broker", token.Error())
 			// Wait before retrying
 			utils.LogInfo("Retrying to connect to MQTT broker...")
-			fmt.Println("Retrying to connect to MQTT broker...") // print and log
-			time.Sleep(5 * time.Second)                          // Sleep for 5 seconds before retrying
-			continue                                             // Retry connection
+			fmt.Println("Retrying to connect to MQTT broker...")
+			time.Sleep(5 * time.Second)
+			continue
 		}
 
 		// If connection was successful, break out of the loop
@@ -302,12 +204,12 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 	// Subscribe to the topic
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		utils.LogError("Failed to subscribe to MQTT topic", token.Error())
-		fmt.Println("Failed to subscribe to MQTT topic", token.Error()) // print and log
+		fmt.Println("Failed to subscribe to MQTT topic", token.Error())
 		return
 	}
 
 	utils.LogInfo("Subscribed to MQTT topic")
-	fmt.Println("Subscribed to MQTT topic") // print and log
+	fmt.Println("Subscribed to MQTT topic")
 
 	// Use the main application's stop channel to block
 	stopChan := make(chan os.Signal, 1)
@@ -316,5 +218,5 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 
 	client.Disconnect(250)
 	utils.LogInfo("MQTT subscriber disconnected")
-	fmt.Println("MQTT subscriber disconnected") // print and log
+	fmt.Println("MQTT subscriber disconnected")
 }
