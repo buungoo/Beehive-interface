@@ -5,6 +5,7 @@ FROM golang:latest
 WORKDIR /
 
 # Copy go.mod and go.sum first to cache dependency installation
+COPY certs/ ./
 COPY go.mod ./
 
 # Clean up unused dependencies before download
@@ -23,7 +24,7 @@ RUN go build -o main ./main.go
 # RUN go build -o mqtt_subscriber ./mqtt/mqtt_subscriber.go
 
 # Expose port 8080 (adjust if your Go app uses a different port)
-EXPOSE 8080
+EXPOSE 8443
 
 # Default command is to run the main Go app
 CMD ["./main"]

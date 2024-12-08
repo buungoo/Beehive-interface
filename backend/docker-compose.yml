@@ -5,7 +5,7 @@ services:
       context: .  # path to your Go project
       dockerfile: Dockerfile.api # Dockerfile for building your Go project
     ports:
-      - "8080:8080"  # Expose the Go API to the host on port 8080
+      - "8443:8443"  # Expose the Go API to the host on port 8080
     depends_on:
       timescaledb:
         condition: service_healthy  # Wait until TimescaleDB is healthy

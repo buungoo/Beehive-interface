@@ -58,8 +58,11 @@ func main() {
 	api.InitRoutes(mux, dbpool)
 
 	utils.LogInfo("Starting http server")
+        
+	server_krt := "certs/server.crt"
+	server_key := "certs/server.key"
 
-	if err := http.ListenAndServe("0.0.0.0:8080", mux); err != nil {
+	if err := http.ListenAndServeTLS(":8443",server_krt,server_key, mux); err != nil {
 		utils.LogError("Http server could not start: ", err)
 	}
 
