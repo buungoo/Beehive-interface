@@ -57,7 +57,7 @@ func main() {
 
 	api.InitRoutes(mux, dbpool)
 
-	utils.LogInfo("Starting http server")
+	utils.LogInfo("Starting https  server")
         
 	server_krt := "certs/server.crt"
 	server_key := "certs/server.key"
