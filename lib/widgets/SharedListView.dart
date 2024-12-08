@@ -21,6 +21,6 @@ Widget SharedListTile(
       : Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ListTile(
-              leading: Icon(Icons.inventory_2), title: title, onTap: onTap),
+              leading: const Icon(Icons.inventory_2), title: title, onTap: onTap),
         );
 }

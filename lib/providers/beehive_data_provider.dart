@@ -9,6 +9,42 @@ import 'package:beehive/models/SensorValues.dart';
 
 import 'package:beehive/utils/helpers.dart';
 
+class TestSensorData {
+  final String sensorId;
+  final String beehiveId;
+  final String sensorType;
+  final double value;
+  final DateTime time;
+
+  TestSensorData({
+    required this.sensorId,
+    required this.beehiveId,
+    required this.sensorType,
+    required this.value,
+    required this.time,
+  });
+
+  factory TestSensorData.fromJson(Map<String, dynamic> json) {
+    return TestSensorData(
+      sensorId: json['sensor_id'],
+      beehiveId: json['beehive_id'],
+      sensorType: json['sensor_type'],
+      value: num.tryParse(json['value'])?.toDouble() ?? 0.0,
+      time: DateTime.parse(json['time']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'sensor_id': sensorId,
+      'beehive_id': beehiveId,
+      'sensor_type': sensorType,
+      'value': value,
+      'time': time.toIso8601String(),
+    };
+  }
+}
+
 class BeehiveDataProvider {
   // Simulates a stream of nullable temperature data
   Stream<BeehiveData> getBeehiveDataStream(String beehiveid) async* {
@@ -33,12 +69,13 @@ class BeehiveDataProvider {
           'Authorization': 'Bearer $token',
         });
 
-        final data = json.decode(response.body);
+        final List<dynamic> data = json.decode(response.body);
+        final test = data.map((item) => item as Map<String, dynamic>).toList();
 
-        double temp = data[0]['value']; // Temperature in °C
-        double weight = data[1]['value']; // Weight in grams
-        double humidity = data[2]['value']; // Humidity in %
-        double ppm = data[3]['value']; // Particles Per Million (PPM)
+        double temp = data[0]['value'].toDouble(); // Temperature in °C
+        double weight = data[1]['value'].toDouble(); // Weight in grams
+        double humidity = data[2]['value'].toDouble(); // Humidity in %
+        double ppm = data[3]['value'].toDouble(); // Particles Per Million (PPM)
 
         yield BeehiveData(
             temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
@@ -69,9 +106,6 @@ class BeehiveDataProvider {
       final uri = Uri.parse(
         '${config.BackendServer}/beehive/$beehiveId/sensor-data/$formattedDate1/$formattedDate2',
       );
-
-      print(uri);
-
       var response = await get(
         uri,
         headers: <String, String>{
@@ -85,7 +119,6 @@ class BeehiveDataProvider {
 
       final values = SensorValues.fromJsonList(response.body);
 
-      print("INDAYS: ${timeRange.inDays}");
       if (timeRange.inDays == 1) {
         return values;
       } else {
@@ -145,8 +178,7 @@ class BeehiveDataProvider {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchBeehiveIssueStatusesList(
-      String beehiveId) async {
+  Future<List<dynamic>> fetchBeehiveIssueStatusesList(String beehiveId) async {
     var path = '/beehive/$beehiveId/status/list';
 
     try {
@@ -160,8 +192,8 @@ class BeehiveDataProvider {
         'Authorization': 'Bearer $token',
       });
 
-      final Map<String, dynamic> data = json.decode(response.body);
-      return [data];
+      final data = json.decode(response.body);
+      return data;
     } catch (e) {
       print("Error fetching beehive issue statuses: $e");
       return [];

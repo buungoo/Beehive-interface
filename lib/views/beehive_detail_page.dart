@@ -15,18 +15,20 @@ class BeehiveDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<BeehiveData?>(
+    return StreamProvider<BeehiveData>(
       // Because the StreamProvider is specified here and not in BeehiveApp
       // class only the BeehiveDetailPage widget can listen to it
-      initialData: null, // Nullable initial data
+      initialData:
+          new BeehiveData(temperature: 0, weight: 0, humidity: 0, ppm: 0),
       create: (context) {
-        // Setup the Stream which the StreamProvider should listen to
         return BeehiveDataProvider().getBeehiveDataStream(beehive.id);
       },
       child: SharedScaffold(
         context: context,
         appBar: getNavigationBar(
-            context: context, title: beehive.name, bgcolor: Color(0xFFf4991a)),
+            context: context,
+            title: beehive.name,
+            bgcolor: const Color(0xFFf4991a)),
         body: Stack(
           children: [
             _buildDetailGrid(beehive.id),
@@ -44,13 +46,17 @@ class BeehiveDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusBox(String id) {
-    return FutureBuilder<List<Map<String, dynamic>>>(
+    return FutureBuilder<List<dynamic>>(
       future: BeehiveDataProvider().fetchBeehiveIssueStatusesList(id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(); // or a loading indicator
+          return Container(
+            child: Text("Loading"),
+          ); // or a loading indicator
         } else if (snapshot.hasError) {
-          return Container(); // or an error message
+          return Container(
+            child: Text("Error"),
+          ); // or an error message
         } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return Positioned(
             bottom: 0,
@@ -59,7 +65,9 @@ class BeehiveDetailPage extends StatelessWidget {
             child: Statusbox(data: snapshot.data!),
           );
         } else {
-          return Container();
+          return Container(
+            child: Text("No data"),
+          );
         }
       },
     );

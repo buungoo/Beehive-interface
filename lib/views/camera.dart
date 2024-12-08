@@ -1,16 +1,15 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/cupertino.dart'; // Import cupertino package for CupertinoApp and CupertinoNavigationBar
+// Import cupertino package for CupertinoApp and CupertinoNavigationBar
 import 'package:flutter/material.dart';
 import '../widgets/shared.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:beehive/providers/beehive_user_provider.dart';
-import 'package:go_router/go_router.dart'; // GoRouter for navigation
+// GoRouter for navigation
 
 import 'dart:developer';
 import 'dart:io';
 
 class Camera extends StatefulWidget {
-  const Camera({Key? key}) : super(key: key);
+  const Camera({super.key});
 
   @override
   State<StatefulWidget> createState() => _Camera();
@@ -42,7 +41,7 @@ class _Camera extends State<Camera> {
     return SharedScaffold(
       context: context,
       appBar: getNavigationBar(
-          context: context, title: "Camera", bgcolor: Color(0xFFf4991a)),
+          context: context, title: "Camera", bgcolor: const Color(0xFFf4991a)),
       body: Column(
         children: <Widget>[
           Expanded(
@@ -80,15 +79,15 @@ class _Camera extends State<Camera> {
       this.controller = controller;
     });
     controller.scannedDataStream.listen((scanData) async {
-      if (this.isLoading) return;
+      if (isLoading) return;
 
       setState(() {
-        this.isLoading = true;
+        isLoading = true;
       });
 
       if (scanData.format == BarcodeFormat.qrcode) {
         controller.pauseCamera();
-        final token = scanData.code!;
+        final token = scanData.code;
         final response = await BeehiveUserProvider().addBeehive(token);
 
         if (response) {
@@ -96,11 +95,11 @@ class _Camera extends State<Camera> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('QR Code Scanned'),
-                content: Text('Beehive added successfully!'),
+                title: const Text('QR Code Scanned'),
+                content: const Text('Beehive added successfully!'),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('OK'),
+                    child: const Text('OK'),
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.pop(context, true);
@@ -115,11 +114,11 @@ class _Camera extends State<Camera> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: Text('QR Code Scanned'),
-                content: Text('Failed to add beehive. Please try again.'),
+                title: const Text('QR Code Scanned'),
+                content: const Text('Failed to add beehive. Please try again.'),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('OK'),
+                    child: const Text('OK'),
                     onPressed: () async {
                       controller.resumeCamera();
                       Navigator.pop(context);
@@ -135,7 +134,7 @@ class _Camera extends State<Camera> {
       }
       setState(() {
         result = scanData;
-        this.isLoading = false;
+        isLoading = false;
       });
     });
   }

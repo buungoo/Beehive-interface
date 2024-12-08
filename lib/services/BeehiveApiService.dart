@@ -5,11 +5,9 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BeehiveApi {
-  BeehiveApi() {}
+  BeehiveApi();
 
-  /**
-   * Return an array of all beehives that are available for the user
-   */
+  /// Return an array of all beehives that are available for the user
   Future<List<Beehive>> GetHives() async {
     // need user token or smt
 
@@ -17,16 +15,14 @@ class BeehiveApi {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      print(config.BackendServer + "/beehive/list");
+      //print("${config.BackendServer}/beehive/list");
 
       var response = await get(
-          Uri.parse(config.BackendServer + "/beehive/list"),
+          Uri.parse("${config.BackendServer}/beehive/list"),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
           });
-
-      print(response.body);
 
       return (jsonDecode(response.body) as List)
           .map((e) => Beehive.fromJson(e))
@@ -39,16 +35,16 @@ class BeehiveApi {
 
   Future<bool> verifyUser() async {
     final perf = await SharedPreferences.getInstance();
-    final token = await perf.getString('token');
+    final token = perf.getString('token');
 
-    print(Uri.parse(config.BackendServer + "/test"));
-    print(token);
+    //print(Uri.parse("${config.BackendServer}/test"));
+    //print(token);
 
     if (token == null) {
       return false;
     }
 
-    var response = await post(Uri.parse(config.BackendServer + "/test"),
+    var response = await post(Uri.parse("${config.BackendServer}/test"),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

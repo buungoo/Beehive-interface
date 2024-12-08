@@ -1,11 +1,8 @@
-import 'package:provider/provider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:beehive/widgets/shared.dart';
 
 class Statusbox extends StatefulWidget {
-  final List<Map<String, dynamic>> data;
+  final List<dynamic> data;
   const Statusbox({super.key, required this.data});
 
   @override
@@ -18,7 +15,7 @@ class _Statusbox extends State<Statusbox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
         height: 700,
         child: DraggableScrollableSheet(
           initialChildSize: _sheetPosition,
@@ -50,14 +47,14 @@ class _Statusbox extends State<Statusbox> {
                   ),
                   Flexible(
                       child: Column(
-                        children: widget.data.map((issue) {
-                          return Status(
-                            name: issue['SensorType'],
-                            value: issue['Description'],
-                            dateTime: DateTime.parse(issue['TimeOfError']),
-                            description: issue['Description'],
-                          );
-                        }).toList(),
+                    children: widget.data.map((issue) {
+                      return Status(
+                        name: issue['SensorType'],
+                        value: issue['Description'],
+                        dateTime: DateTime.parse(issue['TimeOfError']),
+                        description: issue['Description'],
+                      );
+                    }).toList(),
                   )),
                 ],
               ),
@@ -89,17 +86,17 @@ class Status extends StatelessWidget {
     String formattedDate = formatter.format(dateTime);
 
     return Padding(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(8.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4.0),
             color: Colors.grey[800],
           ),
           child: Column(children: [
             Text(name),
-            Text(value, style: TextStyle(color: Colors.red)),
+            Text(value, style: const TextStyle(color: Colors.red)),
             Text(formattedDate),
             Text(description), // This should be a weird value like "123456789"
           ]),

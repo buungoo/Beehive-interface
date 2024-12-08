@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/beehive_list_provider.dart';
 import '../widgets/shared.dart';
 import 'package:beehive/models/beehive.dart';
-import 'package:beehive/services/BeehiveNotificationService.dart';
-import 'dart:io';
 import 'package:beehive/widgets/shared_button.dart';
 
 const simplePeriodicTask = "com.example.beehive.simplePeriodicTask";
@@ -39,7 +36,7 @@ class _OverviewPageState extends State<OverviewPage> {
         appBar: getNavigationBar(
             context: context,
             title: 'Beehive Overview',
-            bgcolor: Color(0xFFf4991a),
+            bgcolor: const Color(0xFFf4991a),
             ActionButtn: SharedButton(
               //context: context,
               onPressed: () async {
@@ -58,6 +55,7 @@ class _OverviewPageState extends State<OverviewPage> {
             setState(() {
               beehiveList = context.read<BeehiveListProvider>().beehives;
             });
+            await beehiveList;
           },
           child: FutureBuilder<List<Beehive>>(
             future: beehiveList,
@@ -65,9 +63,21 @@ class _OverviewPageState extends State<OverviewPage> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: SharedLoadingIndicator(context: context));
               } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  ),
+                );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(child: Text('No beehives found'));
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    child: const Center(child: Text('No beehives found')),
+                  ),
+                );
               } else {
                 // If the future completed successfully, build the ListView
                 final beehives = snapshot.data!;

@@ -2,7 +2,6 @@ import 'package:beehive/models/beehive_user.dart';
 import 'package:beehive/config.dart' as config;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:beehive/utils/helpers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BeehiveUserProvider {
@@ -24,8 +23,6 @@ class BeehiveUserProvider {
                 'password': password,
               }));
 
-      print(response.body);
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return await User.fromToken(data['token']);
@@ -42,7 +39,7 @@ class BeehiveUserProvider {
   Future<User> register(String email, String password) async {
     try {
       var response =
-          await client.post(Uri.parse(config.BackendServer + '/register'),
+          await client.post(Uri.parse('${config.BackendServer}/register'),
               headers: <String, String>{
                 'Content-Type': 'application/json; charset=UTF-8',
               },
@@ -69,7 +66,7 @@ class BeehiveUserProvider {
 
   Future<User?> getUser(String token) async {
     try {
-      var response = await client.get(Uri.parse(config.BackendServer + '/user'),
+      var response = await client.get(Uri.parse('${config.BackendServer}/user'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
@@ -97,7 +94,7 @@ class BeehiveUserProvider {
       //var macaddr = formatHexString(mac);
 
       var response =
-          await client.post(Uri.parse(config.BackendServer + '/beehive/add'),
+          await client.post(Uri.parse('${config.BackendServer}/beehive/add'),
               headers: <String, String>{
                 'Content-Type': 'application/json; charset=UTF-8',
                 'Authorization': 'Bearer $token',
@@ -106,7 +103,6 @@ class BeehiveUserProvider {
                 'macaddress': mac,
               }));
 
-      print(response.body);
       if (response.body.contains("Beehive added to user")) {
         return true;
       } else {

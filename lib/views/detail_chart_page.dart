@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:beehive/widgets/shared_dropdown.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:beehive/models/beehive.dart';
@@ -44,7 +42,7 @@ class BeeChartDataProvider with ChangeNotifier {
     try {
       setValues(fetchedData);
     } catch (e) {
-      print("Error fetching data");
+      //print("Error fetching data");
       setValues([]);
     } finally {
       setIsLoading(false);
@@ -78,7 +76,7 @@ class BeeChartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dataProvider =
-        BeeChartDataProvider(beehiveID: this.beehive.id, sensor: this.type);
+        BeeChartDataProvider(beehiveID: beehive.id, sensor: type);
 
     return ChangeNotifierProvider<BeeChartDataProvider>.value(
         value: dataProvider,
@@ -92,9 +90,7 @@ class BeeChartPage extends StatelessWidget {
     return SharedScaffold(
         context: context,
         appBar: getNavigationBar(
-            context: context,
-            title: this.title,
-            bgcolor: const Color(0xFFf4991a)),
+            context: context, title: title, bgcolor: const Color(0xFFf4991a)),
         body: Center(
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

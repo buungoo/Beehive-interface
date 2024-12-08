@@ -4,7 +4,6 @@ import 'package:mockito/mockito.dart';
 import 'package:beehive/providers/beehive_user_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:beehive/models/beehive_user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 @GenerateMocks([http.Client])

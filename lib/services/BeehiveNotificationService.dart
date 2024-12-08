@@ -1,5 +1,4 @@
 import 'package:beehive/providers/beehive_data_provider.dart';
-import 'package:beehive/providers/beehive_list_provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:beehive/utils/helpers.dart';
 import 'package:flutter/material.dart';
@@ -47,8 +46,7 @@ class BeeNotification {
         flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    final bool? grantedNotificationPermission =
-        await androidImplementation?.requestNotificationsPermission();
+    await androidImplementation?.requestNotificationsPermission();
   }
 
   Future<void> sendCriticalNotification(
@@ -73,7 +71,7 @@ class BeeNotification {
             presentList: true,
             presentAlert: true,
             presentSound: true,
-            interruptionLevel: InterruptionLevel.timeSensitive,
+            interruptionLevel: InterruptionLevel.critical,
             threadIdentifier: 'beeHive');
 
     const NotificationDetails notificationDetails = NotificationDetails(
@@ -83,15 +81,13 @@ class BeeNotification {
         id, title, body, notificationDetails);
   }
 
-  Future<void> checkIssues() async {
+  Future<bool> checkIssues() async {
     print("CHECKING");
     final hives = await BeehiveApi().GetHives();
     for (var hive in hives) {
       final data = await BeehiveDataProvider().fetchBeehiveIssueStatus(hive.id);
       if (data.isNotEmpty) {
         if (data['Read']) {
-          print(data);
-          print("Read is true");
           await Future.delayed(const Duration(seconds: 5));
           continue;
         }
@@ -104,5 +100,6 @@ class BeeNotification {
       // add a delay to prevent spamming notifications
       await Future.delayed(const Duration(seconds: 5));
     }
+    return Future.value(true);
   }
 }

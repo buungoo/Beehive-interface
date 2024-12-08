@@ -44,9 +44,9 @@ class _SharedDropdownMenuState extends State<SharedDropdownMenu> {
   }
 
   Widget _iosBuild(BuildContext context) {
-    const double _kItemExtent = 32.0;
+    const double kItemExtent = 32.0;
     List<String> list = widget.itemList;
-    String dropdownValue = list.first;
+    //String dropdownValue = list.first;
     return CupertinoButton(
       padding: EdgeInsets.zero,
       // Display a CupertinoPicker with list of fruits.
@@ -55,7 +55,7 @@ class _SharedDropdownMenuState extends State<SharedDropdownMenu> {
           magnification: 1.22,
           squeeze: 1.2,
           useMagnifier: true,
-          itemExtent: _kItemExtent,
+          itemExtent: kItemExtent,
           // This sets the initial item.
           scrollController: FixedExtentScrollController(
             initialItem: _selectedFruit,
@@ -84,16 +84,16 @@ class _SharedDropdownMenuState extends State<SharedDropdownMenu> {
     );
   }
 
-  @override
   Widget _androidBuild(BuildContext context) {
     List<String> list = widget.itemList;
-    String dropdownValue = list.first;
+    //String dropdownValue = list.first;
     return DropdownMenu<String>(
       initialSelection: list.first,
       onSelected: (String? value) {
         // This is called when the user selects an item.
         setState(() {
-          dropdownValue = value!;
+          _selectedFruit = list.indexOf(value!);
+          widget.onItemChanged(list[_selectedFruit]);
         });
       },
       dropdownMenuEntries: list.map<DropdownMenuEntry<String>>((String value) {

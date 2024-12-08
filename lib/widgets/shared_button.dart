@@ -6,7 +6,7 @@ class SharedButton extends StatelessWidget {
   final void Function()? onPressed;
   //final BuildContext context;
 
-  SharedButton({this.onPressed});
+  const SharedButton({super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +17,11 @@ class SharedButton extends StatelessWidget {
     return CupertinoButton(
       padding: EdgeInsets.zero,
       onPressed: onPressed,
-      child: Icon(CupertinoIcons.add),
+      child: const Icon(CupertinoIcons.add),
     );
   }
 
   Widget _buildMaterialButton() {
-    return IconButton(onPressed: onPressed, icon: Icon(Icons.add));
+    return IconButton(onPressed: onPressed, icon: const Icon(Icons.add));
   }
 }

@@ -15,9 +15,10 @@ import 'views/login_page.dart';
 import 'package:beehive/views/detail_chart_page.dart';
 import 'package:beehive/views/camera.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
-import 'config.dart' as config;
 
 import 'package:beehive/models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
@@ -81,7 +82,7 @@ final GoRouter _router = GoRouter(
         name: "Camera",
         path: "/camera",
         builder: (context, state) {
-          return Camera();
+          return const Camera();
         }),
     GoRoute(
       name: "testing",
@@ -90,8 +91,7 @@ final GoRouter _router = GoRouter(
         final String id = state.pathParameters['id']!;
         final String type = state.pathParameters['type']!;
 
-        final beehive =
-            context.read<BeehiveListProvider>().findBeehiveById("1");
+        final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
 
         if (beehive == null) {
           return SharedScaffold(
@@ -108,7 +108,7 @@ final GoRouter _router = GoRouter(
         }
 
         return BeeChartPage(
-            beehive: beehive!,
+            beehive: beehive,
             title: type[0].toUpperCase() + type.substring(1),
             type: type);
       },
@@ -141,7 +141,7 @@ class BeehiveApp extends StatelessWidget {
               ],
               routerConfig: _router, // Pass the GoRouter configuration
               title: 'Beehive App', // App title
-              theme: CupertinoThemeData(
+              theme: const CupertinoThemeData(
                 primaryColor: CupertinoColors.systemYellow,
               ),
             )
@@ -157,19 +157,20 @@ class BeehiveApp extends StatelessWidget {
 }
 
 @pragma('vm:entry-point')
-void callbackDispatcher() {
+void callbackDispatcher() async {
+  print("callbackDispatcher was called");
   Workmanager().executeTask((task, inputData) {
     try {
-      BeeNotification().checkIssues();
-
-      //return Future.value(true);
+      return BeeNotification().checkIssues();
     } catch (e) {
-      print(e.toString());
+      print(e);
       BeeNotification().sendCriticalNotification(
-          title: "Error", body: "Failed to check issues: " + e.toString());
-      //return Future.value(false);
+          title: "Unable to contact RockPI",
+          body: "Unable to fetch latest status from RockPI");
+      return Future.value(false);
     }
-    return Future.value(true);
+
+    //return Future.value(true);
   });
 }
 
@@ -184,12 +185,20 @@ void main() {
   Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
-    initialDelay: Duration(seconds: 30),
+    initialDelay: const Duration(seconds: 30),
     //frequency: config.bgWorkerFetchRate,
     constraints: Constraints(
       networkType: NetworkType.connected,
     ),
   );
+
+  // one off task
+  Workmanager().registerOneOffTask("com.example.beehive.rescheduledTask",
+      "com.example.beehive.rescheduledTask",
+      initialDelay: const Duration(seconds: 10),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ));
 
   Workmanager().printScheduledTasks();
 

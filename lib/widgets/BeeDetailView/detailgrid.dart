@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:beehive/models/beehive_data.dart';
 import 'package:beehive/widgets/shared.dart';
@@ -9,7 +8,7 @@ import 'package:go_router/go_router.dart'; // GoRouter for navigation
 
 class DetailGrid extends StatelessWidget {
   final String id;
-  DetailGrid({required this.id, super.key});
+  const DetailGrid({required this.id, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,13 +19,14 @@ class DetailGrid extends StatelessWidget {
         if (beehiveData == null) {
           return Center(child: SharedLoadingIndicator(context: context));
         }
-        beehiveData.toMap().forEach((key, value) => {print('$key: $value')});
+
+        //return Text("Hi");
         Map<String, dynamic> dataMap = beehiveData.toMap();
 
         return Padding(
           padding: const EdgeInsets.all(8.0),
           child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 10.0,
               mainAxisSpacing: 10.0,
@@ -44,7 +44,7 @@ class DetailGrid extends StatelessWidget {
               return GestureDetector(
                 child: FrostedGlassBox(
                   title: key,
-                  value: "${value} ${Suffix}",
+                  value: "$value $Suffix",
                   colors: generateColorsFromString(key),
                   /*colors: [
                     Colors.green.withOpacity(0.2),
@@ -200,7 +200,7 @@ class _DataBox extends StatelessWidget {
   final String title;
   final String value;
 
-  _DataBox({required this.title, required this.value});
+  const _DataBox({required this.title, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -216,15 +216,15 @@ class _DataBox extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16.0,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 10.0),
+            const SizedBox(height: 10.0),
             Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20.0,
               ),
             ),
@@ -236,12 +236,13 @@ class _DataBox extends StatelessWidget {
 }
 
 class FrostedGlassBox extends StatelessWidget {
-  String title;
-  String value;
+  final String title;
+  final String value;
   final List<Color> colors;
 
   FrostedGlassBox(
-      {required this.title,
+      {super.key,
+      required this.title,
       required this.value,
       this.colors = const [Colors.white30]});
 
@@ -270,15 +271,15 @@ class FrostedGlassBox extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 10.0),
+                  const SizedBox(height: 10.0),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20.0,
                     ),
                   ),
