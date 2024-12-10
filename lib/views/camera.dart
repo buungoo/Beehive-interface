@@ -87,8 +87,8 @@ class _Camera extends State<Camera> {
 
       if (scanData.format == BarcodeFormat.qrcode) {
         controller.pauseCamera();
-        final token = scanData.code;
-        final response = await BeehiveUserProvider().addBeehive(token);
+        final token = scanData.code!;
+        final response = await BeehiveUserProvider().addBeehive(token!);
 
         if (response) {
           showDialog(
