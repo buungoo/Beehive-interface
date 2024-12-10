@@ -4,6 +4,8 @@ import 'package:beehive/views/initial_page.dart';
 import 'package:beehive/views/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -23,6 +25,8 @@ import 'widgets/shared.dart';
 import 'package:beehive/models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'package:workmanager/workmanager.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
 // GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
@@ -116,6 +120,20 @@ final GoRouter _router = GoRouter(
   ],
 );
 
+class DevHttpOverrides extends HttpOverrides {
+  final String pemString;
+
+  DevHttpOverrides(this.pemString);
+
+  @override
+  HttpClient createHttpClient(final SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        return pemString.compareTo(cert.pem) == 1;
+      };
+  }
+}
+
 // Main app class that sets up providers and routing
 class BeehiveApp extends StatelessWidget {
   const BeehiveApp({super.key});
@@ -176,8 +194,16 @@ void callbackDispatcher() async {
 
 const simplePeriodicTask = "com.example.beehive.simplePeriodicTask";
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ByteData data = await PlatformAssetBundle().load('assets/ca/sigma.pem');
+  String pemString = utf8.decode(data.buffer.asUint8List());
+  //print(pemString);
+
+  HttpOverrides.global = DevHttpOverrides(pemString);
+// Replace with: https://stackoverflow.com/a/69481863*/
+
   Workmanager().initialize(
     callbackDispatcher,
     isInDebugMode: false,
