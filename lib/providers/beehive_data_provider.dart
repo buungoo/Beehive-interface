@@ -72,10 +72,28 @@ class BeehiveDataProvider {
         final List<dynamic> data = json.decode(response.body);
         final test = data.map((item) => item as Map<String, dynamic>).toList();
 
-        double temp = data[0]['value'].toDouble(); // Temperature in °C
-        double weight = data[1]['value'].toDouble(); // Weight in grams
-        double humidity = data[2]['value'].toDouble(); // Humidity in %
-        double ppm = data[3]['value'].toDouble(); // Particles Per Million (PPM)
+        int tempIndex = data
+            .indexWhere((element) => element['sensor_type'] == 'temperature');
+        int weightIndex =
+            data.indexWhere((element) => element['sensor_type'] == 'weight');
+        int humidityIndex =
+            data.indexWhere((element) => element['sensor_type'] == 'humidity');
+        int ppmIndex =
+            data.indexWhere((element) => element['sensor_type'] == 'oxygen');
+
+        // set value to  0 if index not found
+        double temp = tempIndex != -1
+            ? data[tempIndex]['value'].toDouble()
+            : 0.0; // Temperature in °C
+        double weight = weightIndex != -1
+            ? data[weightIndex]['value'].toDouble()
+            : 0.0; // Weight in grams
+        double humidity = humidityIndex != -1
+            ? data[humidityIndex]['value'].toDouble()
+            : 0.0; // Humidity in %
+        double ppm = ppmIndex != -1
+            ? data[ppmIndex]['value'].toDouble()
+            : 0.0; // Particles Per Million (PPM)
 
         yield BeehiveData(
             temperature: temp, weight: weight, humidity: humidity, ppm: ppm);

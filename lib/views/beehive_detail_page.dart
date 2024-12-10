@@ -50,13 +50,20 @@ class BeehiveDetailPage extends StatelessWidget {
       future: BeehiveDataProvider().fetchBeehiveIssueStatusesList(id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
+          // or a loading indicator
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Text("Loading"),
-          ); // or a loading indicator
+          );
         } else if (snapshot.hasError) {
-          return Container(
-            child: Text("Error"),
-          ); // or an error message
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Text("Error fetching data"),
+          );
         } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return Positioned(
             bottom: 0,
@@ -65,8 +72,11 @@ class BeehiveDetailPage extends StatelessWidget {
             child: Statusbox(data: snapshot.data!),
           );
         } else {
-          return Container(
-            child: Text("No data"),
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox.shrink(),
           );
         }
       },

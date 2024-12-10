@@ -219,14 +219,14 @@ void main() async {
   );
 
   // one off task
-  Workmanager().registerOneOffTask("com.example.beehive.rescheduledTask",
+  /*Workmanager().registerOneOffTask("com.example.beehive.rescheduledTask",
       "com.example.beehive.rescheduledTask",
       initialDelay: const Duration(seconds: 10),
       constraints: Constraints(
         networkType: NetworkType.connected,
-      ));
+      ));*/
 
-  Workmanager().printScheduledTasks();
+  //Workmanager().printScheduledTasks();
 
   runApp(const BeehiveApp()); // Entry point for the app
 }
