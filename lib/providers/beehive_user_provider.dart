@@ -2,6 +2,7 @@ import 'package:beehive/models/beehive_user.dart';
 import 'package:beehive/config.dart' as config;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BeehiveUserProvider {
   final http.Client client;
@@ -12,10 +13,8 @@ class BeehiveUserProvider {
 
   Future<User?> login(String email, String password) async {
     try {
-      print(config.BackendServer + '/login');
-      //print("Mock login attempt");
       var response =
-          await client.post(Uri.parse(config.BackendServer + '/login'),
+          await client.post(Uri.parse('${config.BackendServer}/login'),
               headers: <String, String>{
                 'Content-Type': 'application/json; charset=UTF-8',
               },
@@ -31,17 +30,16 @@ class BeehiveUserProvider {
         return null;
       }
     } catch (e) {
-      print(e);
+      //print(e);
       throw Exception(e);
       //print(e);
     }
-    return null;
   }
 
   Future<User> register(String email, String password) async {
     try {
       var response =
-          await client.post(Uri.parse(config.BackendServer + '/register'),
+          await client.post(Uri.parse('${config.BackendServer}/register'),
               headers: <String, String>{
                 'Content-Type': 'application/json; charset=UTF-8',
               },
@@ -50,13 +48,13 @@ class BeehiveUserProvider {
                 'password': password,
               }));
 
-      print(response);
+      //print(response);
 
       if (response.statusCode == 200) {
         return User.fromJson(response.body);
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     throw Exception('Failed to register');
@@ -68,7 +66,7 @@ class BeehiveUserProvider {
 
   Future<User?> getUser(String token) async {
     try {
-      var response = await client.get(Uri.parse(config.BackendServer + '/user'),
+      var response = await client.get(Uri.parse('${config.BackendServer}/user'),
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token',
@@ -78,7 +76,7 @@ class BeehiveUserProvider {
         return User.fromJson(response.body);
       }
     } catch (e) {
-      print(e);
+      //print(e);
     }
 
     return null;
@@ -86,5 +84,33 @@ class BeehiveUserProvider {
 
   Future<User?> getUserFromStorage() async {
     return await User.getUser();
+  }
+
+  Future<bool> addBeehive(String mac) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      //var macaddr = formatHexString(mac);
+
+      var response =
+          await client.post(Uri.parse('${config.BackendServer}/beehive/add'),
+              headers: <String, String>{
+                'Content-Type': 'application/json; charset=UTF-8',
+                'Authorization': 'Bearer $token',
+              },
+              body: jsonEncode({
+                'macaddress': mac,
+              }));
+
+      if (response.body.contains("Beehive added to user")) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      //print(e);
+      return false;
+    }
   }
 }

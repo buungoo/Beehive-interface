@@ -9,6 +9,8 @@ import workmanager
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    //GeneratedPluginRegistrant.register(with: self)
+      
 
     FlutterLocalNotificationsPlugin.setPluginRegistrantCallback { (registry) in
           GeneratedPluginRegistrant.register(with: registry)
@@ -20,6 +22,7 @@ import workmanager
        UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
      }
 
+      
      WorkmanagerPlugin.setPluginRegistrantCallback { registry in
                  GeneratedPluginRegistrant.register(with: registry)
              }
@@ -27,9 +30,10 @@ import workmanager
 
 
      WorkmanagerPlugin.registerBGProcessingTask(withIdentifier: "com.example.beehive.rescheduledTask")
-    WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.simplePeriodicTask", frequency: NSNumber(value: 60 * 60))
+    WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.simplePeriodicTask", frequency: NSNumber(value: 15 * 60))
+      UIApplication.shared.setMinimumBackgroundFetchInterval(TimeInterval(60*15))
 
-     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.iOSBackgroundAppRefresh", frequency: NSNumber(value: 60 * 60))
+     WorkmanagerPlugin.registerPeriodicTask(withIdentifier: "com.example.beehive.iOSBackgroundAppRefresh", frequency: NSNumber(value: 15 * 60))
 
 
 

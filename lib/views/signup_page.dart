@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // GoRouter for navigation
-import 'package:flutter/cupertino.dart';
 import '../widgets/SharedAppBar.dart';
 import 'package:beehive/providers/beehive_user_provider.dart';
-import 'package:beehive/models/beehive_user.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -37,7 +35,7 @@ class _SignupPageState extends State<SignupPage> {
         throw Exception('Passwords do not match');
       }
 
-      final user = await BeehiveUserProvider().register(email, password);
+      await BeehiveUserProvider().register(email, password);
 
       context.go('/overview');
     } catch (e) {

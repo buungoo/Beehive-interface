@@ -5,14 +5,10 @@ import 'package:beehive/services/BeehiveApiService.dart';
 class InitialPage extends StatelessWidget {
   const InitialPage({super.key});
 
-  void printText() {
-    print("Yeet");
-  }
-
   void checkAuth(BuildContext context) async {
-    print("Checking Auth");
+    //print("Checking Auth");
     final authenticated = await BeehiveApi().verifyUser();
-    print("Authenticated: $authenticated");
+    //print("Authenticated: $authenticated");
     if (authenticated) {
       // Navigate to the 'overview' page on successful login
       context.go('/overview');
@@ -28,24 +24,24 @@ class InitialPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center, // Center Y axis
           children: [
-            Text('Hello'),
-            SizedBox(height: 25),
+            const Text('Hello'),
+            const SizedBox(height: 25),
             ElevatedButton(
-              key: Key("Login"),
+              key: const Key("Login"),
               onPressed: () {
                 context.push('/login_page');
               },
-              child: Text('Login'),
+              child: const Text('Login'),
             ),
-            SizedBox(
+            const SizedBox(
               height: 15,
             ),
             ElevatedButton(
-              key: Key("Signin"),
+              key: const Key("Signin"),
               onPressed: () {
                 context.push('/signup_page');
               },
-              child: Text('Sign Up'),
+              child: const Text('Sign Up'),
             ),
           ],
         ),

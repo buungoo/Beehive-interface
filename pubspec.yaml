@@ -50,6 +50,11 @@ dependencies:
   shared_preferences: ^2.3.2
   fl_chart: ^0.69.0
   intl: ^0.19.0
+  qr_code_scanner:
+    git:
+      url: https://github.com/asmrtfm/qr_code_scanner
+      ref: patch-1
+      version: ^1.0.0
 
 dev_dependencies:
   flutter_test:
@@ -74,8 +79,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/ca/sigma.pem
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

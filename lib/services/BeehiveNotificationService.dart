@@ -1,6 +1,9 @@
+import 'package:beehive/providers/beehive_data_provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:beehive/utils/helpers.dart';
 import 'package:flutter/material.dart';
+
+import 'BeehiveApiService.dart';
 
 class BeeNotification {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -43,8 +46,7 @@ class BeeNotification {
         flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
-    final bool? grantedNotificationPermission =
-        await androidImplementation?.requestNotificationsPermission();
+    await androidImplementation?.requestNotificationsPermission();
   }
 
   Future<void> sendCriticalNotification(
@@ -77,5 +79,27 @@ class BeeNotification {
 
     await flutterLocalNotificationsPlugin.show(
         id, title, body, notificationDetails);
+  }
+
+  Future<bool> checkIssues() async {
+    print("CHECKING");
+    final hives = await BeehiveApi().GetHives();
+    for (var hive in hives) {
+      final data = await BeehiveDataProvider().fetchBeehiveIssueStatus(hive.id);
+      if (data.isNotEmpty) {
+        if (data['Read']) {
+          await Future.delayed(const Duration(seconds: 5));
+          continue;
+        }
+        sendCriticalNotification(
+          title:
+              "Beehive #${hive.id} is having issues with ${data['SensorType']}",
+          body: "${data['Description']}",
+        );
+      }
+      // add a delay to prevent spamming notifications
+      await Future.delayed(const Duration(seconds: 5));
+    }
+    return Future.value(true);
   }
 }

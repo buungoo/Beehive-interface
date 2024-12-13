@@ -15,18 +15,20 @@ class BeehiveDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamProvider<BeehiveData?>(
+    return StreamProvider<BeehiveData>(
       // Because the StreamProvider is specified here and not in BeehiveApp
       // class only the BeehiveDetailPage widget can listen to it
-      initialData: null, // Nullable initial data
+      initialData:
+          new BeehiveData(temperature: 0, weight: 0, humidity: 0, ppm: 0),
       create: (context) {
-        // Setup the Stream which the StreamProvider should listen to
         return BeehiveDataProvider().getBeehiveDataStream(beehive.id);
       },
       child: SharedScaffold(
         context: context,
         appBar: getNavigationBar(
-            context: context, title: beehive.name, bgcolor: Color(0xFFf4991a)),
+            context: context,
+            title: beehive.name,
+            bgcolor: const Color(0xFFf4991a)),
         body: Stack(
           children: [
             _buildDetailGrid(beehive.id),
@@ -44,11 +46,40 @@ class BeehiveDetailPage extends StatelessWidget {
   }
 
   Widget _buildStatusBox(String id) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Statusbox(id: id),
+    return FutureBuilder<List<dynamic>>(
+      future: BeehiveDataProvider().fetchBeehiveIssueStatusesList(id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // or a loading indicator
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Text("Loading"),
+          );
+        } else if (snapshot.hasError) {
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Text("Error fetching data"),
+          );
+        } else if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Statusbox(data: snapshot.data!),
+          );
+        } else {
+          return Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox.shrink(),
+          );
+        }
+      },
     );
   }
 }

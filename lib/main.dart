@@ -4,6 +4,8 @@ import 'package:beehive/views/initial_page.dart';
 import 'package:beehive/views/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -13,14 +15,18 @@ import 'views/overview_page.dart';
 import 'views/beehive_detail_page.dart';
 import 'views/login_page.dart';
 import 'package:beehive/views/detail_chart_page.dart';
+import 'package:beehive/views/camera.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
-import 'config.dart' as config;
 
 import 'package:beehive/models/beehive.dart';
 import 'package:beehive/services/BeehiveNotificationService.dart';
 import 'package:workmanager/workmanager.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
 // GoRouter configuration with initial route and named routes
 final GoRouter _router = GoRouter(
@@ -77,25 +83,56 @@ final GoRouter _router = GoRouter(
       },
     ),
     GoRoute(
+        name: "Camera",
+        path: "/camera",
+        builder: (context, state) {
+          return const Camera();
+        }),
+    GoRoute(
       name: "testing",
       path: '/beehive/test/:id/:type',
       builder: (context, state) {
         final String id = state.pathParameters['id']!;
         final String type = state.pathParameters['type']!;
 
-        final beehive =
-            context.read<BeehiveListProvider>().findBeehiveById("1");
+        final beehive = context.read<BeehiveListProvider>().findBeehiveById(id);
+
+        if (beehive == null) {
+          return SharedScaffold(
+            context: context,
+            appBar: AppBar(
+              title: const Text('Error'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/'),
+              ),
+            ),
+            body: const Center(child: Text('Beehive not found!')),
+          );
+        }
+
         return BeeChartPage(
             beehive: beehive,
             title: type[0].toUpperCase() + type.substring(1),
             type: type);
-
-        // If beehive is found, return the beehive detail page
-        //return BeeChartPage(beehive: beehive);
       },
     ),
   ],
 );
+
+class DevHttpOverrides extends HttpOverrides {
+  final String pemString;
+
+  DevHttpOverrides(this.pemString);
+
+  @override
+  HttpClient createHttpClient(final SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) {
+        return pemString.compareTo(cert.pem) == 1;
+      };
+  }
+}
 
 // Main app class that sets up providers and routing
 class BeehiveApp extends StatelessWidget {
@@ -122,7 +159,7 @@ class BeehiveApp extends StatelessWidget {
               ],
               routerConfig: _router, // Pass the GoRouter configuration
               title: 'Beehive App', // App title
-              theme: CupertinoThemeData(
+              theme: const CupertinoThemeData(
                 primaryColor: CupertinoColors.systemYellow,
               ),
             )
@@ -138,31 +175,58 @@ class BeehiveApp extends StatelessWidget {
 }
 
 @pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    /*BeeNotification().sendCriticalNotification(
-      title: "Beehive #32 is having issues",
-      body: "Unable to connect to the beehive",
-    );*/
-    return Future.value(true);
+void callbackDispatcher() async {
+  print("callbackDispatcher was called");
+  Workmanager().executeTask((task, inputData) {
+    try {
+      return BeeNotification().checkIssues();
+    } catch (e) {
+      print(e);
+      BeeNotification().sendCriticalNotification(
+          title: "Unable to contact RockPI",
+          body: "Unable to fetch latest status from RockPI");
+      return Future.value(false);
+    }
+
+    //return Future.value(true);
   });
 }
 
 const simplePeriodicTask = "com.example.beehive.simplePeriodicTask";
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  ByteData data = await PlatformAssetBundle().load('assets/ca/sigma.pem');
+  String pemString = utf8.decode(data.buffer.asUint8List());
+  //print(pemString);
+
+  HttpOverrides.global = DevHttpOverrides(pemString);
+// Replace with: https://stackoverflow.com/a/69481863*/
+
   Workmanager().initialize(
     callbackDispatcher,
     isInDebugMode: false,
   );
-  /*Workmanager().registerPeriodicTask(
+  Workmanager().registerPeriodicTask(
     simplePeriodicTask,
     simplePeriodicTask,
-    frequency: config.bgWorkerFetchRate,
+    initialDelay: const Duration(seconds: 30),
+    //frequency: config.bgWorkerFetchRate,
+    constraints: Constraints(
+      networkType: NetworkType.connected,
+    ),
   );
-  Workmanager().printScheduledTasks();
-  */
+
+  // one off task
+  /*Workmanager().registerOneOffTask("com.example.beehive.rescheduledTask",
+      "com.example.beehive.rescheduledTask",
+      initialDelay: const Duration(seconds: 10),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ));*/
+
+  //Workmanager().printScheduledTasks();
 
   runApp(const BeehiveApp()); // Entry point for the app
 }
