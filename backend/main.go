@@ -1,17 +1,30 @@
 package main
 
-import (
-	"beehive_api/api"
-	"beehive_api/db"
-	"beehive_api/mqtt"
+// import (
+// 	"beehive_api/api"
+// 	"beehive_api/db"
+// 	"beehive_api/mqtt"
+//
+// 	// "beehive_api/test"
+// 	"beehive_api/utils"
+// 	"log"
+// 	"net/http"
+//
+// 	"os"
+// 	"os/signal"
+// 	"syscall"
+//
+// 	"github.com/joho/godotenv"
+// )
 
-	// "beehive_api/test"
-	"beehive_api/utils"
+import (
 	"log"
 	"net/http"
 
 	"github.com/buungoo/Beehive-interface/api"
 	"github.com/buungoo/Beehive-interface/db"
+	"github.com/buungoo/Beehive-interface/mqtt"
+	// "github.com/buungoo/Beehive-interface/test"
 	"github.com/buungoo/Beehive-interface/utils"
 
 	"os"
@@ -71,12 +84,24 @@ func main() {
 
 	utils.LogInfo("Starting MQTT subscriber")
 	// MQTT Subscriber setup
-	go mqtt.SetupMQTTSubscriber(dbpool)
+	go func() {
+		mqtt.SetupMQTTSubscriber(dbpool)
+	}()
 
 	// Wait for termination signals
 	stopChan := make(chan os.Signal, 1)
 	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
-	<-stopChan
 
+	// Block until a signal is received
+	<-stopChan
 	utils.LogInfo("Shutting down application")
+
+	// go mqtt.SetupMQTTSubscriber(dbpool)
+	//
+	// // Wait for termination signals
+	// stopChan := make(chan os.Signal, 1)
+	// signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+	// <-stopChan
+	//
+	// utils.LogInfo("Shutting down application")
 }

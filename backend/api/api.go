@@ -5,51 +5,17 @@
 package api
 
 import (
-	"beehive_api/authentication"
-	"beehive_api/handlers"
-	"beehive_api/models"
-	"beehive_api/utils"
-	"net"
-	"net/http"
-	"strconv"
-
 	"github.com/buungoo/Beehive-interface/authentication"
 	"github.com/buungoo/Beehive-interface/handlers"
 	"github.com/buungoo/Beehive-interface/models"
 	"github.com/buungoo/Beehive-interface/utils"
 
+	"net"
+	"net/http"
+	"strconv"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-// Middleware for Docker bridge network authentication
-func DockerBridgeAuth(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract IP from "ip:port"
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			utils.SendErrorResponse(w, "Forbidden: Invalid Remote Address", http.StatusForbidden)
-			return
-		}
-
-		// Define the Docker bridge network CIDR
-		bridgeCIDR := "172.18.0.0/16"
-		_, bridgeNet, err := net.ParseCIDR(bridgeCIDR)
-		if err != nil {
-			utils.SendErrorResponse(w, "Server Error: Invalid Network Configuration", http.StatusInternalServerError)
-			return
-		}
-
-		// Check if the request IP is within the bridge network
-		parsedIP := net.ParseIP(ip)
-		if !bridgeNet.Contains(parsedIP) {
-			utils.SendErrorResponse(w, "Forbidden: Access Denied", http.StatusForbidden)
-			return
-		}
-
-		// Call the next handler if the IP is valid
-		next(w, r)
-	}
-}
 
 // Middleware for Docker bridge network authentication
 func DockerBridgeAuth(next http.HandlerFunc) http.HandlerFunc {
@@ -188,7 +154,7 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 			return
 		}
 		// Validate the sensortype
-		sensorType := models.SensorType(r.PathValue("sensorType"))
+		sensorType := models.Sensor(r.PathValue("sensorType"))
 		if !sensorType.IsValid() {
 			utils.SendErrorResponse(w, "Invalid sensortype", http.StatusBadRequest)
 			return

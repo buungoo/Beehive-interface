@@ -113,7 +113,7 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 	LIMIT 1;`
 
 	// Store data in SensorData struct
-	var dataResponse models.SensorData
+	var dataResponse models.SensorReading
 
 	err = conn.QueryRow(context.Background(), sqlQueryFetchLatestSensorValueByType, beehiveId, sensorType).Scan(&dataResponse.SensorID,
 		&dataResponse.BeehiveID, &dataResponse.SensorType, &dataResponse.Value, &dataResponse.Time)
@@ -270,12 +270,12 @@ func GetAverageDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpoo
 
 // Helper functions
 
-func iterateData(rows pgx.Rows) ([]models.SensorData, error) {
+func iterateData(rows pgx.Rows) ([]models.SensorReading, error) {
 	// Slice to hold the data from returned rows
-	var dataResponse []models.SensorData
+	var dataResponse []models.SensorReading
 
 	for rows.Next() {
-		var data models.SensorData
+		var data models.SensorReading
 		if err := rows.Scan(&data.SensorID, &data.BeehiveID, &data.SensorType, &data.Value, &data.Time); err != nil {
 			return dataResponse, err
 		}

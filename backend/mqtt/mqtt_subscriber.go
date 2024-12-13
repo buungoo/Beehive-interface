@@ -1,9 +1,9 @@
 package mqtt
 
 import (
-	"beehive_api/handlers"
-	"beehive_api/models"
-	"beehive_api/utils"
+	"github.com/buungoo/Beehive-interface/handlers"
+	"github.com/buungoo/Beehive-interface/models"
+	"github.com/buungoo/Beehive-interface/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -17,7 +17,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/buungoo/Beehive-interface/utils"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,7 +32,7 @@ func handleSensorMessage(message SensorMessage, dbpool *pgxpool.Pool) {
 
 	for _, reading := range readings {
 		utils.LogInfo(fmt.Sprintf("Sensor Reading: %+v", reading))
-		fmt.Printf("Sensor Reading: %+v\n", reading) // print and log
+		fmt.Printf("Sensor Reading: %+v\n", reading)
 		// Insert the reading into the database
 		err := handlers.InsertSensorReading(dbpool, reading)
 		if err != nil {

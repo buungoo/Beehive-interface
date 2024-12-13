@@ -2,11 +2,130 @@
 package models
 
 import (
+	"github.com/buungoo/Beehive-interface/utils"
+
 	"fmt"
+	"net"
+	"strings"
 	"time"
-	//"errors"
-	//"fmt"
 )
+
+type Sensor string
+
+const (
+	LoadCell    Sensor = "loadcell"
+	Temperature Sensor = "temperature"
+	Humidity    Sensor = "humidity"
+	Microphone  Sensor = "microphone"
+	Oxygen      Sensor = "oxygen"
+	Battery     Sensor = "battery"
+)
+
+func (s Sensor) IsValid() bool {
+	switch s {
+	case LoadCell, Temperature, Humidity, Microphone, Oxygen, Battery:
+		return true
+	default:
+		return false
+	}
+}
+
+// SensorReading struct to hold a parsed sensor reading
+type SensorReading struct {
+	SensorType Sensor			`json:"sensor_type"`
+	SensorID   int              `json:"sensor_id"`	// TODO: Dirty solution, we receive uint8 id but databse is taking int
+	Value      interface{}      `json:"value"`		// Allows for the different types we need, i.e., uint8, int8, bool
+	Time       time.Time       	`json:"time"`		// To store the timestamp of the reading
+	BeehiveID  net.HardwareAddr `json:"beehive_id"`	// MAC address of the parent Beehive, I could have used a string but this makes sure it is parsed as a valid macaddr
+	// SensorID   int       `json:"sensor_id"`
+	// BeehiveID  int       `json:"beehive_id"`
+	// SensorType string    `json:"sensor_type"`
+	// Value      float32   `json:"value"`
+	// Time       time.Time `json:"time"`
+}
+
+// Builder pattern for SensorReading
+type SensorReadingBuilder struct {
+	sensorType    Sensor
+	sensorID      uint8
+	value         interface{}
+	timestamp     time.Time
+	parentBeehive net.HardwareAddr
+}
+
+func NewSensorReadingBuilder(sensorType Sensor, timestamp time.Time) *SensorReadingBuilder {
+	return &SensorReadingBuilder{
+		sensorType: sensorType,
+		timestamp:  timestamp,
+	}
+}
+
+func (b *SensorReadingBuilder) SetSensorID(id uint8) *SensorReadingBuilder {
+	b.sensorID = id
+	return b
+}
+
+func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder {
+	switch b.sensorType {
+	case Temperature:
+		if v, ok := value.(int8); ok {
+			b.value = v
+		} else {
+			utils.LogWarn("Invalid value type for Temperature. Expected int8.")
+		}
+	case Microphone:
+		if v, ok := value.(uint8); ok {
+			b.value = v == 1 // Microphone can be either 0 or 1 as we want to map it to boolean.
+		} else {
+			utils.LogWarn("Invalid value type for Microphone. Expected uint8.")
+		}
+	default:
+		if v, ok := value.(uint8); ok {
+			b.value = v
+		} else {
+			utils.LogWarn("Invalid value type for sensor. Expected uint8.")
+		}
+	}
+	return b
+}
+
+func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBuilder {
+	// Make sure the length of the macaddr is valid
+	if len(parentBeehive) != 16 {
+		utils.LogWarn("Invalid DevEUI length. Expected 16 characters.")
+		return b
+	}
+
+	// Format the macaddr as it is received without colons
+	macFormatted := strings.ToLower(parentBeehive[:2] + ":" +
+		parentBeehive[2:4] + ":" +
+		parentBeehive[4:6] + ":" +
+		parentBeehive[6:8] + ":" +
+		parentBeehive[8:10] + ":" +
+		parentBeehive[10:12] + ":" +
+		parentBeehive[12:14] + ":" +
+		parentBeehive[14:16])
+
+	// Parse the string into macaddr8 type
+	mac, err := net.ParseMAC(macFormatted)
+	if err != nil {
+		utils.LogWarn("Failed to parse DevEUI as MAC address.")
+	} else {
+		b.parentBeehive = mac
+	}
+
+	return b
+}
+
+func (b *SensorReadingBuilder) Build() *SensorReading {
+	return &SensorReading{
+		SensorType: b.sensorType,
+		SensorID:   int(b.sensorID),	// TODO: Dirty solution, we shouldn't have to parse it
+		Value:      b.value,
+		Time:       b.timestamp,
+		BeehiveID:  b.parentBeehive,
+	}
+}
 
 // BeehiveStatus is a struct that is used for the beehive_status table.
 type BeehiveStatus struct {
@@ -21,59 +140,60 @@ type BeehiveStatus struct {
 	TimeRead    *time.Time `json: "time_read, omitempty"`
 }
 
-// Beehives is never used.
-type Beehives struct {
-	Id   int    `json: "id"`
-	Name string `json: "name`
-}
-
 // Season is used to implement seasons and map data.
 type Season struct {
 	Name      string
-	LowTemp   float32
-	HighTemp  float32
-	LowHumid  float32
-	HighHumid float32
+	LowTemp   int8
+	HighTemp  int8
+	LowHumid  uint8
+	HighHumid uint8
 }
 
-// Limits for temperature
+// Limits for temperature (int8)
 const (
-	WinterLowTemp  float32 = -40.0
-	WinterHighTemp float32 = 40.0
-	SpringLowTemp  float32 = -30.0
-	SpringHighTemp float32 = 40.0
-	SummerLowTemp  float32 = 0.0
-	SummerHighTemp float32 = 40.0
-	FallLowTemp    float32 = -30.0
-	FallHighTemp   float32 = 30.0
+	WinterLowTemp  int8 = -40
+	WinterHighTemp int8 = 40
+	SpringLowTemp  int8 = -30
+	SpringHighTemp int8 = 40
+	SummerLowTemp  int8 = 0
+	SummerHighTemp int8 = 40
+	FallLowTemp    int8 = -30
+	FallHighTemp   int8 = 30
 )
 
-// Limits for humidity
+// Limits for humidity (uint8)
 const (
-	WinterLowHumidity  float32 = 5.0
-	WinterHighHumidity float32 = 50.0
-	SpringLowHumidity  float32 = 5.0
-	SpringHighHumidity float32 = 60.0
-	SummerLowHumidity  float32 = 10.0
-	SummerHighHumidity float32 = 70.0
-	FallLowHumidity    float32 = 5.0
-	FallHighHumidity   float32 = 60.0
+	WinterLowHumidity  uint8 = 5
+	WinterHighHumidity uint8 = 50
+	SpringLowHumidity  uint8 = 5
+	SpringHighHumidity uint8 = 60
+	SummerLowHumidity  uint8 = 10
+	SummerHighHumidity uint8 = 70
+	FallLowHumidity    uint8 = 5
+	FallHighHumidity   uint8 = 60
 )
 
-// Limits for oxygen
+// Limits for oxygen (uint8)
 const (
-	LowOxygen  float32 = 18.0
-	HighOxygen float32 = 25.0
+	LowOxygen  uint8 = 18
+	HighOxygen uint8 = 25
 )
 
-// Limits for weight
+// Limits for weight (uint8)
 const (
-	LowWeight  float32 = 0.0
-	HighWeight float32 = 10.0
+	LowWeight  uint8 = 0
+	HighWeight uint8 = 100
 )
 
-// Limits for microphone
-const LowMicNoise float32 = 0.0
+// Limits for microphone (bool)
+const (
+	LowMicNoise bool = false
+)
+
+const (
+	LowBattery  uint8 = 0
+	HighBattery uint8 = 100
+)
 
 // Pointers to each season
 var (
@@ -96,121 +216,126 @@ var seasons = map[time.Month]*Season{
 	time.December: winter,
 }
 
-// SensorData is u
-type SensorData struct {
-	SensorID   int       `json:"sensor_id"`
-	BeehiveID  int       `json:"beehive_id"`
-	SensorType string    `json:"sensor_type"`
-	Value      float32   `json:"value"`
-	Time       time.Time `json:"time"`
-}
-
-type SensorType string
-
-const (
-	SensorTypeTemperature SensorType = "temperature"
-	SensorTypeHumidity    SensorType = "humidity"
-	SensorTypeOxygen      SensorType = "oxygen"
-	SensorTypeWeight      SensorType = "weight"
-	SensorTypeMicrophone  SensorType = "microphone"
-)
-
-var validSensorTypes = map[SensorType]bool{
-	SensorTypeTemperature: true,
-	SensorTypeHumidity:    true,
-	SensorTypeOxygen:      true,
-	SensorTypeWeight:      true,
-	SensorTypeMicrophone:  true,
-}
-
-// IsValid returns true if the sensortype exists.
-func (st SensorType) IsValid() bool {
-	return validSensorTypes[st]
-}
-
-// String convert SensorType to string.
-func (st SensorType) String() string {
-	return string(st)
-}
-
 // VerifyInputData verifies sensorvalue and returns true if everything looks good, else return false with message
-func (sd SensorData) VerifyInputData() (bool, string) {
-	switch sd.SensorType {
-	case SensorTypeTemperature.String():
-		return sd.verifyTemperature()
-	case SensorTypeHumidity.String():
-		return sd.verifyHumidity()
-	case SensorTypeOxygen.String():
-		return sd.verifyOxygen()
-	case SensorTypeWeight.String():
-		return sd.verifyWeight()
-	case SensorTypeMicrophone.String():
-		return sd.verifyMicrophone()
+func (reading SensorReading) VerifyInputData() (bool, string) {
+	switch reading.SensorType {
+	case Temperature:
+		return reading.verifyTemperature()
+	case Humidity:
+		return reading.verifyHumidity()
+	case Oxygen:
+		return reading.verifyOxygen()
+	case LoadCell:
+		return reading.verifyWeight()
+	case Microphone:
+		return reading.verifyMicrophone()
+	case Battery:
+		return reading.VerifyBattery()
 	default:
 		return false, "semthing went wrong while verifying error"
 	}
 }
 
 // Verify temperature sensorvalues
-func (sd SensorData) verifyTemperature() (bool, string) {
-	month := sd.Time.Month()
+func (reading SensorReading) verifyTemperature() (bool, string) {
+	month := reading.Time.Month()
 	season, exists := seasons[month]
 	if !exists {
 		return false, "Error finding month"
 	}
-	if sd.Value < season.LowTemp {
-		return false, "temperature is below " + fmt.Sprintf("%f", season.LowTemp) + " Celsius"
 
-	} else if sd.Value > season.HighTemp {
-		return false, "temperature is above " + fmt.Sprintf("%f", season.HighTemp) + " Celsius"
-	} else {
-		return true, "something went wrong while checking temperature"
+	// Type assertion for int8
+	temp, ok := reading.Value.(int8)
+	if !ok {
+		return false, "Invalid value type for temperature. Expected int8."
 	}
+
+	if temp < season.LowTemp {
+		return false, "temperature is below " + fmt.Sprintf("%f", season.LowTemp) + " Celsius"
+	} else if temp > season.HighTemp {
+		return false, "temperature is above " + fmt.Sprintf("%f", season.HighTemp) + " Celsius"
+	}
+	return true, "temperature is within limits"
 }
 
 // Verify humidity sensorvalues
-func (sd SensorData) verifyHumidity() (bool, string) {
-	month := sd.Time.Month()
+func (reading SensorReading) verifyHumidity() (bool, string) {
+	month := reading.Time.Month()
 	season, exists := seasons[month]
 	if !exists {
 		return false, "Error finding month"
 	}
-	if sd.Value < season.LowHumid {
-		return false, "humidity is below " + fmt.Sprintf("%f", season.LowHumid) + " Celsius"
 
-	} else if sd.Value > season.HighHumid {
-		return false, "temperature is above " + fmt.Sprintf("%f", season.HighHumid) + " Celsius"
-	} else {
-		return true, "humiditylevels are within limits"
+	// Type assertion for uint8
+	humid, ok := reading.Value.(uint8)
+	if !ok {
+		return false, "Invalid value type for humidity. Expected uint8."
 	}
 
+	if humid < season.LowHumid {
+		return false, "humidity is below " + fmt.Sprintf("%f", season.LowHumid) + "%"
+	} else if humid > season.HighHumid {
+		return false, "humidity is above " + fmt.Sprintf("%f", season.HighHumid) + "%"
+	}
+	return true, "humidity levels are within limits"
 }
 
 // Verify oxygen sensorvalues
-func (sd SensorData) verifyOxygen() (bool, string) {
-	if sd.Value < LowOxygen {
-		return false, "humiditylevel is below " + fmt.Sprintf("%f", LowOxygen) + "%"
-	} else if sd.Value > HighOxygen {
-		return false, "humiditylevel is above " + fmt.Sprintf("%f", HighOxygen) + "%"
-	} else {
-		return true, "oxygenlevels are within limits"
+func (reading SensorReading) verifyOxygen() (bool, string) {
+	// Type assertion for uint8
+	oxygen, ok := reading.Value.(uint8)
+	if !ok {
+		return false, "Invalid value type for oxygen. Expected uint8."
 	}
+
+	if oxygen < LowOxygen {
+		return false, "oxygen level is below " + fmt.Sprintf("%f", LowOxygen) + "%"
+	} else if oxygen > HighOxygen {
+		return false, "oxygen level is above " + fmt.Sprintf("%f", HighOxygen) + "%"
+	}
+	return true, "oxygen levels are within limits"
 }
 
 // Verify weight sensorvalues
-func (sd SensorData) verifyWeight() (bool, string) {
-	if sd.Value < LowWeight {
-		return false, "weight is below " + fmt.Sprintf("%f", LowWeight) + "kg"
-	} else if sd.Value > HighWeight {
-		return false, "weight is above " + fmt.Sprintf("%f", LowOxygen) + "kg"
+func (reading SensorReading) verifyWeight() (bool, string) {
+	// Type assertion for uint8
+	weight, ok := reading.Value.(uint8)
+	if !ok {
+		return false, "Invalid value type for weight. Expected uint8."
 	}
-	return true, "weight is within limits"
+
+	if weight < LowWeight {
+		return false, "weight is below " + fmt.Sprintf("%f", LowWeight) + "kg"
+	} else if weight > HighWeight {
+		return false, "weight is above " + fmt.Sprintf("%f", HighWeight) + "kg"
+	}
+	return true, "Weight is within limit"
 }
 
 // Verify microphone sensorvalues
-func (sd SensorData) verifyMicrophone() (bool, string) {
-	if sd.Value > LowMicNoise {
-		return false, "microphone is detecting noise"
+func (reading SensorReading) verifyMicrophone() (bool, string) {
+	// Type assertion for bool
+	mic, ok := reading.Value.(bool)
+	if !ok {
+		return false, "Invalid value type for microphone. Expected bool."
 	}
-	return true, "microphone is not detecting any noise"
+
+	if mic {
+		return false, "The bees are angy"
+	}
+	return true, "The bees are happi"
+}
+
+// Verify battery level
+func (reading SensorReading) VerifyBattery() (bool, string) {
+	// Type assertion for uint8
+	battery, ok := reading.Value.(uint8)
+	if !ok {
+		return false, "Invalid value type for battery. Expected uint8."
+	}
+
+	if battery < LowBattery || battery > HighBattery {
+		return false, fmt.Sprintf("battery level is out of range: %d%%. Expected between 0-100%%", battery)
+	}
+	return true, fmt.Sprintf("battery level is within range: %d%%", battery)
 }

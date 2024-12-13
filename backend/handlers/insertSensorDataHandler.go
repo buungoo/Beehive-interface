@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"beehive_api/models"
-	"beehive_api/utils"
+	"github.com/buungoo/Beehive-interface/models"
+	"github.com/buungoo/Beehive-interface/utils"
+
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -20,9 +21,9 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 	// Fetch the beehive_id using ParentBeehive (MAC address)
 	var beehiveID int
 	queryBeehive := `SELECT id FROM beehives WHERE key = $1`
-	err = conn.QueryRow(context.Background(), queryBeehive, reading.ParentBeehive.String()).Scan(&beehiveID) // Convert the macaddr back to string for the query
+	err = conn.QueryRow(context.Background(), queryBeehive, reading.BeehiveID.String()).Scan(&beehiveID) // Convert the macaddr back to string for the query
 	if err != nil {
-		return fmt.Errorf("failed to find beehive with MAC address %s: %v", reading.ParentBeehive.String(), err)
+		return fmt.Errorf("failed to find beehive with MAC address %s: %v", reading.BeehiveID.String(), err)
 	}
 
 	// Check if the sensor exists in the `sensors` table
@@ -54,7 +55,7 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 		INSERT INTO sensor_data (sensor_id, beehive_id, sensor_type, value, time) 
 		VALUES ($1, $2, $3, $4, $5)`
 	_, err = conn.Exec(context.Background(), insertReadingQuery,
-		reading.SensorID, beehiveID, string(reading.SensorType), reading.Value, reading.Timestamp)
+		reading.SensorID, beehiveID, string(reading.SensorType), reading.Value, reading.Time)
 	if err != nil {
 		return fmt.Errorf("failed to insert sensor reading: %v", err)
 	}
