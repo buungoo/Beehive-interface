@@ -32,11 +32,11 @@ func (s Sensor) IsValid() bool {
 
 // SensorReading struct to hold a parsed sensor reading
 type SensorReading struct {
-	SensorType Sensor			`json:"sensor_type"`
-	SensorID   int              `json:"sensor_id"`	// TODO: Dirty solution, we receive uint8 id but databse is taking int
-	Value      interface{}      `json:"value"`		// Allows for the different types we need, i.e., uint8, int8, bool
-	Time       time.Time       	`json:"time"`		// To store the timestamp of the reading
-	BeehiveID  net.HardwareAddr `json:"beehive_id"`	// MAC address of the parent Beehive, I could have used a string but this makes sure it is parsed as a valid macaddr
+	SensorType Sensor           `json:"sensor_type"`
+	SensorID   int              `json:"sensor_id"`  // TODO: Dirty solution, we receive uint8 id but databse is taking int
+	Value      interface{}      `json:"value"`      // Allows for the different types we need, i.e., uint8, int8, bool
+	Time       time.Time        `json:"time"`       // To store the timestamp of the reading
+	BeehiveID  net.HardwareAddr `json:"beehive_id"` // MAC address of the parent Beehive, I could have used a string but this makes sure it is parsed as a valid macaddr
 	// SensorID   int       `json:"sensor_id"`
 	// BeehiveID  int       `json:"beehive_id"`
 	// SensorType string    `json:"sensor_type"`
@@ -73,12 +73,13 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 		} else {
 			utils.LogWarn("Invalid value type for Temperature. Expected int8.")
 		}
-	case Microphone:
-		if v, ok := value.(uint8); ok {
-			b.value = v == 1 // Microphone can be either 0 or 1 as we want to map it to boolean.
-		} else {
-			utils.LogWarn("Invalid value type for Microphone. Expected uint8.")
-		}
+	// INFO: We are just going to insert 1 or 0 instead of a bool into the database
+	// case Microphone:
+	// 	if v, ok := value.(uint8); ok {
+	// 		b.value = v == 1 // Microphone can be either 0 or 1 as we want to map it to boolean.
+	// 	} else {
+	// 		utils.LogWarn("Invalid value type for Microphone. Expected uint8.")
+	// 	}
 	default:
 		if v, ok := value.(uint8); ok {
 			b.value = v
@@ -120,7 +121,7 @@ func (b *SensorReadingBuilder) SetDevEUI(parentBeehive string) *SensorReadingBui
 func (b *SensorReadingBuilder) Build() *SensorReading {
 	return &SensorReading{
 		SensorType: b.sensorType,
-		SensorID:   int(b.sensorID),	// TODO: Dirty solution, we shouldn't have to parse it
+		SensorID:   int(b.sensorID), // TODO: Dirty solution, we shouldn't have to parse it
 		Value:      b.value,
 		Time:       b.timestamp,
 		BeehiveID:  b.parentBeehive,
@@ -187,7 +188,9 @@ const (
 
 // Limits for microphone (bool)
 const (
-	LowMicNoise bool = false
+	// LowMicNoise bool = false
+	MicLow uint8 = 0
+	MicHigh uint8 = 1
 )
 
 const (
@@ -313,17 +316,35 @@ func (reading SensorReading) verifyWeight() (bool, string) {
 }
 
 // Verify microphone sensorvalues
+// func (reading SensorReading) verifyMicrophone() (bool, string) {
+// 	// Type assertion for bool
+// 	mic, ok := reading.Value.(bool)
+// 	if !ok {
+// 		return false, "Invalid value type for microphone. Expected bool."
+// 	}
+//
+// 	if mic {
+// 		return false, "The bees are angy"
+// 	}
+// 	return true, "The bees are happi"
+// }
+
+// Verify microphone sensor values
 func (reading SensorReading) verifyMicrophone() (bool, string) {
-	// Type assertion for bool
-	mic, ok := reading.Value.(bool)
+	// Type assertion for int
+	mic, ok := reading.Value.(uint8)
 	if !ok {
-		return false, "Invalid value type for microphone. Expected bool."
+		return false, "Invalid value type for microphone. Expected int."
 	}
 
-	if mic {
+	switch mic {
+	case 0:
+		return true, "The bees are happi"
+	case 1:
 		return false, "The bees are angy"
+	default:
+		return false, "Invalid microphone value. Expected 0  or 1."
 	}
-	return true, "The bees are happi"
 }
 
 // Verify battery level
