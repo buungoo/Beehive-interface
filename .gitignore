@@ -1,3 +1,6 @@
+# API related
+/backend/.env
+
 # MQTT related
 /backend/mqtt/logs
 /backend/logs

@@ -47,7 +47,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 
 	// To store data if input is multiple sensors
-	var inputArray []models.SensorData
+	var inputArray []models.SensorReading
 
 	// Put input in byte slice
 	reqBody, err := io.ReadAll(r.Body)
@@ -104,7 +104,7 @@ func AddSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		return
 
 	} else {
-		var inputObject models.SensorData
+		var inputObject models.SensorReading
 		if err := json.Unmarshal(reqBody, &inputObject); err != nil {
 			utils.LogError("Error decoding payload, err: ", err)
 			utils.SendErrorResponse(w, "Invalid payload", http.StatusBadRequest)

@@ -277,7 +277,7 @@ func GetBeehiveStatusList(w http.ResponseWriter, r *http.Request, dbPool *pgxpoo
 }
 
 // Updates the beehive_status table when a value outside of the limits has been receive from the sensors
-func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, statusMessage string, data models.SensorData) {
+func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, statusMessage string, data models.SensorReading) {
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
@@ -321,7 +321,7 @@ func updateBeehiveStatusOnRead(dbPool *pgxpool.Pool, data models.BeehiveStatus) 
 }
 
 // Updates the solved after issue has been solved
-func updateBeehiveStatusSolved(dbPool *pgxpool.Pool, data models.SensorData) error {
+func updateBeehiveStatusSolved(dbPool *pgxpool.Pool, data models.SensorReading) error {
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())

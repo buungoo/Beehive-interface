@@ -56,20 +56,20 @@ services:
   #   volumes:
   #     - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
-  mqtt_subscriber:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    command: go run mqtt/mqtt_subscriber.go
-    # Uncomment if the local broker is setup
-    # depends_on:
-    #   - mqtt_broker
-    networks:
-      - backend
-    volumes:
-      - ./logs:/logs
+  # mqtt_subscriber:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.api
+  #   command: go run mqtt/mqtt_subscriber.go
+  #   # Uncomment if the local broker is setup
+  #   # depends_on:
+  #   #   - mqtt_broker
+  #   networks:
+  #     - backend
+  #   volumes:
+  #     - ./logs:/logs
 
-  # Only for testing the subsriber
+  # Only for testing the subscriber
   # mqtt_publisher:
   #   build:
   #     context: .
@@ -83,6 +83,9 @@ services:
 networks:
   backend:
     driver: bridge
+    # ipam:
+      # config:
+        # - subnet: 172.18.0.0/16
 
 volumes:
   timescaledb_data:

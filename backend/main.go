@@ -6,8 +6,13 @@ import (
 
 	"github.com/buungoo/Beehive-interface/api"
 	"github.com/buungoo/Beehive-interface/db"
+	"github.com/buungoo/Beehive-interface/mqtt"
 	"github.com/buungoo/Beehive-interface/test"
 	"github.com/buungoo/Beehive-interface/utils"
+
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/joho/godotenv"
 )
@@ -66,4 +71,26 @@ func main() {
 		utils.LogError("Http server could not start: ", err)
 	}
 
+	utils.LogInfo("Starting MQTT subscriber")
+	// MQTT Subscriber setup
+	go func() {
+		mqtt.SetupMQTTSubscriber(dbpool)
+	}()
+
+	// Wait for termination signals
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Block until a signal is received
+	<-stopChan
+	utils.LogInfo("Shutting down application")
+
+	// go mqtt.SetupMQTTSubscriber(dbpool)
+	//
+	// // Wait for termination signals
+	// stopChan := make(chan os.Signal, 1)
+	// signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+	// <-stopChan
+	//
+	// utils.LogInfo("Shutting down application")
 }
