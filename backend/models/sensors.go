@@ -4,8 +4,11 @@ package models
 import (
 	"github.com/buungoo/Beehive-interface/utils"
 
+	"bufio"
 	"fmt"
 	"net"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -65,32 +68,112 @@ func (b *SensorReadingBuilder) SetSensorID(id uint8) *SensorReadingBuilder {
 	return b
 }
 
+func loadValuesCommaSeparated(filename string) ([]float64, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var values []float64
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, ",")
+		for _, part := range parts {
+			v, err := strconv.ParseFloat(strings.TrimSpace(part), 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid number in file: %s", err)
+			}
+			values = append(values, v)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
+func interpolateYToX(xs, ys []float64, yTarget float64) (float64, error) {
+	// yMin := ys[0]
+	yMax := ys[len(ys)-1]
+
+	if yTarget == yMax {
+		return xs[len(xs)-1], nil
+	}
+
+	i := findInterval(ys, yTarget)
+	if i == -1 {
+		return 0, fmt.Errorf("target out of range")
+	}
+
+	y0 := ys[i]
+	y1 := ys[i+1]
+	x0 := xs[i]
+	x1 := xs[i+1]
+
+	t := (yTarget - y0) / (y1 - y0)
+	return x0 + t*(x1-x0), nil
+}
+
+func findInterval(values []float64, target float64) int {
+	for i := 0; i < len(values)-1; i++ {
+		if target >= values[i] && target <= values[i+1] {
+			return i
+		}
+	}
+	return -1
+}
+
 func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder {
 	switch b.sensorType {
 	case Temperature:
-		if v, ok := value.(int8); ok {
+		switch v := value.(type) {
+		case int8:
 			b.value = v
-		} else {
-			utils.LogWarn("Invalid value type for Temperature. Expected int8.")
+		default:
+			fmt.Println("Invalid value type for Temperature. Expected int8.")
 		}
-	// INFO: We are just going to insert 1 or 0 instead of a bool into the database
-	// case Microphone:
-	// 	if v, ok := value.(uint8); ok {
-	// 		b.value = v == 1 // Microphone can be either 0 or 1 as we want to map it to boolean.
-	// 	} else {
-	// 		utils.LogWarn("Invalid value type for Microphone. Expected uint8.")
-	// 	}
 	case Battery:
-		if v, ok := value.(uint16); ok {
-			b.value = v
-		} else {
-			utils.LogWarn("Invalid value type for Battery. Expected uint16.")
+		switch v := value.(type) {
+		case uint16:
+			fmt.Println("VALUE WE JUST SENT IN: ", v)
+			// Load LUT values from files
+			xs, err := loadValuesCommaSeparated("models/lut_x.txt")
+			if err != nil {
+				fmt.Printf("Error loading LUT X values: %s\n", err)
+				return b
+			}
+			fmt.Println("XS VALUE: ", xs[0])
+			ys, err := loadValuesCommaSeparated("models/lut_y.txt")
+			if err != nil {
+				fmt.Printf("Error loading LUT Y values: %s\n", err)
+				return b
+			}
+
+			if len(xs) != len(ys) {
+				fmt.Println("X and Y arrays must have the same length.")
+				return b
+			}
+
+			// Interpolate value
+			interpolatedValue, err := interpolateYToX(xs, ys, float64(v)+100.0)
+			fmt.Println("INTERPOLATED VALUE: ", interpolatedValue)
+			if err != nil {
+				fmt.Printf("Error interpolating value: %s\n", err)
+				return b
+			}
+
+			b.value = interpolatedValue // Set the resulting float64 value
+		default:
+			fmt.Println("Invalid value type for Battery. Expected uint16.")
 		}
 	default:
-		if v, ok := value.(uint8); ok {
+		switch v := value.(type) {
+		case uint8:
 			b.value = v
-		} else {
-			utils.LogWarn("Invalid value type for sensor. Expected uint8.")
+		default:
+			fmt.Println("Invalid value type for sensor. Expected uint8.")
 		}
 	}
 	return b
@@ -195,7 +278,7 @@ const (
 // Limits for microphone (bool)
 const (
 	// LowMicNoise bool = false
-	MicLow uint8 = 0
+	MicLow  uint8 = 0
 	MicHigh uint8 = 1
 )
 

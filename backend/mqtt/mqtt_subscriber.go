@@ -49,11 +49,10 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 	decodedData, err := base64.StdEncoding.DecodeString(message.Data)
 	if err != nil {
 		utils.LogError("Error decoding base64 data", err)
-		fmt.Println("Error decoding base64 data", err)
 		return nil, fmt.Errorf("error decoding base64 data: %v", err)
 	}
 
-	// Format the time we received as it couldnt be parsed correctly otherwise
+	// Format the time we received as it couldn't be parsed correctly otherwise
 	if dotIndex := strings.Index(message.Time, "."); dotIndex != -1 {
 		message.Time = message.Time[:dotIndex+4] + "Z" // We only need microseconds so truncate and add "Z" to indicate UTC
 	}
@@ -62,18 +61,18 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 	timeStamp, err := time.Parse(time.RFC3339, message.Time)
 	if err != nil {
 		utils.LogError("Error parsing time", err)
-		fmt.Println("Error parsing time", err)
 		return nil, fmt.Errorf("error parsing time: %v", err)
 	}
 
-	// Each sensor contains 6 bytes, 2 for sensor type, 2 for id, 2 for value
+	// Each sensor contains 3-4 bytes depending on the sensor type
 	var readings []*models.SensorReading
 	for i := 0; i < len(decodedData); {
-		if i+1 >= len(decodedData) {
-			utils.LogWarn("Incomplete data: Missing bytes for sensor type and ID")
+		if len(decodedData)-i < 3 {
+			utils.LogWarn("Incomplete data: Missing bytes for sensor type, ID, or value")
 			break
 		}
 
+		// Parse sensor type and ID
 		var sensorType models.Sensor
 		switch decodedData[i] {
 		case 1:
@@ -91,49 +90,38 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 		default:
 			sensorType = "Unknown"
 		}
-
 		sensorId := decodedData[i+1]
 
+		// Determine the raw value based on the sensor type
 		var rawValue interface{}
-		if sensorType == models.Battery {
-			if i+3 >= len(decodedData) {
-				utils.LogWarn("Incomplete data for Battery sensor value")
+		switch sensorType {
+		case models.Battery:
+			if len(decodedData)-i < 4 {
+				utils.LogWarn("Incomplete data: Missing bytes for Battery sensor value")
 				break
 			}
-			// Extract and parse Battery sensor value
-			byte1 := decodedData[i+2]
-			byte2 := decodedData[i+3]
-			utils.LogInfo(fmt.Sprintf("Battery sensor raw bytes: byte1=%02x, byte2=%02x", byte1, byte2))
-
-			parsedValue := uint16(byte1)<<8 | uint16(byte2)
-			rawValue = parsedValue // Ensure it's uint16
-			utils.LogInfo(fmt.Sprintf("Parsed rawValue=%d", rawValue))
-
-			i += 4 // Move to the next sensor
-		} else {
-			if i+2 >= len(decodedData) {
-				utils.LogWarn(fmt.Sprintf("Incomplete data for sensor ID %d of type %v", sensorId, sensorType))
-				break
-			}
-			// Extract and parse value for non-Battery sensors
-			if sensorType == models.Temperature {
-				rawValue = int8(decodedData[i+2]) // Ensure it's int8
-			} else {
-				rawValue = uint8(decodedData[i+2]) // Default to uint8 for other sensors
-			}
-			i += 3 // Move to the next sensor
+			// Convert raw bytes to uint16 for Battery sensor
+			rawValue = uint16(decodedData[i+2])<<8 | uint16(decodedData[i+3])
+			i += 4
+		case models.Temperature:
+			// Temperature requires int8 (signed 8-bit value)
+			rawValue = int8(decodedData[i+2])
+			i += 3
+		default:
+			// For other sensors, use uint8 (unsigned 8-bit value)
+			rawValue = uint8(decodedData[i+2])
+			i += 3
 		}
 
+		// Build the SensorReading object
 		builder := models.NewSensorReadingBuilder(sensorType, timeStamp).
 			SetSensorID(sensorId).
 			SetDevEUI(message.DevEUI).
 			SetValue(rawValue)
 
-		// Group each individual reading into a list
 		readings = append(readings, builder.Build())
 
 		utils.LogInfo(fmt.Sprintf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v", sensorType, sensorId, rawValue))
-		fmt.Printf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v\n", sensorType, sensorId, rawValue) // print and log
 	}
 
 	return readings, nil
