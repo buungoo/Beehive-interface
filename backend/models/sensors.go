@@ -137,14 +137,12 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 	case Battery:
 		switch v := value.(type) {
 		case uint16:
-			fmt.Println("VALUE WE JUST SENT IN: ", v)
 			// Load LUT values from files
 			xs, err := loadValuesCommaSeparated("models/lut_x.txt")
 			if err != nil {
 				fmt.Printf("Error loading LUT X values: %s\n", err)
 				return b
 			}
-			fmt.Println("XS VALUE: ", xs[0])
 			ys, err := loadValuesCommaSeparated("models/lut_y.txt")
 			if err != nil {
 				fmt.Printf("Error loading LUT Y values: %s\n", err)
@@ -157,8 +155,7 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 			}
 
 			// Interpolate value
-			interpolatedValue, err := interpolateYToX(xs, ys, float64(v)+100.0)
-			fmt.Println("INTERPOLATED VALUE: ", interpolatedValue)
+			interpolatedValue, err := interpolateYToX(xs, ys, float64(v))
 			if err != nil {
 				fmt.Printf("Error interpolating value: %s\n", err)
 				return b
