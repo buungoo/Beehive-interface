@@ -1,12 +1,12 @@
 package mqtt
 
 import (
-	"github.com/buungoo/Beehive-interface/handlers"
-	"github.com/buungoo/Beehive-interface/models"
-	"github.com/buungoo/Beehive-interface/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/buungoo/Beehive-interface/handlers"
+	"github.com/buungoo/Beehive-interface/models"
+	"github.com/buungoo/Beehive-interface/utils"
 
 	// "log"
 	"os"
@@ -16,7 +16,6 @@ import (
 	// "sync"
 	"syscall"
 	"time"
-
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -69,7 +68,12 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 
 	// Each sensor contains 6 bytes, 2 for sensor type, 2 for id, 2 for value
 	var readings []*models.SensorReading
-	for i := 0; i < len(decodedData); i += 3 {
+	for i := 0; i < len(decodedData); {
+		if i+1 >= len(decodedData) {
+			utils.LogWarn("Incomplete data: Missing bytes for sensor type and ID")
+			break
+		}
+
 		var sensorType models.Sensor
 		switch decodedData[i] {
 		case 1:
@@ -82,12 +86,43 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 			sensorType = models.Microphone
 		case 5:
 			sensorType = models.Oxygen
+		case 6:
+			sensorType = models.Battery
 		default:
 			sensorType = "Unknown"
 		}
 
 		sensorId := decodedData[i+1]
-		rawValue := decodedData[i+2]
+
+		var rawValue interface{}
+		if sensorType == models.Battery {
+			if i+3 >= len(decodedData) {
+				utils.LogWarn("Incomplete data for Battery sensor value")
+				break
+			}
+			// Extract and parse Battery sensor value
+			byte1 := decodedData[i+2]
+			byte2 := decodedData[i+3]
+			utils.LogInfo(fmt.Sprintf("Battery sensor raw bytes: byte1=%02x, byte2=%02x", byte1, byte2))
+
+			parsedValue := uint16(byte1)<<8 | uint16(byte2)
+			rawValue = parsedValue // Ensure it's uint16
+			utils.LogInfo(fmt.Sprintf("Parsed rawValue=%d", rawValue))
+
+			i += 4 // Move to the next sensor
+		} else {
+			if i+2 >= len(decodedData) {
+				utils.LogWarn(fmt.Sprintf("Incomplete data for sensor ID %d of type %v", sensorId, sensorType))
+				break
+			}
+			// Extract and parse value for non-Battery sensors
+			if sensorType == models.Temperature {
+				rawValue = int8(decodedData[i+2]) // Ensure it's int8
+			} else {
+				rawValue = uint8(decodedData[i+2]) // Default to uint8 for other sensors
+			}
+			i += 3 // Move to the next sensor
+		}
 
 		builder := models.NewSensorReadingBuilder(sensorType, timeStamp).
 			SetSensorID(sensorId).
@@ -174,7 +209,7 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("fkjsdhflafhlhgds") //beehive_subscriber")
+	opts.SetClientID("testfkdhsafk") //beehive_subscriber")
 	opts.SetDefaultPublishHandler(createMessagePubHandler(dbpool))
 
 	opts.OnConnect = func(client mqtt.Client) {

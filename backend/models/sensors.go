@@ -80,6 +80,12 @@ func (b *SensorReadingBuilder) SetValue(value interface{}) *SensorReadingBuilder
 	// 	} else {
 	// 		utils.LogWarn("Invalid value type for Microphone. Expected uint8.")
 	// 	}
+	case Battery:
+		if v, ok := value.(uint16); ok {
+			b.value = v
+		} else {
+			utils.LogWarn("Invalid value type for Battery. Expected uint16.")
+		}
 	default:
 		if v, ok := value.(uint8); ok {
 			b.value = v

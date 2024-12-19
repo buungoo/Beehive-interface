@@ -33,10 +33,12 @@ func main() {
 
 		// Construct JSON payload with the current time
 		//AwEgAgHs,
+		//AgUC
+		//BgULwrg=
 		payload := fmt.Sprintf(`{
 			"applicationID": "1",
 			"applicationName": "beehive-sensor-card",
-			"data": "AWNkAmMZA2M8BGMyBWMV",
+			"data": "AgUC",
 			"devEUI": "0080e115000adf82",
 			"deviceName": "beehive-sensor-card-dn",
 			"fCnt": 200,
