@@ -68,8 +68,7 @@ func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 	// Fetch beehiveId for beehive
 	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveId, macAddrStruct.Addr).Scan(&beehiveId)
 	if err != nil {
-		utils.LogError("This is the error", err)
-		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.LogError("Beehive doesnt exist", err)
 		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
 		return
 	}
@@ -81,6 +80,12 @@ func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 		utils.LogError("Error adding beehive to user, error: ", err)
 		utils.SendErrorResponse(w, "Error adding beehive to user", http.StatusBadRequest)
 		return
+	}
+
+	err = addDefaultSensors(w, r, dbPool, beehiveId)
+	if err != nil {
+		utils.LogError("Error adding sensors", err)
+		utils.SendErrorResponse(w, "Error adding sensors", http.StatusInternalServerError)
 	}
 
 	utils.SendJSONResponse(w, "Beehive added to user", http.StatusOK)
@@ -405,4 +410,28 @@ func iterateBeehives(rows pgx.Rows) ([]models.Beehives, error) {
 	}
 
 	return dataResponse, nil
+}
+
+func addDefaultSensors(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) error {
+	sensorTypes := [6]string{"loadcell", "temperature", "humidity", "microphone", "oxygen", "battery"}
+	const sqlQueryAddSensors = `ÌNSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $)`
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	for i := 0; i < len(sensorTypes); i++ {
+		_, err = conn.Exec(context.Background(), sqlQueryAddSensors, sensorTypes[i], beehiveId)
+		if err != nil {
+			utils.LogError("Error adding standard sensors, error: ", err)
+			utils.SendErrorResponse(w, "Error adding standard sensors to db", http.StatusBadRequest)
+			return err
+		}
+
+	}
+
+	return nil
 }

@@ -7,10 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/buungoo/Beehive-interface/api"
 	"github.com/buungoo/Beehive-interface/db"
 	"github.com/buungoo/Beehive-interface/mqtt"
-	"github.com/buungoo/Beehive-interface/test"
+	"github.com/buungoo/Beehive-interface/router"
 	"github.com/buungoo/Beehive-interface/utils"
 	"github.com/joho/godotenv"
 )
@@ -43,10 +42,10 @@ func main() {
 	utils.LogInfo("Database tables successfully initialized")
 
 	// Inject test data into the database
-	if err := test.InjectTestData(dbpool); err != nil {
-		utils.LogFatal("Error injecting test data", err)
-	}
-	utils.LogInfo("Test data successfully injected")
+	// if err := test.InjectTestData(dbpool); err != nil {
+	// 	utils.LogFatal("Error injecting test data", err)
+	// }
+	// utils.LogInfo("Test data successfully injected")
 
 	// Start MQTT subscriber in a separate goroutine
 	utils.LogInfo("Starting MQTT subscriber")
@@ -61,7 +60,7 @@ func main() {
 
 	// Initialize HTTP server routes
 	mux := http.NewServeMux()
-	api.InitRoutes(mux, dbpool)
+	router.InitRoutes(mux, dbpool)
 
 	// HTTPS server configuration
 	serverCert := "certs/server.crt"

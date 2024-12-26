@@ -74,7 +74,14 @@ func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool
 
 }
 
-func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, sensorType string) {
+func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Validate the sensortype
+	sensorType := models.Sensor(r.PathValue("sensorType"))
+	if !sensorType.IsValid() {
+		utils.SendErrorResponse(w, "Invalid sensortype", http.StatusBadRequest)
+		return
+	}
+	sensorTypeString := string(sensorType)
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
@@ -115,7 +122,7 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 	// Store data in SensorData struct
 	var dataResponse models.SensorReading
 
-	err = conn.QueryRow(context.Background(), sqlQueryFetchLatestSensorValueByType, beehiveId, sensorType).Scan(&dataResponse.SensorID,
+	err = conn.QueryRow(context.Background(), sqlQueryFetchLatestSensorValueByType, beehiveId, sensorTypeString).Scan(&dataResponse.SensorID,
 		&dataResponse.BeehiveID, &dataResponse.SensorType, &dataResponse.Value, &dataResponse.Time)
 	if err != nil {
 		utils.LogError("Error fetching latest sensorvalue, err: ", err)

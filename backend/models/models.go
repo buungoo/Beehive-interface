@@ -13,6 +13,17 @@ import (
 	"time"
 )
 
+type Beehives struct {
+	Id   int    `json: "id"`
+	Name string `json: "name`
+}
+
+// User is used to handle login.
+type User struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type Sensor string
 
 const (

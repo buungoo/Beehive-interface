@@ -2,12 +2,11 @@
 //
 // This package is the entrypoint for all Api calls. It sends requests to the correct handler.
 // In som occasions it performes some checks before passing it along to a handler.
-package api
+package router
 
 import (
 	"github.com/buungoo/Beehive-interface/authentication"
 	"github.com/buungoo/Beehive-interface/handlers"
-	"github.com/buungoo/Beehive-interface/models"
 	"github.com/buungoo/Beehive-interface/utils"
 
 	"net"
@@ -153,14 +152,8 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 			utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
 			return
 		}
-		// Validate the sensortype
-		sensorType := models.Sensor(r.PathValue("sensorType"))
-		if !sensorType.IsValid() {
-			utils.SendErrorResponse(w, "Invalid sensortype", http.StatusBadRequest)
-			return
-		}
-		sensorTypeString := string(sensorType)
-		handlers.GetLatestOfSensortype(w, r, dbPool, beehiveId, sensorTypeString)
+
+		handlers.GetLatestOfSensortype(w, r, dbPool, beehiveId)
 	}))
 
 	mux.HandleFunc("POST /test", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
