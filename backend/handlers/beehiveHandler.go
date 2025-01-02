@@ -1,3 +1,6 @@
+// Package handlers contains handlers for all API calls.
+//
+// Handlers are called from the routerpackage and handle all the queries to the database. Such as adding a user or reading sensordata from a specific beehive or sensor.
 package handlers
 
 import (
@@ -14,7 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Connect a beehive to a user by using the sensor-cards mac address
+// AddBeehiveToUser connects a beehive to a user by using the sensor-cards mac address
 func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
@@ -92,7 +95,7 @@ func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 
 }
 
-// Connect a beehive to a user by using the sensor-cards mac address
+// RemoveBeehiveFromUser removes a beehive from a user
 func RemoveBeehiveFromUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
@@ -138,12 +141,12 @@ func RemoveBeehiveFromUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 
 }
 
-// Returns the beehive_status table which shows issues
+// GetBeehiveStatus returns the beehive_status table which shows issues
 func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
-	// Acuire connection from the connection pool
+	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
 		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
@@ -201,12 +204,12 @@ func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 
 }
 
-// Returns the beehive_status table which shows issues
+// GetBeehiveStatusList returns the beehive_status table which shows issues
 func GetBeehiveStatusList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
-	// Acuire connection from the connection pool
+	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
 		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
@@ -281,7 +284,7 @@ func GetBeehiveStatusList(w http.ResponseWriter, r *http.Request, dbPool *pgxpoo
 
 }
 
-// Updates the beehive_status table when a value outside of the limits has been receive from the sensors
+// UpdateBeehiveStatusOnAdd updates the beehive_status table when a value outside of the limits has been receive from the sensors
 func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, statusMessage string, data models.SensorReading) {
 
 	// Acquire connection from the connection pool
@@ -348,7 +351,7 @@ func updateBeehiveStatusSolved(dbPool *pgxpool.Pool, data models.SensorReading) 
 	return nil
 }
 
-// Returns a list of the beehives connected to the user
+// GetBeehiveList returns a list of the beehives connected to the user
 func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)

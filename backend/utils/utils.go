@@ -13,7 +13,7 @@ type ErrorResponse struct {
 	Code  int    `json:"code,omitempty"`
 }
 
-// This is used for every successfull request
+// SendJSONResponse is used for every successfull request and returns a JSON response
 func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -22,7 +22,7 @@ func SendJSONResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	}
 }
 
-// This is used for every error response
+// SendErrorResponse is used for every error response and returns a JSON response
 func SendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -37,7 +37,7 @@ func SendErrorResponse(w http.ResponseWriter, message string, statusCode int) {
 
 }
 
-// Returns the userid
+// GetUserId returns the userid
 func GetUserId(conn *pgx.Conn, username string) (int, error) {
 	const sqlQueryFetchUserID = `SELECT id FROM users WHERE username=$1`
 
@@ -51,7 +51,7 @@ func GetUserId(conn *pgx.Conn, username string) (int, error) {
 
 }
 
-// Veryfies the provided beehive_id exists in the database
+// VerifyBeehiveId veryfies the provided beehive_id exists in the database
 func VerifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
 	const sqlQueryCheckBeehive = `SELECT EXISTS(SELECT 1 FROM user_beehive WHERE beehive_id=$1 AND user_id=$2)`
 
@@ -64,7 +64,7 @@ func VerifyBeehiveId(conn *pgx.Conn, beehiveId int, userId int) (bool, error) {
 	return exists, nil
 }
 
-// Veryfies the provided beehive exists in the database
+// VerifyBeehive veryfies the provided beehive exists in the database
 func VerifyBeehive(conn *pgx.Conn, macAdrr string) (bool, error) {
 	const sqlQueryCheckBeehive = `SELECT EXISTS (SELECT 1 FROM beehives WHERE key = $1)`
 
@@ -78,7 +78,7 @@ func VerifyBeehive(conn *pgx.Conn, macAdrr string) (bool, error) {
 	return exists, nil
 }
 
-// Check is there is an active issue with this sensor
+// CheckIfActiveIssue checks if there is an active issue with this sensor
 func CheckIfActiveIssue(conn *pgx.Conn, beehiveId int, sensorId int) (bool, error) {
 	const sqlQueryActiveIssue = `SELECT EXISTS 
 								(SELECT 1 FROM beehive_status WHERE beehive_id = $1 

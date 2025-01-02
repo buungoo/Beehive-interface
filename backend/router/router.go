@@ -1,4 +1,4 @@
-// Package api contains the all the endpoints and handles routing http-request to the correct handler.
+// Package router contains the all the endpoints and handles routing http-request to the correct handler.
 //
 // This package is the entrypoint for all Api calls. It sends requests to the correct handler.
 // In som occasions it performes some checks before passing it along to a handler.

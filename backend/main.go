@@ -41,6 +41,12 @@ func main() {
 	}
 	utils.LogInfo("Database tables successfully initialized")
 
+	// Add needed data to db
+	if err := db.StartupDb(dbpool); err != nil {
+		utils.LogFatal("Error adding essential startup data to db", err)
+	}
+	utils.LogInfo("Essential startup-information added to db")
+
 	// Inject test data into the database
 	// if err := test.InjectTestData(dbpool); err != nil {
 	// 	utils.LogFatal("Error injecting test data", err)

@@ -107,6 +107,6 @@ func getSecretKey() []byte {
 		utils.LogWarn("failed to get the environtment variable")
 		return []byte("ThisIsAStandardPassword123")
 	}
-	utils.LogInfo("Succesfully implemented .env")
+
 	return []byte(secretKey)
 }
