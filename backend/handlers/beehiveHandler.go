@@ -85,7 +85,7 @@ func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Po
 		return
 	}
 
-	err = addDefaultSensors(w, r, dbPool, beehiveId)
+	err = addDefaultSensors(w, dbPool, beehiveId)
 	if err != nil {
 		utils.LogError("Error adding sensors", err)
 		utils.SendErrorResponse(w, "Error adding sensors", http.StatusInternalServerError)
@@ -415,19 +415,20 @@ func iterateBeehives(rows pgx.Rows) ([]models.Beehives, error) {
 	return dataResponse, nil
 }
 
-func addDefaultSensors(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) error {
+func addDefaultSensors(w http.ResponseWriter, dbPool *pgxpool.Pool, beehiveId int) error {
 	sensorTypes := [6]string{"loadcell", "temperature", "humidity", "microphone", "oxygen", "battery"}
-	const sqlQueryAddSensors = `ÌNSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $)`
+	const sqlQueryAddSensors = `INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3)`
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
 	if err != nil {
 		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+		return err
 	}
 	defer conn.Release()
 
 	for i := 0; i < len(sensorTypes); i++ {
-		_, err = conn.Exec(context.Background(), sqlQueryAddSensors, sensorTypes[i], beehiveId)
+		_, err = conn.Exec(context.Background(), sqlQueryAddSensors, 1, sensorTypes[i], beehiveId)
 		if err != nil {
 			utils.LogError("Error adding standard sensors, error: ", err)
 			utils.SendErrorResponse(w, "Error adding standard sensors to db", http.StatusBadRequest)
