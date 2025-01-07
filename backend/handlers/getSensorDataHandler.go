@@ -50,7 +50,7 @@ func GetLatestSensorData(w http.ResponseWriter, r *http.Request, dbPool *pgxpool
 	const sqlQueryFetchLatestData = `SELECT DISTINCT ON (sensor_type) sensor_id, beehive_id, sensor_type, value, time
 		FROM sensor_data
 		WHERE beehive_id = $1
-		ORDER BY sensor_id, time DESC;
+		ORDER BY sensor_type, time DESC;
 		`
 	// Fetch all data
 	rows, err := conn.Query(context.Background(), sqlQueryFetchLatestData, beehiveId)

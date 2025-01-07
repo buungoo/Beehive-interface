@@ -417,7 +417,7 @@ func iterateBeehives(rows pgx.Rows) ([]models.Beehives, error) {
 
 func addDefaultSensors(w http.ResponseWriter, dbPool *pgxpool.Pool, beehiveId int) error {
 	sensorTypes := [6]string{"loadcell", "temperature", "humidity", "microphone", "oxygen", "battery"}
-	const sqlQueryAddSensors = `INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3)`
+	const sqlQueryAddSensors = `INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ON CONFLICT (id, type, beehive) DO NOTHING`
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
