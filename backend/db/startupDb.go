@@ -9,7 +9,8 @@ import (
 
 // StartupDb adds needed data to the database at startup.
 func StartupDb(dbPool *pgxpool.Pool) error {
-	var MacAddr string = "0080e115000adf82"
+	var macAddr string = "0080e115000adf82"
+	var beehiveName string = "Beehive A"
 
 	// Acquire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
@@ -19,7 +20,13 @@ func StartupDb(dbPool *pgxpool.Pool) error {
 	}
 	defer conn.Release()
 
-	_, err = conn.Exec(context.Background(), "INSERT INTO beehives (name, key) VALUES ($1, $2) ", "Beehive A", MacAddr)
+	const sqlQuery = `
+	INSERT INTO beehives (name, key) 
+	VALUES ($1, $2)
+	ON CONFLICT (key) DO NOTHING;
+`
+
+	_, err = conn.Exec(context.Background(), sqlQuery, beehiveName, macAddr)
 	if err != nil {
 		utils.LogError("failed to insert beehive A", err)
 		return err
