@@ -101,7 +101,7 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 				break
 			}
 			// Convert raw bytes to uint16 for Battery sensor
-			rawValue = uint16(decodedData[i+2])<<8 | uint16(decodedData[i+3])
+			rawValue = uint16(decodedData[i+2]) << 8 | uint16(decodedData[i+3])
 			i += 4
 		case models.Temperature:
 			// Temperature requires int8 (signed 8-bit value)
