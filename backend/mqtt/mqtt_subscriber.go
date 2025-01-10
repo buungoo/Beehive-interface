@@ -30,7 +30,7 @@ func handleSensorMessage(message SensorMessage, dbpool *pgxpool.Pool) {
 	}
 
 	for _, reading := range readings {
-		utils.LogInfo(fmt.Sprintf("Sensor Reading: %+v", reading))
+		// utils.LogInfo(fmt.Sprintf("Sensor Reading: %+v", reading))
 		fmt.Printf("Sensor Reading: %+v\n", reading)
 		// Insert the reading into the database
 		err := handlers.InsertSensorReading(dbpool, reading)
@@ -38,7 +38,7 @@ func handleSensorMessage(message SensorMessage, dbpool *pgxpool.Pool) {
 			utils.LogError("Failed to insert sensor reading: ", err)
 			fmt.Println("Failed to insert sensor reading: ", err)
 		} else {
-			utils.LogInfo(fmt.Sprintf("Successfully inserted reading into the database: %+v", reading))
+			// utils.LogInfo(fmt.Sprintf("Successfully inserted reading into the database: %+v", reading))
 			fmt.Println("Successfully inserted reading into the database:", reading)
 		}
 	}
@@ -121,7 +121,7 @@ func parseSensorMessage(message SensorMessage) ([]*models.SensorReading, error) 
 
 		readings = append(readings, builder.Build())
 
-		utils.LogInfo(fmt.Sprintf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v", sensorType, sensorId, rawValue))
+		// utils.LogInfo(fmt.Sprintf("Processed reading: SensorType=%v, SensorID=%v, RawValue=%v", sensorType, sensorId, rawValue))
 	}
 
 	return readings, nil
@@ -144,7 +144,7 @@ func createMessagePubHandler(dbpool *pgxpool.Pool) mqtt.MessageHandler {
 			return
 		}
 
-		utils.LogInfo(fmt.Sprintf("Received message: %+v", sensorMessage))
+		// utils.LogInfo(fmt.Sprintf("Received message: %+v", sensorMessage))
 		fmt.Printf("Received message: %+v\n", sensorMessage) // print and log
 		handleSensorMessage(sensorMessage, dbpool)
 	}
@@ -197,16 +197,16 @@ func SetupMQTTSubscriber(dbpool *pgxpool.Pool) {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(broker)
-	opts.SetClientID("testfkdhsafk") //beehive_subscriber")
+	opts.SetClientID("beehive_subscriber")
 	opts.SetDefaultPublishHandler(createMessagePubHandler(dbpool))
 
 	opts.OnConnect = func(client mqtt.Client) {
 		utils.LogInfo("Connected to MQTT broker")
-		fmt.Println("Connected to MQTT broker") // print and log
+		fmt.Println("Connected to MQTT broker")
 	}
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		utils.LogError("Connection to MQTT broker lost", err)
-		fmt.Println("Connection to MQTT broker lost", err) // print and log
+		fmt.Println("Connection to MQTT broker lost", err)
 	}
 
 	client := mqtt.NewClient(opts)
