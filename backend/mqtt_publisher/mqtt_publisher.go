@@ -32,13 +32,22 @@ func main() {
 		currentTime := time.Now().Format(time.RFC3339) // ISO 8601 format
 
 		// Construct JSON payload with the current time
-		//AwEgAgHs,
+		//AwEgAgHs
 		//AgUC
 		//BgULwrg=
+		//
+		// AwEgAgHsAQEUBAEABQEV
+		// 00000011 00000001 00100000
+		// 00000010 00000001 11101100
+		// 00000001 00000001 00010100
+		// 00000100 00000001 00000000
+		// 00000101 00000001 00010101
+		// BgEO2A==
+		// 00000110 00000001 0000111011011000
 		payload := fmt.Sprintf(`{
 			"applicationID": "1",
 			"applicationName": "beehive-sensor-card",
-			"data": "AgUC",
+			"data": "BgEO2A==",
 			"devEUI": "0080e115000adf82",
 			"deviceName": "beehive-sensor-card-dn",
 			"fCnt": 200,
