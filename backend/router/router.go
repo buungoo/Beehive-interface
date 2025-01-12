@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -109,6 +110,20 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		handlers.GetBeehiveList(w, r, dbPool)
 	}))
 
+	// mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/{startDate}/{endDate}", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
+	// 	beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
+	// 	if err != nil {
+	// 		utils.SendErrorResponse(w, "Invalid Beehive id", http.StatusBadRequest)
+	// 		return
+	// 	}
+	//
+	// 	date1 := r.PathValue("startDate")
+	// 	date2 := r.PathValue("endDate")
+	//
+	// 	handlers.GetDataByDate(w, r, dbPool, beehiveId, date1, date2)
+	//
+	// }))
+
 	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/{startDate}/{endDate}", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		beehiveId, err := strconv.Atoi(r.PathValue("beehiveId"))
 		if err != nil {
@@ -119,8 +134,26 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 		date1 := r.PathValue("startDate")
 		date2 := r.PathValue("endDate")
 
-		handlers.GetDataByDate(w, r, dbPool, beehiveId, date1, date2)
+		// Parse the start date
+		startDate, err := time.Parse("2006-01-02", date1) // Adjust format if needed
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid start date format, expected YYYY-MM-DD", http.StatusBadRequest)
+			return
+		}
 
+		// Parse the end date
+		endDate, err := time.Parse("2006-01-02", date2) // Adjust format if needed
+		if err != nil {
+			utils.SendErrorResponse(w, "Invalid end date format, expected YYYY-MM-DD", http.StatusBadRequest)
+			return
+		}
+
+		// Adjust start and end dates to include full day
+		startDateFormatted := startDate.Format("2006-01-02 00:00:00")
+		endDateFormatted := endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second).Format("2006-01-02 15:04:05")
+
+		// Pass the adjusted dates to the handler
+		handlers.GetDataByDate(w, r, dbPool, beehiveId, startDateFormatted, endDateFormatted)
 	}))
 
 	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/average/{startDate}/{endDate}", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {

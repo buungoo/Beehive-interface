@@ -177,7 +177,7 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 
 	const sqlQueryFetchDataBetweenDates = `SELECT sensor_id, beehive_id, sensor_type, value, time
 	FROM sensor_data 
-	WHERE beehive_id=$1 AND time BETWEEN $2::timestamptz AND $3::timestamptz
+	WHERE beehive_id=$1 AND time BETWEEN $2 AND $3
 	ORDER BY time;
 	`
 
