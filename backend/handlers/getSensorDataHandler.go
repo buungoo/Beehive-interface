@@ -255,15 +255,8 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		return
 	}
 
-	jsonResponse, err := json.Marshal(sensorDataList)
-	if err != nil {
-		utils.LogError("Error marshalling JSON", err)
-		utils.SendErrorResponse(w, "Error generating response", http.StatusInternalServerError)
-		return
-	}
-
 	// Return the data
-	utils.SendJSONResponse(w, jsonResponse, http.StatusOK)
+	utils.SendJSONResponse(w, sensorDataList, http.StatusOK)
 
 }
 
