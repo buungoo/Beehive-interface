@@ -218,6 +218,8 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 	defer rows.Close()
 
+	fmt.Println(rows)
+
 	// // Put all data into struct before returning to client
 	// data, err := iterateData(rows)
 	// if err != nil {
