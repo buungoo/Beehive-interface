@@ -47,7 +47,7 @@ func main() {
 		payload := fmt.Sprintf(`{
 			"applicationID": "1",
 			"applicationName": "beehive-sensor-card",
-			"data": "BgEO2A==",
+			"data": "AwEgAgHsAQEUBAEABQEV",
 			"devEUI": "0080e115000adf82",
 			"deviceName": "beehive-sensor-card-dn",
 			"fCnt": 200,

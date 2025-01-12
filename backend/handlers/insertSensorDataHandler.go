@@ -38,7 +38,6 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 
 	// If the sensor does not exist, add it to the sensors table
 	if sensorExists == 0 {
-		// Insert the sensor into the `sensors` table
 		insertSensorQuery := `
 			INSERT INTO sensors (id, type, beehive_id) 
 			VALUES ($1, $2, $3)`
@@ -48,6 +47,48 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 			return fmt.Errorf("failed to insert sensor: %v", err)
 		}
 		utils.LogInfo(fmt.Sprintf("Added new sensor: ID=%d, Type=%s, BeehiveID=%d", reading.SensorID, reading.SensorType, beehiveID))
+	}
+
+	// Verify the sensor reading
+	isValid, verificationMessage := reading.VerifyInputData()
+
+	if !isValid {
+		// If verification fails, log the error in the beehive_status table
+		insertErrorQuery := `
+			INSERT INTO beehive_status (sensor_id, beehive_id, sensor_type, description, solved, read, time_of_error) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7)`
+		_, err = conn.Exec(context.Background(), insertErrorQuery,
+			reading.SensorID, beehiveID, string(reading.SensorType), verificationMessage, false, false, reading.Time)
+		if err != nil {
+			utils.LogWarn(fmt.Sprintf("Failed to log error in beehive_status table: %v", err))
+		} else {
+			utils.LogInfo(fmt.Sprintf("Logged error in beehive_status: %s", verificationMessage))
+		}
+	} else {
+		// If the reading is valid, check for active issues in beehive_status
+		queryActiveIssue := `
+			SELECT COUNT(*) FROM beehive_status 
+			WHERE sensor_id = $1 AND beehive_id = $2 AND solved = false`
+		var activeIssueCount int
+		err = conn.QueryRow(context.Background(), queryActiveIssue, reading.SensorID, beehiveID).Scan(&activeIssueCount)
+		if err != nil {
+			utils.LogError("Error checking for active issues in beehive_status: ", err)
+			return fmt.Errorf("error checking active issues: %v", err)
+		}
+
+		// Mark the issue as solved if there's an active issue
+		if activeIssueCount > 0 {
+			updateIssueQuery := `
+				UPDATE beehive_status 
+				SET solved = true, time_of_resolution = $1 
+				WHERE sensor_id = $2 AND beehive_id = $3 AND solved = false`
+			_, err = conn.Exec(context.Background(), updateIssueQuery, reading.Time, reading.SensorID, beehiveID)
+			if err != nil {
+				utils.LogError("Failed to mark active issue as solved: ", err)
+			} else {
+				utils.LogInfo(fmt.Sprintf("Marked active issue as solved for SensorID=%d, BeehiveID=%d", reading.SensorID, beehiveID))
+			}
+		}
 	}
 
 	// Insert the sensor reading into the `sensor_data` table
@@ -62,3 +103,4 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 
 	return nil
 }
+
