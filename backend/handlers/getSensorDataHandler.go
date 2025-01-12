@@ -135,16 +135,16 @@ func GetLatestOfSensortype(w http.ResponseWriter, r *http.Request, dbPool *pgxpo
 
 }
 
-func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, date1 string, date2 string) {
+func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, date1 time.Time, date2 time.Time) {
 	// Retrieve the username from the request context
 	username := r.Context().Value("username").(string)
 
 	// Verify and parse the input dates
-	parsedDate1, parsedDate2, err := verifyDates(date1, date2)
-	if err != nil {
-		utils.LogError("Error parsing the dates: ", err)
-		utils.SendErrorResponse(w, "Wrong format of the dates, or wrong order", http.StatusBadRequest)
-	}
+	// parsedDate1, parsedDate2, err := verifyDates(date1, date2)
+	// if err != nil {
+	// 	utils.LogError("Error parsing the dates: ", err)
+	// 	utils.SendErrorResponse(w, "Wrong format of the dates, or wrong order", http.StatusBadRequest)
+	// }
 
 	// Acuire connection from the connection pool
 	conn, err := dbPool.Acquire(context.Background())
@@ -175,14 +175,35 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 		return
 	}
 
-	const sqlQueryFetchDataBetweenDates = `SELECT sensor_id, beehive_id, sensor_type, value, time
-	FROM sensor_data 
-	WHERE beehive_id=$1 AND time BETWEEN $2 AND $3
-	ORDER BY time;
-	`
+	// const sqlQueryFetchDataBetweenDates = `SELECT sensor_id, beehive_id, sensor_type, value, time
+	// FROM sensor_data 
+	// WHERE beehive_id=$1 AND time BETWEEN $2 AND $3
+	// ORDER BY time;
+	// `
+
+	const sqlQueryFetchDataBetweenDates = `
+        SELECT
+            beehive_id,
+            sensor_type,
+            CASE
+                WHEN $1::date = $2::date THEN
+                    DATE_TRUNC('hour', time) -- Group by hour for a single day
+                ELSE
+                    DATE_TRUNC('day', time)  -- Group by day for multiple days
+            END AS time_bucket,
+            AVG(value) AS avg_value
+        FROM
+            sensor_data
+        WHERE
+            beehive_id = $3 AND
+            time BETWEEN $4 AND $5
+        GROUP BY
+            beehive_id, sensor_type, time_bucket
+        ORDER BY
+            time_bucket;`
 
 	// Fetch all data
-	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, beehiveId, parsedDate1, parsedDate2)
+	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, beehiveId, date1, date2)
 	if err != nil {
 		utils.LogError("Error fetching data", err)
 		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)

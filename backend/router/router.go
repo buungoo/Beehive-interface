@@ -9,6 +9,7 @@ import (
 	"github.com/buungoo/Beehive-interface/handlers"
 	"github.com/buungoo/Beehive-interface/utils"
 
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
@@ -131,29 +132,23 @@ func InitRoutes(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 			return
 		}
 
-		date1 := r.PathValue("startDate")
-		date2 := r.PathValue("endDate")
+		startDate := r.PathValue("startDate")
+		endDate := r.PathValue("endDate")
 
-		// Parse the start date
-		startDate, err := time.Parse("2006-01-02", date1) // Adjust format if needed
+		startTime, err := time.Parse("2006-01-02", startDate)
 		if err != nil {
-			utils.SendErrorResponse(w, "Invalid start date format, expected YYYY-MM-DD", http.StatusBadRequest)
-			return
+			fmt.Println("Invalid start date format: %v", err)
+		}
+		endTime, err := time.Parse("2006-01-02", endDate)
+		if err != nil {
+			fmt.Println("Invalid end date format: %v", err)
 		}
 
-		// Parse the end date
-		endDate, err := time.Parse("2006-01-02", date2) // Adjust format if needed
-		if err != nil {
-			utils.SendErrorResponse(w, "Invalid end date format, expected YYYY-MM-DD", http.StatusBadRequest)
-			return
-		}
-
-		// Adjust start and end dates to include full day
-		startDateFormatted := startDate.Format("2006-01-02 00:00:00")
-		endDateFormatted := endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second).Format("2006-01-02 15:04:05")
+		// Extend the end time to the end of the day
+		endTime = endTime.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
 
 		// Pass the adjusted dates to the handler
-		handlers.GetDataByDate(w, r, dbPool, beehiveId, startDateFormatted, endDateFormatted)
+		handlers.GetDataByDate(w, r, dbPool, beehiveId, startTime, endTime)
 	}))
 
 	mux.HandleFunc("GET /beehive/{beehiveId}/sensor-data/average/{startDate}/{endDate}", authentication.JWTAuth(func(w http.ResponseWriter, r *http.Request) {
