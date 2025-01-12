@@ -218,16 +218,16 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 	defer rows.Close()
 
-	// Put all data into struct before returning to client
-	data, err := iterateData(rows)
-	if err != nil {
-		utils.LogError("Error iterating data, err: ", err)
-		utils.SendErrorResponse(w, "Error iterating data", http.StatusInternalServerError)
-		return
-	}
+	// // Put all data into struct before returning to client
+	// data, err := iterateData(rows)
+	// if err != nil {
+	// 	utils.LogError("Error iterating data, err: ", err)
+	// 	utils.SendErrorResponse(w, "Error iterating data", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Return the data
-	utils.SendJSONResponse(w, data, http.StatusOK)
+	utils.SendJSONResponse(w, rows, http.StatusOK)
 
 }
 
