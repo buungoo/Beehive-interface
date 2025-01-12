@@ -203,7 +203,7 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
             time_bucket;`
 
 	// Fetch all data
-	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, beehiveId, date1, date2)
+	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, date1, date2, beehiveId, date1, date2)
 	if err != nil {
 		utils.LogError("Error fetching data", err)
 		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
