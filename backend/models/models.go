@@ -291,8 +291,8 @@ const (
 )
 
 const (
-	LowBattery  uint8 = 0
-	HighBattery uint8 = 100
+	LowBattery  uint16 = 0
+	HighBattery uint16 = 100
 )
 
 // Pointers to each season
@@ -447,7 +447,7 @@ func (reading SensorReading) verifyMicrophone() (bool, string) {
 // Verify battery level
 func (reading SensorReading) VerifyBattery() (bool, string) {
 	// Type assertion for uint8
-	battery, ok := reading.Value.(uint8)
+	battery, ok := reading.Value.(uint16)
 	if !ok {
 		return false, "Invalid value type for battery. Expected uint8."
 	}
