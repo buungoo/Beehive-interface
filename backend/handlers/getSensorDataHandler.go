@@ -226,6 +226,29 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	// 	return
 	// }
 
+	// Prepare to collect results
+	var result []map[string]interface{}
+	for rows.Next() {
+		var beehiveId string
+		var sensorType string
+		var time time.Time
+		var value float64
+
+		if err := rows.Scan(&beehiveId, &sensorType, &time, &value); err != nil {
+			utils.LogError("Error scanning row", err)
+			utils.SendErrorResponse(w, "Error scanning row", http.StatusInternalServerError)
+			return
+		}
+
+		// Collect row into a map
+		result = append(result, map[string]interface{}{
+			"beehive_id": beehiveId,
+			"sensor_type": sensorType,
+			"time": time,
+			"value": value,
+		})
+	}
+
 	// Return the data
 	utils.SendJSONResponse(w, rows, http.StatusOK)
 
