@@ -182,35 +182,35 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	// `
 
 	const sqlQueryFetchDataBetweenDates = `
-		SELECT
-		beehive_id,
-		sensor_type,
-		CASE
-		WHEN $1::date = $2::date THEN
-		DATE_TRUNC('hour', time) -- Group by hour for a single day
-		ELSE
-		DATE_TRUNC('day', time)  -- Group by day for multiple days
-		END AS time,
-		AVG(value) AS value
-		FROM
-		sensor_data
-		WHERE
-		beehive_id = $3 AND
-		time BETWEEN $4 AND $5
-		GROUP BY
-		beehive_id, sensor_type, 
-		CASE
-		WHEN $1::date = $2::date THEN
-		DATE_TRUNC('hour', time) -- Group by hour for a single day
-		ELSE
-		DATE_TRUNC('day', time)  -- Group by day for multiple days
-		END
-		ORDER BY
-    	time;
+			SELECT
+				beehive_id,
+				sensor_type,
+				CASE
+					WHEN $1::date = $2::date THEN
+						DATE_TRUNC('hour', time) -- Group by hour for a single day
+					ELSE
+						DATE_TRUNC('day', time)  -- Group by day for multiple days
+				END AS time,
+				AVG(value) AS value
+			FROM
+				sensor_data
+			WHERE
+				beehive_id = $3 AND
+				time BETWEEN $4 AND $5
+			GROUP BY
+				beehive_id, sensor_type, 
+				CASE
+					WHEN $1::date = $2::date THEN
+						DATE_TRUNC('hour', time) -- Group by hour for a single day
+					ELSE
+						DATE_TRUNC('day', time)  -- Group by day for multiple days
+				END
+			ORDER BY
+				time;
 	`
 
 	// Fetch all data
-	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, date1, date2, beehiveId, date1, date2)
+	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, date1.Format("2006-01-02"), date2.Format("2006-01-02"), beehiveId, date1, date2)
 	if err != nil {
 		utils.LogError("Error fetching data", err)
 		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
@@ -218,7 +218,6 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 	defer rows.Close()
 
-	fmt.Println(rows)
 
 	// // Put all data into struct before returning to client
 	// data, err := iterateData(rows)
@@ -228,31 +227,43 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	// 	return
 	// }
 
-	// Prepare to collect results
-	var result []map[string]interface{}
-	for rows.Next() {
-		var beehiveId string
-		var sensorType string
-		var time time.Time
-		var value float64
 
-		if err := rows.Scan(&beehiveId, &sensorType, &time, &value); err != nil {
+	type SensorData struct {
+		BeehiveID  int       `json:"beehive_id"`
+		SensorType string    `json:"sensor_type"`
+		Time       time.Time `json:"time"`
+		Value      float64   `json:"value"`
+	}
+	
+
+	var sensorDataList []SensorData
+
+	for rows.Next() {
+		var data SensorData
+		err := rows.Scan(&data.BeehiveID, &data.SensorType, &data.Time, &data.Value)
+		if err != nil {
 			utils.LogError("Error scanning row", err)
-			utils.SendErrorResponse(w, "Error scanning row", http.StatusInternalServerError)
+			utils.SendErrorResponse(w, "Error processing data", http.StatusInternalServerError)
 			return
 		}
+		sensorDataList = append(sensorDataList, data)
+	}
 
-		// Collect row into a map
-		result = append(result, map[string]interface{}{
-			"beehive_id": beehiveId,
-			"sensor_type": sensorType,
-			"time": time,
-			"value": value,
-		})
+	if rows.Err() != nil {
+		utils.LogError("Error iterating rows", rows.Err())
+		utils.SendErrorResponse(w, "Error processing data", http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse, err := json.Marshal(sensorDataList)
+	if err != nil {
+		utils.LogError("Error marshalling JSON", err)
+		utils.SendErrorResponse(w, "Error generating response", http.StatusInternalServerError)
+		return
 	}
 
 	// Return the data
-	utils.SendJSONResponse(w, rows, http.StatusOK)
+	utils.SendJSONResponse(w, jsonResponse, http.StatusOK)
 
 }
 
