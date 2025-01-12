@@ -176,31 +176,38 @@ func GetDataByDate(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool,
 	}
 
 	// const sqlQueryFetchDataBetweenDates = `SELECT sensor_id, beehive_id, sensor_type, value, time
-	// FROM sensor_data 
+	// FROM sensor_data
 	// WHERE beehive_id=$1 AND time BETWEEN $2 AND $3
 	// ORDER BY time;
 	// `
 
 	const sqlQueryFetchDataBetweenDates = `
-        SELECT
-            beehive_id,
-            sensor_type,
-            CASE
-                WHEN $1::date = $2::date THEN
-                    DATE_TRUNC('hour', time) -- Group by hour for a single day
-                ELSE
-                    DATE_TRUNC('day', time)  -- Group by day for multiple days
-            END AS time_bucket,
-            AVG(value) AS avg_value
-        FROM
-            sensor_data
-        WHERE
-            beehive_id = $3 AND
-            time BETWEEN $4 AND $5
-        GROUP BY
-            beehive_id, sensor_type, time_bucket
-        ORDER BY
-            time_bucket;`
+		SELECT
+		beehive_id,
+		sensor_type,
+		CASE
+		WHEN $1::date = $2::date THEN
+		DATE_TRUNC('hour', time) -- Group by hour for a single day
+		ELSE
+		DATE_TRUNC('day', time)  -- Group by day for multiple days
+		END AS time,
+		AVG(value) AS value
+		FROM
+		sensor_data
+		WHERE
+		beehive_id = $3 AND
+		time BETWEEN $4 AND $5
+		GROUP BY
+		beehive_id, sensor_type, 
+		CASE
+		WHEN $1::date = $2::date THEN
+		DATE_TRUNC('hour', time) -- Group by hour for a single day
+		ELSE
+		DATE_TRUNC('day', time)  -- Group by day for multiple days
+		END
+		ORDER BY
+    	time;
+	`
 
 	// Fetch all data
 	rows, err := conn.Query(context.Background(), sqlQueryFetchDataBetweenDates, date1, date2, beehiveId, date1, date2)
