@@ -446,10 +446,11 @@ func (reading SensorReading) verifyMicrophone() (bool, string) {
 
 // Verify battery level
 func (reading SensorReading) VerifyBattery() (bool, string) {
+	fmt.Printf("Value: %v, Type: %T\n", reading.Value, reading.Value)
 	// Type assertion for uint8
 	battery, ok := reading.Value.(uint16)
 	if !ok {
-		return false, "Invalid value type for battery. Expected uint8."
+		return false, "Invalid value type for battery. Expected uint16."
 	}
 
 	if battery < LowBattery || battery > HighBattery {
