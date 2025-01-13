@@ -382,6 +382,8 @@ func (reading SensorReading) verifyHumidity() (bool, string) {
 
 // Verify oxygen sensorvalues
 func (reading SensorReading) verifyOxygen() (bool, string) {
+	fmt.Printf("Value: %v, Type: %T\n", reading.Value, reading.Value)
+
 	// Type assertion for uint8
 	oxygen, ok := reading.Value.(uint8)
 	if !ok {
