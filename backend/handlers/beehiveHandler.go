@@ -1,0 +1,441 @@
+// Package handlers contains handlers for all API calls.
+//
+// Handlers are called from the routerpackage and handle all the queries to the database. Such as adding a user or reading sensordata from a specific beehive or sensor.
+package handlers
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"time"
+
+	"github.com/buungoo/Beehive-interface/models"
+	"github.com/buungoo/Beehive-interface/utils"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+// AddBeehiveToUser connects a beehive to a user by using the sensor-cards mac address
+func AddBeehiveToUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Retrieve the macaddress from http-body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	macAddrStruct := struct {
+		Addr string `json:"macaddress"`
+	}{}
+	err := decoder.Decode(&macAddrStruct)
+	if err != nil {
+		utils.LogError("Could not decode macaddress", err)
+		utils.SendErrorResponse(w, "Could not decode macaddress", http.StatusInternalServerError)
+		return
+	}
+	utils.LogInfo("Macaddress is: " + macAddrStruct.Addr)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the mac address is correct
+	beehiveExists, err := utils.VerifyBeehive(conn.Conn(), macAddrStruct.Addr)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryFetchBeehiveId = `SELECT id FROM beehives WHERE key = $1::macaddr8`
+
+	var beehiveId int
+	// Fetch beehiveId for beehive
+	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveId, macAddrStruct.Addr).Scan(&beehiveId)
+	if err != nil {
+		utils.LogError("Beehive doesnt exist", err)
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryAddBeehive = `INSERT INTO user_beehive (user_id, beehive_id) VALUES ($1, $2)`
+
+	_, err = conn.Exec(context.Background(), sqlQueryAddBeehive, userId, beehiveId)
+	if err != nil {
+		utils.LogError("Error adding beehive to user, error: ", err)
+		utils.SendErrorResponse(w, "Error adding beehive to user", http.StatusBadRequest)
+		return
+	}
+
+	err = addDefaultSensors(w, dbPool, beehiveId)
+	if err != nil {
+		utils.LogError("Error adding sensors", err)
+		utils.SendErrorResponse(w, "Error adding sensors", http.StatusInternalServerError)
+	}
+
+	utils.SendJSONResponse(w, "Beehive added to user", http.StatusOK)
+
+}
+
+// RemoveBeehiveFromUser removes a beehive from a user
+func RemoveBeehiveFromUser(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the user is already connected
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryRemoveBeehiveFromUser = `DELETE FROM user_beehive WHERE user_id = $1 AND beehive_id = $2`
+	_, err = conn.Exec(context.Background(), sqlQueryRemoveBeehiveFromUser, userId, beehiveId)
+	if err != nil {
+		utils.LogError("Error removing beehive from user, error: ", err)
+		utils.SendErrorResponse(w, "Error removing beehive to user", http.StatusBadRequest)
+		return
+	}
+
+	utils.SendJSONResponse(w, "Beehive removed from user", http.StatusOK)
+
+}
+
+// GetBeehiveStatus returns the beehive_status table which shows issues
+func GetBeehiveStatus(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the beehive exists and that the user has access to said beehive
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryFetchBeehiveStatus = `SELECT * FROM beehive_status 
+										WHERE beehive_id=$1 AND solved=$2
+										ORDER BY time_of_error DESC
+										LIMIT 1; `
+
+	// Hold the data
+	var data models.BeehiveStatus
+
+	// Fetch all data
+	err = conn.QueryRow(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId, false).Scan(&data.IssueId, &data.SensorId,
+		&data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead)
+	if err != nil {
+		utils.LogError("error reading beehivestatus: ", err)
+		utils.SendErrorResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
+		return
+	}
+
+	if !data.Read {
+		err = updateBeehiveStatusOnRead(dbPool, data)
+		if err != nil {
+			utils.LogError("error updating beehive_status: ", err)
+		}
+	}
+
+	utils.SendJSONResponse(w, data, http.StatusOK)
+	//utils.SendErrorResponse(w, "Under development", http.StatusNotFound)
+
+}
+
+// GetBeehiveStatusList returns the beehive_status table which shows issues
+func GetBeehiveStatusList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the beehive exists and that the user has access to said beehive
+	beehiveExists, err := utils.VerifyBeehiveId(conn.Conn(), beehiveId, userId)
+	if err != nil {
+		utils.LogError("Error finding beehive, err: ", err)
+		utils.SendErrorResponse(w, "Error finding beehive", http.StatusInternalServerError)
+		return
+	}
+
+	if !beehiveExists {
+		utils.LogError("Error, beehive doesnt exists", errors.New("beehive doesn't exist"))
+		utils.SendErrorResponse(w, "Beehive doesn't exist", http.StatusNotFound)
+		return
+	}
+
+	const sqlQueryFetchBeehiveStatus = `SELECT * FROM beehive_status 
+										WHERE beehive_id=$1 AND solved=$2
+										ORDER BY time_of_error DESC `
+
+	// Fetch all data
+	rows, err := conn.Query(context.Background(), sqlQueryFetchBeehiveStatus, beehiveId, false)
+	if err != nil {
+		utils.LogError("Error fetching data", err)
+		utils.SendErrorResponse(w, "Error fetching data", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type BeehiveStatus struct {
+		IssueId     int        `json: "issue_id`
+		SensorId    int        `json: "sensor_id"`
+		BeehiveId   int        `json:"beehive_id"`
+		SensorType  string     `json: "sensor_type"`
+		Description string     `json: "description"`
+		Solved      bool       `json: "solved"`
+		Read        bool       `json: "read"`
+		TimeOfError *time.Time `json: "time_of_error, omitempty"`
+		TimeRead    *time.Time `json: "time_read, omitempty"`
+	}
+
+	// Slice to hold the data from returned rows
+	var dataResponse []BeehiveStatus
+
+	for rows.Next() {
+		var data BeehiveStatus
+		if err := rows.Scan(&data.IssueId, &data.SensorId, &data.BeehiveId, &data.SensorType, &data.Description, &data.Solved, &data.Read, &data.TimeOfError, &data.TimeRead); err != nil {
+			utils.LogError("error reading beehivestatus: ", err)
+			utils.SendErrorResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
+			return
+		}
+		dataResponse = append(dataResponse, data)
+	}
+	if err := rows.Err(); err != nil {
+		utils.SendJSONResponse(w, "error reading beehivestatus", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendJSONResponse(w, dataResponse, http.StatusOK)
+
+}
+
+// UpdateBeehiveStatusOnAdd updates the beehive_status table when a value outside of the limits has been receive from the sensors
+func UpdateBeehiveStatusOnAdd(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool, beehiveId int, statusMessage string, data models.SensorReading) {
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	const sqlQueryUpdateBeehiveStatus = `INSERT INTO beehive_status (sensor_id, beehive_id, sensor_type, description, solved, read, time_of_error) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+
+	// Insert username and password
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, data.SensorID, data.BeehiveID, data.SensorType, statusMessage, false, false, data.Time)
+	if err != nil {
+		utils.LogError("Error updating status of beehive: ", err)
+		utils.SendErrorResponse(w, "Error updating status of beehive", http.StatusBadRequest)
+		return
+	}
+}
+
+// Updates the read time after the issue has been read
+func updateBeehiveStatusOnRead(dbPool *pgxpool.Pool, data models.BeehiveStatus) error {
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	const sqlQueryUpdateBeehiveStatus = `UPDATE beehive_status 
+									SET read = $1, time_read = $2 
+									WHERE issue_id = $3 AND beehive_id = $4 AND sensor_id = $5`
+
+	// Update beehive_status
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, true, time.Now(), data.IssueId, data.BeehiveId, data.SensorId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Updates the solved after issue has been solved
+func updateBeehiveStatusSolved(dbPool *pgxpool.Pool, data models.SensorReading) error {
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool: ", err)
+	}
+	defer conn.Release()
+
+	const sqlQueryUpdateBeehiveStatus = `UPDATE beehive_status 
+									SET solved = $1 
+									WHERE beehive_id = $2 AND sensor_id = $3`
+
+	// Update beehive_status
+	_, err = conn.Exec(context.Background(), sqlQueryUpdateBeehiveStatus, true, data.BeehiveID, data.SensorID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetBeehiveList returns a list of the beehives connected to the user
+func GetBeehiveList(w http.ResponseWriter, r *http.Request, dbPool *pgxpool.Pool) {
+	// Retrieve the username from the request context
+	username := r.Context().Value("username").(string)
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+	}
+	defer conn.Release()
+
+	// Fetch userid
+	userId, err := utils.GetUserId(conn.Conn(), username)
+	if err != nil {
+		utils.LogError("Error fetching user id, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching user id", http.StatusInternalServerError)
+	}
+
+	// Fetch all beehives connected to the user
+	const sqlQueryFetchAllBeehives = `SELECT b.id, b.name 
+						FROM beehives b 
+						JOIN user_beehive ub ON ub.beehive_id = b.id 
+						WHERE ub.user_id=$1`
+
+	rows, err := conn.Query(context.Background(), sqlQueryFetchAllBeehives, userId)
+	if err != nil {
+		utils.LogError("Error fetching all beehives, err: ", err)
+		utils.SendErrorResponse(w, "Error fetching all beehives", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Put all data into struct before returning to client
+	beehives, err := iterateBeehives(rows)
+	if err != nil {
+		utils.LogError("Error iterating data, err: ", err)
+		utils.SendErrorResponse(w, "Error iterating data", http.StatusInternalServerError)
+		return
+	}
+
+	// Return the data
+	utils.SendJSONResponse(w, beehives, http.StatusOK)
+
+}
+
+func iterateBeehives(rows pgx.Rows) ([]models.Beehives, error) {
+	// Slice to hold the data from returned rows
+	var dataResponse []models.Beehives
+
+	for rows.Next() {
+		var beehive models.Beehives
+		if err := rows.Scan(&beehive.Id, &beehive.Name); err != nil {
+			return dataResponse, err
+		}
+		dataResponse = append(dataResponse, beehive)
+	}
+	if err := rows.Err(); err != nil {
+		return dataResponse, err
+	}
+
+	return dataResponse, nil
+}
+
+func addDefaultSensors(w http.ResponseWriter, dbPool *pgxpool.Pool, beehiveId int) error {
+	sensorTypes := [6]string{"loadcell", "temperature", "humidity", "microphone", "oxygen", "battery"}
+	const sqlQueryAddSensors = `INSERT INTO sensors (id, type, beehive_id) VALUES ($1, $2, $3) ON CONFLICT (id, type, beehive) DO NOTHING`
+
+	// Acquire connection from the connection pool
+	conn, err := dbPool.Acquire(context.Background())
+	if err != nil {
+		utils.LogFatal("Error while acquiring connection from the database pool!!", errors.New("error while acquiring a connection from the pool"))
+		return err
+	}
+	defer conn.Release()
+
+	for i := 0; i < len(sensorTypes); i++ {
+		_, err = conn.Exec(context.Background(), sqlQueryAddSensors, 1, sensorTypes[i], beehiveId)
+		if err != nil {
+			utils.LogError("Error adding standard sensors, error: ", err)
+			utils.SendErrorResponse(w, "Error adding standard sensors to db", http.StatusBadRequest)
+			return err
+		}
+
+	}
+
+	return nil
+}

@@ -1,0 +1,58 @@
+[
+    {
+    "sensor_id": 1,
+    "beehive_id": 1,
+    "sensor_type": "temperature",
+    "value": 26.94,
+    "time": "2024-09-16 19:52:19"
+    },
+    {
+    "sensor_id": 2,
+    "beehive_id": 1,
+    "sensor_type": "humidity",
+    "value": 47.52,
+    "time": "2024-09-01 21:22:06"
+    },
+    {
+    "sensor_id": 3,
+    "beehive_id": 1,
+    "sensor_type": "weight",
+    "value": 58.14,
+    "time": "2024-10-09 07:00:22"
+    },
+    {
+    "sensor_id": 4,
+    "beehive_id": 1,
+    "sensor_type": "oxygen",
+    "value": 30.13,
+    "time": "2024-12-22 22:39:57"
+    },
+    {
+    "sensor_id": 5,
+    "beehive_id": 2,
+    "sensor_type": "temperature",
+    "value": -13.72,
+    "time": "2024-11-12 19:13:32"
+    },
+    {
+    "sensor_id": 6,
+    "beehive_id": 2,
+    "sensor_type": "humidity",
+    "value": 35.4,
+    "time": "2024-07-12 22:25:20"
+    },
+    {
+    "sensor_id": 7,
+    "beehive_id": 2,
+    "sensor_type": "weight",
+    "value": 30.13,
+    "time": "2024-06-08 16:45:26"
+    },
+    {
+    "sensor_id": 8,
+    "beehive_id": 2,
+    "sensor_type": "oxygen",
+    "value": 2.12,
+    "time": "2024-07-05 16:28:30"
+    }
+]

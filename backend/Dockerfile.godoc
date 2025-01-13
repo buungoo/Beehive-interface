@@ -1,0 +1,16 @@
+# Start from the official Golang image
+FROM golang:latest
+
+# Install godoc
+RUN go install golang.org/x/tools/cmd/godoc@latest
+
+# Set working directory
+WORKDIR /
+
+# Copy the entire Go project into the container
+COPY . .
+# Expose godoc port
+EXPOSE 6060
+
+# Default command to run godoc
+CMD ["godoc", "-http=:6060"]
