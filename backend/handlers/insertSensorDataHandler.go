@@ -80,9 +80,9 @@ func InsertSensorReading(dbpool *pgxpool.Pool, reading *models.SensorReading) er
 		if activeIssueCount > 0 {
 			updateIssueQuery := `
 				UPDATE beehive_status 
-				SET solved = true, time_of_resolution = $1 
-				WHERE sensor_id = $2 AND beehive_id = $3 AND solved = false`
-			_, err = conn.Exec(context.Background(), updateIssueQuery, reading.Time, reading.SensorID, beehiveID)
+				SET solved = true
+				WHERE sensor_id = $1 AND beehive_id = $2 AND solved = false`
+			_, err = conn.Exec(context.Background(), updateIssueQuery, reading.SensorID, beehiveID)
 			if err != nil {
 				utils.LogError("Failed to mark active issue as solved: ", err)
 			} else {
