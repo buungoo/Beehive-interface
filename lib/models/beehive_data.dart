@@ -10,7 +10,7 @@ class BeehiveData {
       required this.weight,
       required this.humidity,
       required this.ppm,
-      this.battery = 98.0});
+      required this.battery});
 
   Map<String, double> toMap() {
     return {
@@ -18,7 +18,7 @@ class BeehiveData {
       'weight': weight,
       'humidity': humidity,
       'ppm': ppm,
-      'battery': 98.0,
+      'battery': battery,
     };
   }
 }

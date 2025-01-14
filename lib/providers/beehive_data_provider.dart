@@ -70,7 +70,7 @@ class BeehiveDataProvider {
         });
 
         final List<dynamic> data = json.decode(response.body);
-        final test = data.map((item) => item as Map<String, dynamic>).toList();
+        //final test = data.map((item) => item as Map<String, dynamic>).toList();
 
         int tempIndex = data
             .indexWhere((element) => element['sensor_type'] == 'temperature');
@@ -81,22 +81,32 @@ class BeehiveDataProvider {
         int ppmIndex =
             data.indexWhere((element) => element['sensor_type'] == 'oxygen');
 
+        int batteryIndex =
+            data.indexWhere((element) => element['sensor_type'] == 'battery');
+
         // set value to  0 if index not found
         double temp = tempIndex != -1
             ? data[tempIndex]['value'].toDouble()
             : 0.0; // Temperature in °C
         double weight = weightIndex != -1
             ? data[weightIndex]['value'].toDouble()
-            : 0.0; // Weight in grams
+            : 0.0; // Weight in grams or smt
         double humidity = humidityIndex != -1
             ? data[humidityIndex]['value'].toDouble()
             : 0.0; // Humidity in %
         double ppm = ppmIndex != -1
             ? data[ppmIndex]['value'].toDouble()
             : 0.0; // Particles Per Million (PPM)
+        double battery = batteryIndex != -1
+            ? data[batteryIndex]['value'].toDouble()
+            : 0.0; // Battery in %
 
         yield BeehiveData(
-            temperature: temp, weight: weight, humidity: humidity, ppm: ppm);
+            temperature: temp,
+            weight: weight,
+            humidity: humidity,
+            ppm: ppm,
+            battery: battery);
       } catch (e) {
         //print(e);
       }

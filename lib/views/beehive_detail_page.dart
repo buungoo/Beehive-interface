@@ -18,8 +18,8 @@ class BeehiveDetailPage extends StatelessWidget {
     return StreamProvider<BeehiveData>(
       // Because the StreamProvider is specified here and not in BeehiveApp
       // class only the BeehiveDetailPage widget can listen to it
-      initialData:
-          new BeehiveData(temperature: 0, weight: 0, humidity: 0, ppm: 0),
+      initialData: new BeehiveData(
+          temperature: 0, weight: 0, humidity: 0, ppm: 0, battery: 0),
       create: (context) {
         return BeehiveDataProvider().getBeehiveDataStream(beehive.id);
       },

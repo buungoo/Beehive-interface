@@ -17,8 +17,6 @@ import 'views/login_page.dart';
 import 'package:beehive/views/detail_chart_page.dart';
 import 'package:beehive/views/camera.dart';
 
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'utils/helpers.dart';
 import 'widgets/shared.dart';
 
